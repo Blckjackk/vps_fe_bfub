@@ -10,15 +10,22 @@
  *      - Menyediakan fitur pencarian dan filter peserta.
  *      - Memungkinkan admin untuk menambah, melihat detail, mengedit, dan menghapus data peserta.
  *      - Menyediakan fitur untuk ekspor data peserta (misal: ke format CSV/Excel).
+ *      - Menampilkan status peserta (aktif, tidak aktif, dll).
  * API Methods      / Endpoints :
- *      - GET       /api/v1/peserta               (Untuk menampilkan seluruh data peserta)
- *      - POST      /api/v1/peserta               (Untuk membuat/menambah data peserta baru)
- *      - GET       /api/v1/peserta/:id           (Untuk menampilkan detail satu peserta)
- *      - PUT       /api/v1/peserta/:id           (Untuk mengupdate data peserta yang dipilih)
- *      - DELETE    /api/v1/peserta/:id           (Untuk menghapus data peserta yang dipilih)
+ *      - GET       api/admin/peserta          (Untuk menampilkan seluruh data peserta dengan pagination)
+ *      - POST      api/admin/peserta          (Untuk membuat/menambah data peserta baru)
+ *      - GET       api/admin/peserta/{id}     (Untuk menampilkan detail satu peserta)
+ *      - PUT       api/admin/peserta/{id}     (Untuk mengupdate data peserta yang dipilih)
+ *      - DELETE    api/admin/peserta/{id}     (Untuk menghapus data peserta yang dipilih)
+ *      - GET       api/admin/export/excel     (Untuk ekspor data peserta ke Excel)
  * Table Activities             :
- *      - SELECT peserta dari tabel peserta
+ *      - SELECT peserta dari tabel peserta dengan filter dan pagination
  *      - INSERT peserta ke tabel peserta
  *      - UPDATE peserta di tabel peserta
  *      - DELETE peserta dari tabel peserta
+ *      - SELECT COUNT(*) untuk pagination
+ * Anchor Links                 :
+ *      - tambah_peserta.tsx
+ *      - edit_peserta.tsx
+ *      - import_file_peserta.tsx
  */

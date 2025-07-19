@@ -9,8 +9,11 @@
  *      - Menampilkan form untuk menambah data soal PG baru.
  *      - Memungkinkan input pertanyaan, beberapa opsi jawaban, dan penentuan kunci jawaban.
  *      - Menyimpan data soal baru ke dalam sistem.
+ *      - Validasi input untuk memastikan kualitas soal.
  * API Methods      / Endpoints :
- *      - POST      /api/v1/soal               (Untuk membuat/menambah data soal baru)
+ *      - POST      api/admin/soal/pg          (Untuk membuat/menambah data soal PG baru)
+ *      - GET       api/lomba                  (Untuk mendapatkan daftar lomba untuk dropdown)
  * Table Activities             :
- *      - INSERT soal pilihan ganda ke tabel soal_pilihan_ganda
+ *      - INSERT soal pilihan ganda ke tabel soal
+ *      - SELECT lomba dari tabel cabang_lomba untuk dropdown
  */

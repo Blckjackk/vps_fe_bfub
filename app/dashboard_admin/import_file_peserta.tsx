@@ -10,8 +10,12 @@
  *      - Melakukan validasi data dari file yang diunggah.
  *      - Memproses dan menyimpan banyak data peserta sekaligus ke sistem.
  *      - Menampilkan status dan hasil dari proses impor.
+ *      - Auto-generate token untuk setiap peserta yang diimpor.
  * API Methods      / Endpoints :
- *      - POST      /api/v1/peserta/import       (Untuk memproses file dan membuat data peserta secara massal)
+ *      - POST      api/admin/import/peserta    (Untuk memproses file dan membuat data peserta secara massal)
+ *      - GET       api/lomba                   (Untuk mendapatkan daftar lomba untuk assignment)
  * Table Activities             :
- *      - INSERT peserta ke tabel peserta
+ *      - INSERT peserta ke tabel peserta (batch import)
+ *      - INSERT token ke tabel token (auto-generate untuk peserta baru)
+ *      - SELECT lomba dari tabel cabang_lomba untuk assignment
  */

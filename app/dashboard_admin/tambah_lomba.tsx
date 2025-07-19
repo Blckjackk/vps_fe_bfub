@@ -9,8 +9,11 @@
  *      - Menampilkan form untuk menambah data lomba baru.
  *      - Melakukan validasi terhadap input data pada form.
  *      - Menyimpan data lomba baru ke dalam sistem.
+ *      - Redirect ke daftar lomba setelah berhasil menyimpan.
  * API Methods      / Endpoints :
- *      - POST      /api/v1/lomba              (Untuk membuat/menambah data lomba baru)
+ *      - POST      api/lomba                  (Untuk membuat/menambah data lomba baru)
+ *      - GET       api/kategori               (Untuk mendapatkan daftar kategori lomba)
  * Table Activities             :
  *      - INSERT lomba ke tabel cabang_lomba
+ *      - SELECT kategori dari tabel kategori untuk dropdown
  */

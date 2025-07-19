@@ -9,8 +9,11 @@
  *      - Menampilkan form untuk menambah data soal esai baru.
  *      - Melakukan validasi terhadap input pada form.
  *      - Menyimpan data soal esai baru ke dalam sistem.
+ *      - Menentukan kriteria penilaian dan bobot soal esai.
  * API Methods      / Endpoints :
- *      - POST      /api/v1/soal               (Untuk membuat/menambah data soal baru)
+ *      - POST      api/admin/soal/essay       (Untuk membuat/menambah data soal esai baru)
+ *      - GET       api/lomba                  (Untuk mendapatkan daftar lomba untuk dropdown)
  * Table Activities             :
  *      - INSERT soal esai ke tabel soal_essay
+ *      - SELECT lomba dari tabel cabang_lomba untuk dropdown
  */

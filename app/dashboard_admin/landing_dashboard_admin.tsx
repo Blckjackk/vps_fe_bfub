@@ -9,16 +9,22 @@
  *      - Menampilkan statistik ringkasan (misal: jumlah lomba, total peserta).
  *      - Menampilkan daftar pendaftar terbaru atau aktivitas terakhir.
  *      - Menyediakan navigasi ke fitur-fitur admin lainnya.
+ *      - Menampilkan grafik dan chart untuk visualisasi data.
  * API Methods      / Endpoints :
- *      - GET       /api/v1/lomba         (Untuk mendapatkan data statistik jumlah lomba)
- *      - GET       /api/v1/peserta       (Untuk mendapatkan data statistik jumlah peserta)
- *      - GET       /api/v1/pendaftaran   (Untuk mendapatkan data statistik jumlah pendaftaran)
- *      - GET       /api/v1/nilai         (Untuk mendapatkan data statistik hasil/nilai yang sudah masuk)
+ *      - GET       api/stats/lomba            (Untuk mendapatkan data statistik jumlah lomba)
+ *      - GET       api/stats/peserta          (Untuk mendapatkan data statistik jumlah peserta)
+ *      - GET       api/stats/pendaftaran      (Untuk mendapatkan data statistik jumlah pendaftaran)
+ *      - GET       api/stats/nilai            (Untuk mendapatkan data statistik hasil/nilai yang sudah masuk)
  * Table Activities             :
- *      - SELECT lomba dari tabel cabang_lomba
- *      - SELECT peserta dari tabel peserta
- *      - SELECT pendaftaran dari tabel pendaftaran
- *      - SELECT nilai dari tabel nilai
- *      - SELECT token dari tabel token
- *      - UPDATE status_token diubah dari aktif menjadi digunakan
+ *      - SELECT COUNT(*) lomba dari tabel cabang_lomba
+ *      - SELECT COUNT(*) peserta dari tabel peserta
+ *      - SELECT COUNT(*) pendaftaran dari tabel pendaftaran
+ *      - SELECT COUNT(*) nilai dari tabel nilai
+ *      - SELECT COUNT(*) token aktif dari tabel token
+ *      - SELECT recent activities untuk dashboard feed
+ * Anchor Links                 :
+ *      - daftar_lomba.tsx      (untuk mengarahkan ke manajemen lomba)
+ *      - data_peserta.tsx      (untuk mengarahkan ke manajemen peserta)
+ *      - hasil_lomba.tsx       (untuk mengarahkan ke hasil lomba)
+ *      - token_lomba.tsx       (untuk mengarahkan ke manajemen token)
  */
