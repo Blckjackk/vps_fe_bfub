@@ -26,9 +26,8 @@
 
 "use client";
 
-import AdminSidebar from "../../../components/admin/AdminSidebar";
 import { useState } from "react";
-import { FaAngleDown, FaTrashAlt, FaEdit} from "react-icons/fa";
+import { FaAngleDown, FaTrashAlt, FaEdit } from "react-icons/fa";
 import Link from "next/link";
 import {
   AlertDialog,
@@ -37,13 +36,40 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogAction,
-  AlertDialogCancel
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 
 const lombaDummy = [
-  { id: 1, nama: "OBN", kode: "091301231", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 110 },
-  { id: 2, nama: "OBI", kode: "123123123", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 110 },
-  { id: 3, nama: "OSA", kode: "13123123", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 105 },
+  {
+    id: 1,
+    nama: "OBN",
+    kode: "091301231",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 110,
+  },
+  {
+    id: 2,
+    nama: "OBI",
+    kode: "123123123",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 110,
+  },
+  {
+    id: 3,
+    nama: "OSA",
+    kode: "13123123",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 105,
+  },
 ];
 
 export default function DaftarLomba() {
@@ -52,25 +78,51 @@ export default function DaftarLomba() {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FB]">
-      <div className="hidden md:block"><AdminSidebar /></div>
+      <div className="hidden md:block">
+      
+      </div>
       <main className="flex-1 p-8 md:p-12">
         <h1 className="text-2xl font-bold mb-8">Daftar Lomba</h1>
-        <Link href="/dashboard_admin/tambah_lomba" className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c] mb-4">
+        <Link
+          href="/dashboard-admin/manajemen-lomba/tambah-lomba"
+          className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c] mb-4"
+        >
           <span className="text-lg">+</span> Tambah Lomba
         </Link>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-            <input type="text" placeholder="Cari Ujian" className="w-full md:w-80 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]" />
-            <button className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]">
-              Filter <span className="ml-1"><FaAngleDown /></span>
-            </button>
-            <button className="bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-gray-500">Pilih Semua</button>
-            <button className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]">Hapus Pilih</button>
-          </div>
+          <input
+            type="text"
+            placeholder="Cari Ujian"
+            className="w-full md:w-80 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+          />
+          <button className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]">
+            Filter{" "}
+            <span className="ml-1">
+              <FaAngleDown />
+            </span>
+          </button>
+          <button className="bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-gray-500">
+            Pilih Semua
+          </button>
+          <button className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]">
+            Hapus Pilih
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full bg-white rounded-xl shadow text-sm">
             <thead>
               <tr className="text-gray-500 text-left">
-                <th className="p-4"><input type="checkbox" checked={allSelected} onChange={e => setSelected(e.target.checked ? lombaDummy.map(l => l.id) : [])} /></th>
+                <th className="p-4">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked ? lombaDummy.map((l) => l.id) : []
+                      )
+                    }
+                  />
+                </th>
                 <th className="p-4">No.</th>
                 <th className="p-4">Nama Lomba</th>
                 <th className="p-4">Kode Grup</th>
@@ -89,7 +141,13 @@ export default function DaftarLomba() {
                     <input
                       type="checkbox"
                       checked={selected.includes(lomba.id)}
-                      onChange={e => setSelected(e.target.checked ? [...selected, lomba.id] : selected.filter(id => id !== lomba.id))}
+                      onChange={(e) =>
+                        setSelected(
+                          e.target.checked
+                            ? [...selected, lomba.id]
+                            : selected.filter((id) => id !== lomba.id)
+                        )
+                      }
                       className="accent-[#6C63FF] w-4 h-4 rounded"
                     />
                   </td>
@@ -102,21 +160,33 @@ export default function DaftarLomba() {
                   <td className="p-4">{lomba.akhir}</td>
                   <td className="p-4">{lomba.jumlah}</td>
                   <td className="p-4 flex gap-2">
-                    <Link href="/dashboard_admin/edit_lomba" className="text-[#223A5F] hover:text-[#185bb5]" title="Edit">
+                    <Link
+                      href="/dashboard-admin/manajemen-lomba/edit-lomba"
+                      className="text-[#223A5F] hover:text-[#185bb5]"
+                      title="Edit"
+                    >
                       <FaEdit />
                     </Link>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="text-[#B94A48] hover:text-[#a53e3c]" title="Hapus"><FaTrashAlt /></button>
+                        <button
+                          className="text-[#B94A48] hover:text-[#a53e3c]"
+                          title="Hapus"
+                        >
+                          <FaTrashAlt />
+                        </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Apakah Anda yakin ingin menghapus data lomba ini? Tindakan ini tidak dapat dibatalkan.
+                          Apakah Anda yakin ingin menghapus data lomba ini?
+                          Tindakan ini tidak dapat dibatalkan.
                         </AlertDialogDescription>
                         <div className="flex justify-end gap-2 mt-4">
                           <AlertDialogCancel>Batal</AlertDialogCancel>
-                          <AlertDialogAction /* onClick={handleDelete} */>Hapus</AlertDialogAction>
+                          <AlertDialogAction /* onClick={handleDelete} */>
+                            Hapus
+                          </AlertDialogAction>
                         </div>
                       </AlertDialogContent>
                     </AlertDialog>
