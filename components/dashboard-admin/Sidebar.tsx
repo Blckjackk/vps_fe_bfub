@@ -3,16 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Trophy, FileText, Ticket, LogOut, CircleUserRound
-} from 'lucide-react';
+  FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaUserCircle
+} from 'react-icons/fa'; // <-- GANTI DARI lucide-react KE react-icons/fa
 
-// Array ini adalah kunci dari semua navigasi.
+// Array navigasi dengan ikon dari react-icons
 const navItems = [
-  { href: '/dashboard-admin', icon: LayoutDashboard, label: 'Dashboard' }, // <-- Menargetkan /app/dashboard-admin/page.tsx
-  { href: '/dashboard-admin/data-peserta', icon: Users, label: 'Data Peserta' }, // <-- Menargetkan /app/dashboard-admin/data-peserta/
-  { href: '/dashboard-admin/manajemen-lomba', icon: Trophy, label: 'Manajemen Lomba' }, // <-- Menargetkan /app/dashboard-admin/manajemen-lomba/
-  { href: '/dashboard-admin/hasil-lomba', icon: FileText, label: 'Hasil Ujian' }, // <-- Menargetkan /app/dashboard-admin/hasil-lomba/
-  { href: '/dashboard-admin/token-lomba', icon: Ticket, label: 'Token' }, // <-- Menargetkan /app/dashboard-admin/token-lomba/
+  { href: '/dashboard-admin', icon: FaHome, label: 'Dashboard' },
+  { href: '/dashboard-admin/data-peserta', icon: FaUsers, label: 'Data Peserta' },
+  { href: '/dashboard-admin/manajemen-lomba/daftar-lomba', icon: FaBorderAll, label: 'Manajemen Lomba' },
+  { href: '/dashboard-admin/hasil-lomba', icon: FaClipboardList, label: 'Hasil Ujian' },
+  { href: '/dashboard-admin/token-lomba', icon: FaKey, label: 'Token' },
 ];
 
 interface SidebarProps {
@@ -22,20 +22,28 @@ interface SidebarProps {
 export default function Sidebar({ onLogoutClick }: SidebarProps) {
   const pathname = usePathname();
 
-  // ... sisa kode sidebar (profile, logo, tombol logout, dll) tetap sama ...
-  // Anda tidak perlu mengubah apa pun di sini jika sudah benar.
-  // Pastikan bagian navigasinya seperti ini:
-
   return (
     <aside className="w-64 flex-shrink-0 bg-white shadow-md flex flex-col p-4">
-      <div className="text-center py-4 border-b mb-4">
-        <h1 className="font-bold text-lg">Bakti Formica Untuk Bangsa</h1>
-        <p className="text-sm">BFUB XXVII</p>
+      <div className="flex items-center gap-x-3 mb-4">
+        <img src="/images/logos/brand/logo-BFUB.png" alt="BFUB Logo" className="w-20 h-20 object-contain"/>
+        <div className="flex flex-col">
+          <span className="font-semibold text-sm text-gray-700 leading-tight">Bakti Formica Untuk Bangsa</span>
+          <span className="text-xs text-gray-500 leading-tight">(BFUB) XXVII</span>
+        </div>
       </div>
-      <div className="flex flex-col items-center text-center my-4">
-        <CircleUserRound size={80} className="text-gray-400 mb-2" />
-        <p className="font-semibold">Admin</p>
-        <p className="text-sm text-gray-500">Admin BFUB</p>
+
+         {/* Profil Admin */}
+      <div className="flex flex-col items-center gap-4 mb-6 mt-2">
+        <div className="w-20 h-20 rounded-full border-2 border-gray-300 flex items-center justify-center">
+          <svg width="48" height="48" fill="none" viewBox="0 0 48 48">
+            <circle cx="24" cy="18" r="9" stroke="#BDBDBD" strokeWidth="2" />
+            <ellipse cx="24" cy="36" rx="14" ry="8" stroke="#BDBDBD" strokeWidth="2" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-gray-800">Admin</div>
+          <div className="text-xs text-gray-500">Admin BFUB</div>
+        </div>
       </div>
 
       <nav className="flex-1 flex flex-col gap-2">
@@ -43,28 +51,26 @@ export default function Sidebar({ onLogoutClick }: SidebarProps) {
           <Link
             key={item.label}
             href={item.href}
-            // Logika di bawah ini yang membuat menu aktif menjadi merah secara otomatis
             className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
               pathname === item.href
-                ? 'bg-red-500 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-[#B94A48] text-white'
+                : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
             <item.icon size={20} />
             <span>{item.label}</span>
           </Link>
         ))}
-      </nav>
 
-      <div className="mt-auto">
+        {/* Tombol Logout langsung di dalam nav */}
         <button
           onClick={onLogoutClick}
-          className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
         >
-          <LogOut size={20} />
+          <FaDoorOpen size={20} />
           <span>Log Out</span>
         </button>
-      </div>
+      </nav>
     </aside>
   );
 }
