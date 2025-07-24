@@ -17,16 +17,20 @@ interface SidebarPesertaProps {
 
 const navItems = [
   {
-    href: "/dashboard_peserta",
+    href: "/dashboard-peserta",
     icon: FaClipboardList,
     label: "Ujian",
   },
   {
-    href: "/dashboard_peserta/profile_peserta",
+    href: "/dashboard-peserta/profile-peserta",
     icon: FaUser,
     label: "Profile",
   },
-  { href: "/dashboard_peserta/hasil_lomba", icon: FaBookOpen, label: "Hasil" },
+  { 
+    href: "/dashboard-peserta/hasil-lomba", 
+    icon: FaBookOpen, 
+    label: "Hasil" 
+  },
 ];
 
 export default function SidebarPeserta({
