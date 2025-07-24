@@ -1,3 +1,6 @@
+'use client';
+
+import Link from 'next/link'; // <-- IMPORT Link
 import { FileText, Trash2 } from 'lucide-react';
 
 // Tipe data untuk setiap baris hasil ujian
@@ -16,11 +19,13 @@ type HasilUjian = {
   isChecked: boolean;
 };
 
-interface HasilUjianTableProps {
+// Definisikan props yang diterima komponen
+interface HasilLombaTableProps {
   hasil: HasilUjian[];
+  onDeleteItem: (id: number) => void; // <-- TAMBAHKAN PROPERTI INI
 }
 
-export default function HasilUjianTable({ hasil }: HasilUjianTableProps) {
+export default function HasilLombaTable({ hasil, onDeleteItem }: HasilLombaTableProps) {
   return (
     <div className="mt-4 bg-white rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -28,7 +33,7 @@ export default function HasilUjianTable({ hasil }: HasilUjianTableProps) {
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               <th scope="col" className="p-4">
-                <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                <input type="checkbox" className="w-4 h-4 rounded" />
               </th>
               <th scope="col" className="px-6 py-3">No.</th>
               <th scope="col" className="px-6 py-3">No.Pendaftaran</th>
@@ -48,12 +53,7 @@ export default function HasilUjianTable({ hasil }: HasilUjianTableProps) {
             {hasil.map((item, index) => (
               <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
                 <td className="w-4 p-4">
-                  <input
-                    type="checkbox"
-                    checked={item.isChecked}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    readOnly
-                  />
+                  <input type="checkbox" checked={item.isChecked} className="w-4 h-4 rounded" readOnly />
                 </td>
                 <td className="px-6 py-4 font-medium">{index + 1}</td>
                 <td className="px-6 py-4">{item.noPendaftaran}</td>
@@ -68,11 +68,18 @@ export default function HasilUjianTable({ hasil }: HasilUjianTableProps) {
                 <td className="px-6 py-4 font-bold text-gray-900">{item.nilai}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
-                    <button className="text-gray-500 hover:text-gray-700">
-                      {/* Ikon untuk 'Lihat Detail' atau 'Lihat Laporan' */}
+                    <Link
+                      href={`/dashboard-admin/hasil-lomba/detail/${item.id}`}
+                      className="text-gray-500 hover:text-blue-600"
+                      title="Lihat Detail">
                       <FileText size={18} />
-                    </button>
-                    <button className="text-red-600 hover:text-red-800">
+                    </Link>
+                    {/* 👇 PERUBAHAN DI SINI 👇 */}
+                    <button 
+                      onClick={() => onDeleteItem(item.id)} 
+                      className="text-red-600 hover:text-red-800" 
+                      title="Hapus Hasil Ujian"
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>
