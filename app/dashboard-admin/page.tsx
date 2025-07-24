@@ -1,5 +1,5 @@
 /**
- * File                         : landing_dashboard_admin.tsx
+ * File                         : page.tsx (landing page for admin dashboard)
  * Created                      : 2025-07-19
  * Last Updated                 : 2025-07-19
  * Url                          : /dashboard-admin
@@ -28,3 +28,40 @@
  *      - hasil_lomba.tsx       (untuk mengarahkan ke hasil lomba)
  *      - token_lomba.tsx       (untuk mengarahkan ke manajemen token)
  */
+
+
+import StatCard from '@/components/dashboard-admin/StatCard';
+import { Users, LayoutGrid, Wifi } from 'lucide-react';
+
+export default function AdminDashboardPage() {
+  return (
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-800">Selamat Datang Admin!</h1>
+
+      <section className="mt-6">
+        <h2 className="text-xl font-bold">Dashboard</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          <StatCard
+            Icon={Users}
+            title="Peserta"
+            value={99}
+          />
+          <StatCard
+            Icon={LayoutGrid}
+            title="Lomba"
+            value={10}
+            iconColor="text-blue-500"
+          />
+          <StatCard
+            Icon={Wifi}
+            title="Peserta Online"
+            value={99}
+            iconColor="text-green-500"
+          />
+        </div>
+      </section>
+
+      {/* Anda bisa menambahkan konten atau komponen lain di sini */}
+    </div>
+  );
+}
