@@ -1,19 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen} from "react-icons/fa";
+import { usePathname } from "next/navigation";
+import { FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaFileExport} from "react-icons/fa";
 
 const menu = [
   { name: "Dashboard", icon: <FaHome />, href: "/dashboard_admin" },
   { name: "Data Peserta", icon: <FaUsers />, href: "/dashboard_admin/data_peserta" },
-  { name: "Manajemen Lomba", icon: <FaBorderAll />, href: "/dashboard_admin/lomba/daftar_lomba", active: true },
+  { name: "Manajemen Lomba", icon: <FaBorderAll />, href: "/dashboard_admin/daftar_lomba" },
   { name: "Hasil Ujian", icon: <FaClipboardList />, href: "/dashboard_admin/hasil_ujian" },
   { name: "Token", icon: <FaKey />, href: "/dashboard_admin/token" },
+  { name: "Ekspor File", icon: <FaFileExport />, href: "/dashboard_admin/export" },
   { name: "Log Out", icon: <FaDoorOpen />, href: "/logout" },
 ];
 
 export default function AdminSidebar() {
+  const pathname = usePathname();
   return (
-    <aside className="w-full md:w-80 h-screen bg-white border-r flex flex-col px-6 py-8 gap-8">
+    <aside className="w-full md:w-80 h-screen bg-white border-r flex flex-col px-6 py-8 gap-8 overflow-y-auto">
       <div className="flex flex-row items-center gap-x-3 mb-8">
         <Image src="/images/logos/brand/logo-BFUB.png" alt="BFUB Logo" width={48} height={48} />      
         <div className="text-xs text-gray-700 font-semibold text-left leading-tight">
@@ -30,18 +33,23 @@ export default function AdminSidebar() {
         </div>
       </div>
       <nav className="flex-1 flex flex-col gap-2">
-        {menu.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium text-sm transition-colors
-              ${item.active ? "bg-[#B94A48] text-white" : "text-gray-700 hover:bg-gray-100"}
-            `}
-          >
-            <span className="text-lg">{item.icon}</span>
-            {item.name}
-          </Link>
-        ))}
+        {menu.map((item) => {
+          const isActive =
+            (item.href === "/dashboard_admin" && pathname === "/dashboard_admin") ||
+            (item.href !== "/dashboard_admin" && item.href !== "/logout" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium text-sm transition-colors
+                ${isActive ? "bg-[#B94A48] text-white" : "text-gray-700 hover:bg-gray-100"}
+              `}
+            >
+              <span className="text-lg">{item.icon}</span>
+              {item.name}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
