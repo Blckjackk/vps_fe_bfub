@@ -115,12 +115,12 @@ export default function LandingPage() {
           </Link>
         </nav>
         <div className="flex gap-2 items-center">
-          <Link href="/page_auth/login">
+          <Link href="/login">
             <Button className="bg-[#C13F3F] text-white rounded-full px-6 py-2 min-w-[120px] hover:bg-[#ac5555]  hover:border-[#a03030]">
               Login
             </Button>
           </Link>
-          <Link href="/page_auth/register">
+          <Link href="/register">
             <Button className="bg-transparent border border-[#C13F3F] text-[#C13F3F] rounded-full px-6 py-2 min-w-[120px] hover:bg-[#fceaea] hover:text-[#a03030] hover:border-[#a03030]">
               Register
             </Button>
@@ -142,7 +142,7 @@ export default function LandingPage() {
             Untuk mengikuti lomba, silakan login terlebih dahulu dengan menekan
             tombol di bawah.
           </p>
-          <Link href="/page_auth/login">
+          <Link href="/login">
             <Button className="bg-[#C13F3F] text-white rounded-full px-6 py-2 min-w-[120px] hover:bg-[#ac5555]  hover:border-[#a03030]">
               Login
             </Button>
