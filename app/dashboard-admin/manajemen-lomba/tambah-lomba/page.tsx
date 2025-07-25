@@ -20,7 +20,6 @@
 
 "use client";
 
-import AdminSidebar from "../../../components/admin/AdminSidebar";
 import Link from "next/link";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
@@ -35,7 +34,9 @@ export default function TambahLomba() {
     jumlahSoal: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -47,16 +48,24 @@ export default function TambahLomba() {
   return (
     <div className="min-h-screen bg-[#FAFBFF] flex">
       <div className="hidden md:block">
-        <AdminSidebar />
       </div>
       <main className="flex-1 flex flex-col items-start justify-start py-12 px-2 md:px-20">
         <div className="w-full max-w-xl">
-          <Link href="/dashboard_admin/daftar_lomba" className="inline-block mb-6">
-            <span className="text-2xl font-bold text-[#223A5F]"><FaArrowLeft /></span>
+          <Link
+            href="/dashboard_admin/daftar_lomba"
+            className="inline-block mb-6"
+          >
+            <span className="text-2xl font-bold text-[#223A5F]">
+              <FaArrowLeft />
+            </span>
           </Link>
           <h1 className="text-2xl font-bold mb-8">Tambah Lomba</h1>
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-8 flex flex-col gap-4">
-            <label className="font-medium text-sm">Nama Lomba
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-xl shadow p-8 flex flex-col gap-4"
+          >
+            <label className="font-medium text-sm">
+              Nama Lomba
               <input
                 type="text"
                 name="nama"
@@ -66,7 +75,8 @@ export default function TambahLomba() {
                 required
               />
             </label>
-            <label className="font-medium text-sm">Kode Grup
+            <label className="font-medium text-sm">
+              Kode Grup
               <input
                 type="text"
                 name="kode"
@@ -76,7 +86,8 @@ export default function TambahLomba() {
                 required
               />
             </label>
-            <label className="font-medium text-sm">Kategori
+            <label className="font-medium text-sm">
+              Kategori
               <select
                 name="kategori"
                 value={form.kategori}
@@ -88,7 +99,8 @@ export default function TambahLomba() {
                 <option value="Esai">Esai</option>
               </select>
             </label>
-            <label className="font-medium text-sm">Waktu Mulai
+            <label className="font-medium text-sm">
+              Waktu Mulai
               <input
                 type="text"
                 name="waktuMulai"
@@ -98,7 +110,8 @@ export default function TambahLomba() {
                 required
               />
             </label>
-            <label className="font-medium text-sm">Waktu Akhir
+            <label className="font-medium text-sm">
+              Waktu Akhir
               <input
                 type="text"
                 name="waktuAkhir"
@@ -108,7 +121,8 @@ export default function TambahLomba() {
                 required
               />
             </label>
-            <label className="font-medium text-sm">Jumlah Soal
+            <label className="font-medium text-sm">
+              Jumlah Soal
               <input
                 type="text"
                 name="jumlahSoal"

@@ -26,7 +26,7 @@
 
 "use client";
 
-import AdminSidebar from "../../../components/admin/AdminSidebar";
+import AdminSidebar from "../../../../components/admin/AdminSidebar";    
 import { useState, useRef, useEffect } from "react";
 import { FaAngleDown, FaTrashAlt, FaEdit} from "react-icons/fa";
 import Link from "next/link";
@@ -37,13 +37,40 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogAction,
-  AlertDialogCancel
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 
 const lombaDummy = [
-  { id: 1, nama: "OBN", kode: "091301231", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 110 },
-  { id: 2, nama: "OBI", kode: "123123123", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 110 },
-  { id: 3, nama: "OSA", kode: "13123123", kategori: "PG dan Esai", durasi: "00:00", mulai: "00:00", akhir: "00:00", jumlah: 105 },
+  {
+    id: 1,
+    nama: "OBN",
+    kode: "091301231",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 110,
+  },
+  {
+    id: 2,
+    nama: "OBI",
+    kode: "123123123",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 110,
+  },
+  {
+    id: 3,
+    nama: "OSA",
+    kode: "13123123",
+    kategori: "PG dan Esai",
+    durasi: "00:00",
+    mulai: "00:00",
+    akhir: "00:00",
+    jumlah: 105,
+  },
 ];
 
 export default function DaftarLomba() {
@@ -95,7 +122,17 @@ export default function DaftarLomba() {
           <table className="w-full bg-white rounded-xl shadow text-sm">
             <thead>
               <tr className="text-gray-500 text-left">
-                <th className="p-4"><input type="checkbox" checked={allSelected} onChange={e => setSelected(e.target.checked ? lombaDummy.map(l => l.id) : [])} /></th>
+                <th className="p-4">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked ? lombaDummy.map((l) => l.id) : []
+                      )
+                    }
+                  />
+                </th>
                 <th className="p-4">No.</th>
                 <th className="p-4">Nama Lomba</th>
                 <th className="p-4">Kode Grup</th>
@@ -114,7 +151,13 @@ export default function DaftarLomba() {
                     <input
                       type="checkbox"
                       checked={selected.includes(lomba.id)}
-                      onChange={e => setSelected(e.target.checked ? [...selected, lomba.id] : selected.filter(id => id !== lomba.id))}
+                      onChange={(e) =>
+                        setSelected(
+                          e.target.checked
+                            ? [...selected, lomba.id]
+                            : selected.filter((id) => id !== lomba.id)
+                        )
+                      }
                       className="accent-[#6C63FF] w-4 h-4 rounded"
                     />
                   </td>
@@ -127,21 +170,33 @@ export default function DaftarLomba() {
                   <td className="p-4">{lomba.akhir}</td>
                   <td className="p-4">{lomba.jumlah}</td>
                   <td className="p-4 flex gap-2">
-                    <Link href="/dashboard_admin/edit_lomba" className="text-[#223A5F] hover:text-[#185bb5]" title="Edit">
+                    <Link
+                      href="/dashboard-admin/manajemen-lomba/edit-lomba"
+                      className="text-[#223A5F] hover:text-[#185bb5]"
+                      title="Edit"
+                    >
                       <FaEdit />
                     </Link>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="text-[#B94A48] hover:text-[#a53e3c]" title="Hapus"><FaTrashAlt /></button>
+                        <button
+                          className="text-[#B94A48] hover:text-[#a53e3c]"
+                          title="Hapus"
+                        >
+                          <FaTrashAlt />
+                        </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Apakah Anda yakin ingin menghapus data lomba ini? Tindakan ini tidak dapat dibatalkan.
+                          Apakah Anda yakin ingin menghapus data lomba ini?
+                          Tindakan ini tidak dapat dibatalkan.
                         </AlertDialogDescription>
                         <div className="flex justify-end gap-2 mt-4">
                           <AlertDialogCancel>Batal</AlertDialogCancel>
-                          <AlertDialogAction /* onClick={handleDelete} */>Hapus</AlertDialogAction>
+                          <AlertDialogAction /* onClick={handleDelete} */>
+                            Hapus
+                          </AlertDialogAction>
                         </div>
                       </AlertDialogContent>
                     </AlertDialog>

@@ -22,15 +22,50 @@
  */
 "use client";
 
-import AdminSidebar from "../../../components/admin/AdminSidebar";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { FaEdit, FaTrashAlt, FaPlus, FaAngleDown, FaArrowLeft, FaFileImport, FaFileExport} from "react-icons/fa";
 
 const dummyPG = [
-  { id: 1, pertanyaan: "Asep...", kode: "091301231", tipe: "PG", media: "PG", a: "a", b: "b", c: "c", d: "d", e: "e", jawaban: "a" },
-  { id: 2, pertanyaan: "Budi", kode: "123123123", tipe: "PG", media: "PG", a: "a", b: "b", c: "c", d: "d", e: "e", jawaban: "g" },
-  { id: 3, pertanyaan: "Andi", kode: "13123123", tipe: "PG", media: "PG", a: "a", b: "b", c: "c", d: "d", e: "e", jawaban: "g" },
+  {
+    id: 1,
+    pertanyaan: "Asep...",
+    kode: "091301231",
+    tipe: "PG",
+    media: "PG",
+    a: "a",
+    b: "b",
+    c: "c",
+    d: "d",
+    e: "e",
+    jawaban: "a",
+  },
+  {
+    id: 2,
+    pertanyaan: "Budi",
+    kode: "123123123",
+    tipe: "PG",
+    media: "PG",
+    a: "a",
+    b: "b",
+    c: "c",
+    d: "d",
+    e: "e",
+    jawaban: "g",
+  },
+  {
+    id: 3,
+    pertanyaan: "Andi",
+    kode: "13123123",
+    tipe: "PG",
+    media: "PG",
+    a: "a",
+    b: "b",
+    c: "c",
+    d: "d",
+    e: "e",
+    jawaban: "g",
+  },
 ];
 const dummyEsai = [
   { id: 1, soal: "Organel Sel ..", bobot: 100 },
@@ -61,40 +96,80 @@ export default function EditLomba() {
   return (
     <div className="min-h-screen bg-[#FAFBFF] flex">
       <div className="hidden md:block">
-        <AdminSidebar />
       </div>
       <main className="flex-1 flex flex-col items-start justify-start py-12 px-2 md:px-0">
         <div className="w-full max-w-xl ml-0 md:ml-16">
-          <Link href="/dashboard_admin/daftar_lomba" className="inline-block mb-6">
-            <span className="text-2xl font-bold text-[#223A5F]"><FaArrowLeft /></span>
+          <Link
+            href="/dashboard_admin/daftar_lomba"
+            className="inline-block mb-6"
+          >
+            <span className="text-2xl font-bold text-[#223A5F]">
+              <FaArrowLeft />
+            </span>
           </Link>
           <h1 className="text-2xl font-bold mb-8">Edit Lomba</h1>
           <form className="bg-white rounded-xl shadow p-8 flex flex-col gap-4">
-            <label className="font-medium text-sm">Nama Lomba
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="Muklis" disabled />
+            <label className="font-medium text-sm">
+              Nama Lomba
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="Muklis"
+                disabled
+              />
             </label>
-            <label className="font-medium text-sm">Kode Grup
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="OIN-11123" disabled />
+            <label className="font-medium text-sm">
+              Kode Grup
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="OIN-11123"
+                disabled
+              />
             </label>
-            <label className="font-medium text-sm">Kategori
-              <select className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" defaultValue="PG, Esai, Isian Singkat">
+            <label className="font-medium text-sm">
+              Kategori
+              <select
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                defaultValue="PG, Esai, Isian Singkat"
+              >
                 <option>PG, Esai, Isian Singkat</option>
                 <option>PG</option>
                 <option>Esai</option>
                 <option>Isian Singkat</option>
               </select>
             </label>
-            <label className="font-medium text-sm">Durasi pengerjaan Soal
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="1 jam" />
+            <label className="font-medium text-sm">
+              Durasi pengerjaan Soal
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="1 jam"
+              />
             </label>
-            <label className="font-medium text-sm">Waktu Mulai
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="08:00" />
+            <label className="font-medium text-sm">
+              Waktu Mulai
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="08:00"
+              />
             </label>
-            <label className="font-medium text-sm">Waktu Akhir
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="09:00" />
+            <label className="font-medium text-sm">
+              Waktu Akhir
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="09:00"
+              />
             </label>
-            <label className="font-medium text-sm">Jumlah Soal
-              <input type="text" className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]" value="10" />
+            <label className="font-medium text-sm">
+              Jumlah Soal
+              <input
+                type="text"
+                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
+                value="10"
+              />
             </label>
           </form>
           <div className="flex flex-col md:flex-row gap-4 mt-6 items-center">
@@ -230,10 +305,31 @@ function SectionSoal({ title, data, selected, setSelected, type }: any) {
         <table className="w-full bg-white rounded-xl shadow text-sm">
           <thead>
             <tr className="text-gray-500 text-left">
-              <th className="p-4"><input type="checkbox" checked={allSelected} onChange={e => setSelected(e.target.checked ? data.map((d: any) => d.id) : [])} /></th>
+              <th className="p-4">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(e) =>
+                    setSelected(
+                      e.target.checked ? data.map((d: any) => d.id) : []
+                    )
+                  }
+                />
+              </th>
               <th className="p-4">No.</th>
               <th className="p-4">{type === "pg" ? "Pertanyaan" : "Soal"}</th>
-              {type === "pg" && <><th className="p-4">Tipe Soal</th><th className="p-4">Media Soal</th><th className="p-4">a</th><th className="p-4">b</th><th className="p-4">c</th><th className="p-4">d</th><th className="p-4">e</th><th className="p-4">Jawaban</th></>}
+              {type === "pg" && (
+                <>
+                  <th className="p-4">Tipe Soal</th>
+                  <th className="p-4">Media Soal</th>
+                  <th className="p-4">a</th>
+                  <th className="p-4">b</th>
+                  <th className="p-4">c</th>
+                  <th className="p-4">d</th>
+                  <th className="p-4">e</th>
+                  <th className="p-4">Jawaban</th>
+                </>
+              )}
               {type !== "pg" && <th className="p-4">Bobot</th>}
               <th className="p-4">Aksi</th>
             </tr>
@@ -245,13 +341,32 @@ function SectionSoal({ title, data, selected, setSelected, type }: any) {
                   <input
                     type="checkbox"
                     checked={selected.includes(item.id)}
-                    onChange={e => setSelected(e.target.checked ? [...selected, item.id] : selected.filter((id: number) => id !== item.id))}
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked
+                          ? [...selected, item.id]
+                          : selected.filter((id: number) => id !== item.id)
+                      )
+                    }
                     className="accent-[#6C63FF] w-4 h-4 rounded"
                   />
                 </td>
                 <td className="p-4">{idx + 1}</td>
-                <td className="p-4 font-semibold">{type === "pg" ? item.pertanyaan : item.soal}</td>
-                {type === "pg" && <><td className="p-4">{item.tipe}</td><td className="p-4">{item.media}</td><td className="p-4">{item.a}</td><td className="p-4">{item.b}</td><td className="p-4">{item.c}</td><td className="p-4">{item.d}</td><td className="p-4">{item.e}</td><td className="p-4">{item.jawaban}</td></>}
+                <td className="p-4 font-semibold">
+                  {type === "pg" ? item.pertanyaan : item.soal}
+                </td>
+                {type === "pg" && (
+                  <>
+                    <td className="p-4">{item.tipe}</td>
+                    <td className="p-4">{item.media}</td>
+                    <td className="p-4">{item.a}</td>
+                    <td className="p-4">{item.b}</td>
+                    <td className="p-4">{item.c}</td>
+                    <td className="p-4">{item.d}</td>
+                    <td className="p-4">{item.e}</td>
+                    <td className="p-4">{item.jawaban}</td>
+                  </>
+                )}
                 {type !== "pg" && <td className="p-4">{item.bobot}</td>}
                 <td className="p-4 flex gap-2">
                   {type === "pg" && (
