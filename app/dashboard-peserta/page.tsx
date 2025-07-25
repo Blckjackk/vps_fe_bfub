@@ -147,6 +147,51 @@ export default function HalamanUjian() {
           </div>
         </div>
       </div>
+
+      {/* Popup Token */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowPopup(false)}
+              aria-label="Tutup"
+            >
+              <FaTimes size={22} />
+            </button>
+            <h2 className="text-2xl font-bold text-center mb-4">
+              Olimpiade Biologi
+            </h2>
+            <div className="text-center text-sm mb-4">
+              <div>Durasi : {waktu} Menit</div>
+              <div>Jumlah Soal : {jumlahSoal}</div>
+              <div>Waktu Mulai : {waktuMulai}</div>
+              <div>Waktu Akhir : {waktuAkhir}</div>
+            </div>
+            <label className="block text-center text-gray-700 font-medium mb-2">
+              Masukkan Token
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-4 text-center"
+              placeholder="Token Ujian"
+              value={inputToken}
+              onChange={(e) => setInputToken(e.target.value)}
+            />
+            <button
+              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
+              onClick={() => {
+                // Validasi token di sini
+                setShowPopup(false);
+                window.location.href = "/cbt";
+                // Lanjut ke ujian...
+              }}
+            >
+              Mulai
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
