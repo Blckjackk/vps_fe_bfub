@@ -1,8 +1,7 @@
-"use client";
 /**
  * File                         : page.tsx (landing page for peserta dashboard)
  * Created                      : 2025-07-24
- * Last Updated                 : 2025-07-24
+ * Last Updated                 : 2025-07-25
  * Url                          : /dashboard-peserta
  * Description                  : Landing dashboard untuk peserta aplikasi website perlombaan BFUB.
  *                                Menampilkan halaman utama ujian dengan instruksi, info token, dan tombol mulai ujian.
@@ -25,13 +24,16 @@
  *      - page_cbt/soal_pg.tsx (untuk memulai ujian)
  */
 
-import React, { useState } from "react";
-import { FaTimes } from "react-icons/fa";
+"use client";
+
+import { useEffect, useState } from "react";
 
 export default function HalamanUjian() {
-  // Data statis untuk demo
-  const namaPeserta = "Ahmad Izzudin Azzam";
-  const asalSekolah = "SMAN 2 Bandung";
+  const [userData, setUserData] = useState<any>(null);
+  
+  // Data statis untuk demo - akan diganti dengan data dari API
+  const [namaPeserta, setNamaPeserta] = useState("Ahmad Izzudin Azzam");
+  const [asalSekolah, setAsalSekolah] = useState("SMAN 2 Bandung");
   const token = "OSA-TOKEN-001";
   const jumlahToken = 5;
   const jumlahSoal = 100;
@@ -39,9 +41,16 @@ export default function HalamanUjian() {
   const waktuMulai = "16.00";
   const waktuAkhir = "17.00";
 
-  // State untuk popup
-  const [showPopup, setShowPopup] = useState(false);
-  const [inputToken, setInputToken] = useState("");
+  useEffect(() => {
+    // Ambil data user dari localStorage
+    const storedUserData = localStorage.getItem("user_data");
+    if (storedUserData) {
+      const user = JSON.parse(storedUserData);
+      setUserData(user);
+      setNamaPeserta(user.nama_lengkap || "Ahmad Izzudin Azzam");
+      setAsalSekolah(user.asal_sekolah || "SMAN 2 Bandung");
+    }
+  }, []);
 
   return (
     <>
@@ -61,14 +70,16 @@ export default function HalamanUjian() {
           <h3 className="font-semibold text-lg mb-4">Instruksi Pengerjaan</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
             <li>
-              Durasi ujian selama {waktu} menit termasuk pengerjaan tipe soal PG
-              dan Esai.
+              Durasi ujian selama {waktu} menit termasuk pengerjaan tipe soal
+              PG dan Esai.
             </li>
             <li>
-              Waktu akan berjalan otomatis sesuai jadwal yang telah di tentukan.
+              Waktu akan berjalan otomatis sesuai jadwal yang telah di
+              tentukan.
             </li>
             <li>
-              Sistem akan mengunci jawaban secara otomatis setelah waktu habis.
+              Sistem akan mengunci jawaban secara otomatis setelah waktu
+              habis.
             </li>
             <li>
               Tidak diperkenankan membuka tab lain selama ujian berlangsung.
@@ -77,7 +88,9 @@ export default function HalamanUjian() {
               Jika peserta membuka tab lain ketika ujian berlangsung sistem
               otomatis akan keluar dan meminta token baru.
             </li>
-            <li>Pastikan koneksi internet stabil selama ujian berlangsung.</li>
+            <li>
+              Pastikan koneksi internet stabil selama ujian berlangsung.
+            </li>
             <li>
               Setiap peserta hanya diperbolehkan mengikuti ujian satu kali.
             </li>
@@ -90,7 +103,9 @@ export default function HalamanUjian() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="font-semibold text-lg mb-4">Informasi Token</h3>
             <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-              <li>Kamu diberikan {jumlahToken} token untuk mengakses ujian.</li>
+              <li>
+                Kamu diberikan {jumlahToken} token untuk mengakses ujian.
+              </li>
               <li>Hanya 1 token aktif yang akan ditampilkan saat ini.</li>
               <li>
                 Setelah token digunakan dan kamu menekan <b>Mulai</b>, token
@@ -125,59 +140,13 @@ export default function HalamanUjian() {
                 <li>Akhir : {waktuAkhir}</li>
               </ul>
             </div>
-            <button
-              className="mt-6 bg-[#D84C3B] hover:bg-red-600 text-white text-sm font-medium py-2 rounded-md transition"
-              onClick={() => setShowPopup(true)}
-            >
+
+            <button className="mt-6 bg-[#D84C3B] hover:bg-red-600 text-white text-sm font-medium py-2 rounded-md transition">
               Mulai
             </button>
           </div>
         </div>
       </div>
-
-      {/* Popup Token */}
-      {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
-              onClick={() => setShowPopup(false)}
-              aria-label="Tutup"
-            >
-              <FaTimes size={22} />
-            </button>
-            <h2 className="text-2xl font-bold text-center mb-4">
-              Olimpiade Biologi
-            </h2>
-            <div className="text-center text-sm mb-4">
-              <div>Durasi : {waktu} Menit</div>
-              <div>Jumlah Soal : {jumlahSoal}</div>
-              <div>Waktu Mulai : {waktuMulai}</div>
-              <div>Waktu Akhir : {waktuAkhir}</div>
-            </div>
-            <label className="block text-center text-gray-700 font-medium mb-2">
-              Masukkan Token
-            </label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-4 text-center"
-              placeholder="Token Ujian"
-              value={inputToken}
-              onChange={(e) => setInputToken(e.target.value)}
-            />
-            <button
-              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
-              onClick={() => {
-                // Validasi token di sini
-                setShowPopup(false);
-                // Lanjut ke ujian...
-              }}
-            >
-              Mulai
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

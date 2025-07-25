@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -5,6 +9,49 @@ import { Button } from "@/components/ui/button";
 import { LuLockKeyhole } from "react-icons/lu";
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Simpan data login ke localStorage
+        localStorage.setItem("session_token", data.data.session_token);
+        localStorage.setItem("user_data", JSON.stringify(data.data.user));
+        localStorage.setItem("user_role", data.data.role);
+
+        // Redirect berdasarkan role
+        router.push(data.data.redirect);
+      } else {
+        setError(data.message || "Login gagal");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan saat login. Periksa koneksi internet Anda.");
+      console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Side - Info & Illustration */}
@@ -39,7 +86,13 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mb-8 text-center max-w-md">
             Masukkan username dan password yang telah kamu buat.
           </p>
-          <form className="w-full flex flex-col gap-4 mb-6">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 mb-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                 <svg
@@ -55,20 +108,30 @@ export default function LoginPage() {
               <Input
                 className="pl-10 rounded-full"
                 placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
+            
             <div className="relative">
               <LuLockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
               <Input
                 className="pl-10 rounded-full"
                 type="password"
                 placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            <Button className="w-full rounded-full bg-[#1877F2] hover:bg-[#1256b0] text-white text-base font-semibold py-2">
-              Login
+            
+            <Button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-full bg-[#1877F2] hover:bg-[#1256b0] text-white text-base font-semibold py-2"
+            >
+              {isLoading ? "Loading..." : "Login"}
             </Button>
           </form>
           <p className="text-center text-sm text-black">
