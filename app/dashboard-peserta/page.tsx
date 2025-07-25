@@ -170,6 +170,7 @@ export default function HalamanUjian() {
               onClick={() => {
                 // Validasi token di sini
                 setShowPopup(false);
+                window.location.href = "/cbt";
                 // Lanjut ke ujian...
               }}
             >
