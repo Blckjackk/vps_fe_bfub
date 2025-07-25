@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaFileExport} from "react-icons/fa";
 
+// versi bener
+
 const menu = [
   { name: "Dashboard", icon: <FaHome />, href: "/dashboard_admin" },
   { name: "Data Peserta", icon: <FaUsers />, href: "/dashboard_admin/data_peserta" },
