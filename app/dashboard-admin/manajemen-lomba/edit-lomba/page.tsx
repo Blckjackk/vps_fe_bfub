@@ -23,16 +23,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import {
-  FaEdit,
-  FaTrashAlt,
-  FaPlus,
-  FaAngleDown,
-  FaArrowLeft,
-  FaFileImport,
-  FaFileExport,
-} from "react-icons/fa";
+import { useState, useRef, useEffect } from "react";
+import { FaEdit, FaTrashAlt, FaPlus, FaAngleDown, FaArrowLeft, FaFileImport, FaFileExport} from "react-icons/fa";
 
 const dummyPG = [
   {
@@ -88,6 +80,18 @@ export default function EditLomba() {
   const [selectedPG, setSelectedPG] = useState<number[]>([]);
   const [selectedEsai, setSelectedEsai] = useState<number[]>([]);
   const [selectedIsian, setSelectedIsian] = useState<number[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !(dropdownRef.current as HTMLDivElement).contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAFBFF] flex">
@@ -168,21 +172,31 @@ export default function EditLomba() {
               />
             </label>
           </form>
+          <div className="flex flex-col md:flex-row gap-4 mt-6 items-center">
+            {/* Dropdown Filter */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]"
+                onClick={() => setShowDropdown((prev: boolean) => !prev)}
+                type="button"
+              >
+                Filter <span className="ml-1"><FaAngleDown /></span>
+              </button>
+              {showDropdown && (
+                <div className="absolute left-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
+                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 1</button>
+                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 2</button>
+                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 3</button>
+                </div>
+              )}
+            </div>
+            {/* Tombol lain jika ada */}
+          </div>
           <div className="flex flex-col md:flex-row gap-4 mt-6">
             <Link href="/dashboard_admin/daftar_lomba" className="flex-1">
-              <button
-                type="button"
-                className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-lg shadow hover:bg-[#a53e3c]"
-              >
-                Back
-              </button>
+              <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">Back</button>
             </Link>
-            <button
-              type="submit"
-              className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-lg shadow hover:bg-[#27ae60]"
-            >
-              Update
-            </button>
+            <button type="submit" className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60]">Update</button>
           </div>
         </div>
         {/* Section Soal PG */}
@@ -216,52 +230,78 @@ export default function EditLomba() {
 
 function SectionSoal({ title, data, selected, setSelected, type }: any) {
   const allSelected = selected.length === data.length && data.length > 0;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   return (
     <section className="w-full max-w-6xl mt-12 ml-0 md:ml-16">
       <h2 className="text-xl font-bold mb-4">{title}</h2>
       <div className="flex flex-wrap gap-2 mb-4">
-        <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
-          <FaPlus /> Tambah PG
-        </button>
-        <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
-          <FaPlus /> Tambah Esai
-        </button>
-        <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
-          <FaPlus /> Tambah Isian Singkat
-        </button>
-        <button className="flex items-center gap-2 bg-[#F6C23E] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#e0b12d]">
-          <span className="text-lg">
-            <FaFileImport />
-          </span>{" "}
-          Import
-        </button>
-        <button className="flex items-center gap-2 bg-[#2176FF] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#185bb5]">
-          <span className="text-lg">
-            <FaFileExport />
-          </span>{" "}
-          Export
-        </button>
+        <Link href="/dashboard_admin/tambah_soal_pg">
+          <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+            <FaPlus /> Tambah PG
+          </button>
+        </Link>
+        <Link href="/dashboard_admin/tambah_soal_esai">
+          <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+            <FaPlus /> Tambah Esai
+          </button>
+        </Link>
+        <Link href="/dashboard_admin/tambah_soal_isian_singkat">
+          <button className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+            <FaPlus /> Tambah Isian Singkat
+          </button>
+        </Link>
+        {type === "pg" && (
+          <Link href="/dashboard_admin/import_soal_pg">
+            <button className="flex items-center gap-2 bg-[#F6C23E] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#e0b12d]">
+              <span className="text-lg"><FaFileImport /></span> Import
+            </button>
+          </Link>
+        )}
+        {type === "esai" && (
+          <Link href="/dashboard_admin/import_soal_esai">
+            <button className="flex items-center gap-2 bg-[#F6C23E] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#e0b12d]">
+              <span className="text-lg"><FaFileImport /></span> Import
+            </button>
+          </Link>
+        )}
+        {type === "isian" && (
+          <Link href="/dashboard_admin/import_soal_isian_singkat">
+            <button className="flex items-center gap-2 bg-[#F6C23E] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#e0b12d]">
+              <span className="text-lg"><FaFileImport /></span> Import
+            </button>
+          </Link>
+        )}
+        <Link href="/dashboard_admin/export">
+          <button className="flex items-center gap-2 bg-[#2176FF] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#185bb5]">
+            <span className="text-lg"><FaFileExport /></span> Export
+          </button>
+        </Link>
       </div>
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Cari Ujian"
-          className="w-full md:w-80 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
-        />
-        <button className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]">
-          Filter{" "}
-          <span className="ml-1">
-            <FaAngleDown />
-          </span>
-        </button>
-        <button className="bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-gray-500">
-          Pilih Semua
-        </button>
-        <button className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]">
-          Hapus Pilih
-        </button>
+        <input type="text" placeholder="Cari Ujian" className="w-full md:w-80 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]" />
+        {/* Ganti tombol Filter menjadi dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]"
+            onClick={() => setShowDropdown((prev: boolean) => !prev)}
+            type="button"
+          >
+            Filter <span className="ml-1"><FaAngleDown /></span>
+          </button>
+          {showDropdown && (
+            <div className="absolute left-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
+              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 1</button>
+              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 2</button>
+              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Filter 3</button>
+            </div>
+          )}
+        </div>
+        <button className="bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-gray-500">Pilih Semua</button>
+        <button className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]">Hapus Pilih</button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto pr-8">
         <table className="w-full bg-white rounded-xl shadow text-sm">
           <thead>
             <tr className="text-gray-500 text-left">
@@ -329,18 +369,22 @@ function SectionSoal({ title, data, selected, setSelected, type }: any) {
                 )}
                 {type !== "pg" && <td className="p-4">{item.bobot}</td>}
                 <td className="p-4 flex gap-2">
-                  <button
-                    className="text-[#223A5F] hover:text-[#185bb5]"
-                    title="Edit"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    className="text-[#B94A48] hover:text-[#a53e3c]"
-                    title="Hapus"
-                  >
-                    <FaTrashAlt />
-                  </button>
+                  {type === "pg" && (
+                    <Link href={`/dashboard_admin/edit_soal_pg?id=${item.id}`}>
+                      <button className="text-[#223A5F] hover:text-[#185bb5]" title="Edit"><FaEdit /></button>
+                    </Link>
+                  )}
+                  {type === "esai" && (
+                    <Link href={`/dashboard_admin/edit_soal_esai?id=${item.id}`}>
+                      <button className="text-[#223A5F] hover:text-[#185bb5]" title="Edit"><FaEdit /></button>
+                    </Link>
+                  )}
+                  {type === "isian" && (
+                    <Link href={`/dashboard_admin/edit_soal_isian_singkat?id=${item.id}`}>
+                      <button className="text-[#223A5F] hover:text-[#185bb5]" title="Edit"><FaEdit /></button>
+                    </Link>
+                  )}
+                  <button className="text-[#B94A48] hover:text-[#a53e3c]" title="Hapus"><FaTrashAlt /></button>
                 </td>
               </tr>
             ))}

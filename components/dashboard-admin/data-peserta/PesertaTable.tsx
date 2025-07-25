@@ -70,7 +70,7 @@ export default function PesertaTable({ peserta, onDeleteItem }: PesertaTableProp
                     </Link>
                     <button
                       onClick={() => onDeleteItem(item.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-[#B94A48] hover:text-[#a53e3c]"
                       title="Hapus Peserta"
                     >
                       <Trash2 size={18} />

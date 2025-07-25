@@ -134,21 +134,11 @@ export default function TambahLomba() {
             </label>
           </form>
           <div className="flex flex-col md:flex-row gap-4 mt-6">
-            <Link href="/dashboard_admin/daftar_lomba" className="flex-1">
-              <button
-                type="button"
-                className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-lg shadow hover:bg-[#a53e3c]"
-              >
-                Back
-              </button>
-            </Link>
-            <button
-              type="submit"
-              className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-lg shadow hover:bg-[#27ae60]"
-            >
-              Submit
-            </button>
-          </div>
+              <Link href="/dashboard_admin/daftar_lomba" className="flex-1">
+                <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">Back</button>
+              </Link>
+              <button type="submit" className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60]">Submit</button>
+            </div>
         </div>
       </main>
     </div>
