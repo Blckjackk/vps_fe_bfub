@@ -6,13 +6,14 @@ import {
   FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaUserCircle
 } from 'react-icons/fa'; // <-- GANTI DARI lucide-react KE react-icons/fa
 
-// Array navigasi dengan ikon dari react-icons
+// Array navigasi dengan ikon dari react-icons - MENU LENGKAP TANPA DUPLIKASI
 const navItems = [
   { href: '/dashboard-admin', icon: FaHome, label: 'Dashboard' },
   { href: '/dashboard-admin/data-peserta', icon: FaUsers, label: 'Data Peserta' },
-  { href: '/dashboard-admin/manajemen-lomba/daftar-lomba', icon: FaBorderAll, label: 'Manajemen Lomba' },
+  { href: '/dashboard-admin/manajemen-lomba', icon: FaBorderAll, label: 'Manajemen Lomba' },
   { href: '/dashboard-admin/hasil-lomba', icon: FaClipboardList, label: 'Hasil Ujian' },
   { href: '/dashboard-admin/token-lomba', icon: FaKey, label: 'Token' },
+  { href: '/dashboard-admin/export', icon: FaClipboardList, label: 'Ekspor File' },
 ];
 
 interface SidebarProps {
@@ -47,25 +48,32 @@ export default function Sidebar({ onLogoutClick }: SidebarProps) {
       </div>
 
       <nav className="flex-1 flex flex-col gap-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-              pathname === item.href
-                ? 'bg-[#B94A48] text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <item.icon size={20} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          // Check if current path starts with item href for better matching
+          const isActive = item.href === '/dashboard-admin' 
+            ? pathname === '/dashboard-admin'
+            : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#B94A48] text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
 
         {/* Tombol Logout langsung di dalam nav */}
         <button
           onClick={onLogoutClick}
-          className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors mt-4"
         >
           <FaDoorOpen size={20} />
           <span>Log Out</span>

@@ -52,7 +52,7 @@ export default function TambahLomba() {
       <main className="flex-1 flex flex-col items-start justify-start py-12 px-2 md:px-20">
         <div className="w-full max-w-xl">
           <Link
-            href="/dashboard_admin/daftar_lomba"
+            href="/dashboard-admin/manajemen-lomba"
             className="inline-block mb-6"
           >
             <span className="text-2xl font-bold text-[#223A5F]">
@@ -134,7 +134,7 @@ export default function TambahLomba() {
             </label>
           </form>
           <div className="flex flex-col md:flex-row gap-4 mt-6">
-              <Link href="/dashboard_admin/daftar_lomba" className="flex-1">
+              <Link href="/dashboard-admin/manajemen-lomba" className="flex-1">
                 <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">Back</button>
               </Link>
               <button type="submit" className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60]">Submit</button>

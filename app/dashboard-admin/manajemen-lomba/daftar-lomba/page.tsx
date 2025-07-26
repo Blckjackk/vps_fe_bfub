@@ -2,7 +2,7 @@
  * File                         : daftar_lomba.tsx
  * Created                      : 2025-07-19
  * Last Updated                 : 2025-07-19
- * Url                          : /dashboard_admin/daftar_lomba
+ * Url                          : /dashboard-admin/manajemen-lomba/daftar-lomba
  * Description                  : Halaman dashboard admin untuk daftar lomba pada aplikasi website perlombaan BFUB.
  *                                Menampilkan daftar lomba yang terdaftar dan fitur manajemen lomba.
  * Functional                   :
@@ -26,7 +26,6 @@
 
 "use client";
 
-import AdminSidebar from "../../../../components/admin/AdminSidebar";    
 import { useState, useRef, useEffect } from "react";
 import { FaAngleDown, FaTrashAlt, FaEdit} from "react-icons/fa";
 import Link from "next/link";
@@ -90,13 +89,11 @@ export default function DaftarLomba() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#FAFBFF]">
-      <div className="hidden md:block"><AdminSidebar /></div>
-      <main className="flex-1 p-8 md:p-12">
-        <h1 className="text-2xl font-bold mb-8">Manajemen Lomba</h1>
-        <Link href="/dashboard_admin/tambah_lomba" className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c] mb-4">
-          <span className="text-lg">+</span> Tambah Lomba
-        </Link>
+    <div className="w-full">
+      <h1 className="text-2xl font-bold mb-8">Manajemen Lomba</h1>
+      <Link href="/dashboard-admin/manajemen-lomba/tambah" className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c] mb-4">
+        <span className="text-lg">+</span> Tambah Lomba
+      </Link>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 w-full">
             <input type="text" placeholder="Cari Ujian" className="flex-1 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]" />
             <div className="relative" ref={dropdownRef}>
@@ -206,7 +203,6 @@ export default function DaftarLomba() {
             </tbody>
           </table>
         </div>
-      </main>
     </div>
   );
 }
