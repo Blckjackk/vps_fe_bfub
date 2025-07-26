@@ -41,6 +41,7 @@ export default function HalamanUjian() {
   const [namaPeserta, setNamaPeserta] = useState("Ahmad Izzudin Azzam");
   const [asalSekolah, setAsalSekolah] = useState("SMAN 2 Bandung");
   const token = "OSA-TOKEN-001";
+  const [tokenAktif, setTokenAktif] = useState<string | null>("Memuat...");
   const jumlahToken = 5;
   const jumlahSoal = 100;
   const waktu = 60;
@@ -56,6 +57,36 @@ export default function HalamanUjian() {
       setNamaPeserta(user.nama_lengkap || "Ahmad Izzudin Azzam");
       setAsalSekolah(user.asal_sekolah || "SMAN 2 Bandung");
     }
+
+    // Ambil token aktif dari localStorage atau API
+
+    const fetchTokenPeserta = async () => {
+      const storedUserData = localStorage.getItem("user_data");
+      if (!storedUserData) {
+        setTokenAktif("Belum login");
+        return;
+      }
+      const user = JSON.parse(storedUserData);
+      const pesertaId = user.id;
+      if (!pesertaId) {
+        setTokenAktif("ID peserta tidak ditemukan");
+        return;
+      }
+      try {
+        const response = await fetch(`http://localhost:8000/api/peserta/ambil-token?peserta_id=${pesertaId}`);
+        const data = await response.json();
+        if (data.success) {
+          setTokenAktif(data.data.kode_token || "Tidak ada token aktif");
+        } else {
+          setTokenAktif("Token tidak ditemukan");
+        }
+      } catch (error) {
+        console.error("Gagal fetch token:", error);
+        setTokenAktif("Gagal mengambil token");
+      }
+    };
+
+    fetchTokenPeserta();
   }, []);
 
   return (
@@ -136,7 +167,7 @@ export default function HalamanUjian() {
               </h4>
               <div className="text-center text-sm mb-4">
                 <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  Token : {token}
+                  Token: {tokenAktif}
                 </span>
               </div>
               <ul className="text-sm text-gray-700 space-y-1 text-center">
