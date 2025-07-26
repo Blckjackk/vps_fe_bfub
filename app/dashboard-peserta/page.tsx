@@ -1,3 +1,6 @@
+"use client";
+
+import { FaTimes } from "react-icons/fa";
 /**
  * File                         : page.tsx (landing page for peserta dashboard)
  * Created                      : 2025-07-24
@@ -24,11 +27,14 @@
  *      - page_cbt/soal_pg.tsx (untuk memulai ujian)
  */
 
-"use client";
-
 import { useEffect, useState } from "react";
 
+// State untuk popup dan input token
+// Dideklarasikan di dalam komponen utama
+
 export default function HalamanUjian() {
+  const [showPopup, setShowPopup] = useState(false);
+  const [inputToken, setInputToken] = useState("");
   const [userData, setUserData] = useState<any>(null);
   
   // Data statis untuk demo - akan diganti dengan data dari API
@@ -141,7 +147,9 @@ export default function HalamanUjian() {
               </ul>
             </div>
 
-            <button className="mt-6 bg-[#D84C3B] hover:bg-red-600 text-white text-sm font-medium py-2 rounded-md transition">
+            <button className="mt-6 bg-[#D84C3B] hover:bg-red-600 text-white text-sm font-medium py-2 rounded-md transition"
+            onClick={() => setShowPopup(true)}
+            >
               Mulai
             </button>
           </div>
