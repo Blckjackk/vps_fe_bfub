@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaUserCircle
+  FaHome, FaUsers, FaBorderAll, FaClipboardList, FaKey, FaDoorOpen, FaUserCircle, FaDownload
 } from 'react-icons/fa'; // <-- GANTI DARI lucide-react KE react-icons/fa
 
 // Array navigasi dengan ikon dari react-icons - MENU LENGKAP TANPA DUPLIKASI
@@ -13,7 +13,7 @@ const navItems = [
   { href: '/dashboard-admin/manajemen-lomba', icon: FaBorderAll, label: 'Manajemen Lomba' },
   { href: '/dashboard-admin/hasil-lomba', icon: FaClipboardList, label: 'Hasil Ujian' },
   { href: '/dashboard-admin/token-lomba', icon: FaKey, label: 'Token' },
-  { href: '/dashboard-admin/export', icon: FaClipboardList, label: 'Ekspor File' },
+  { href: '/dashboard-admin/export', icon: FaDownload, label: 'Ekspor File' },
 ];
 
 interface SidebarProps {
