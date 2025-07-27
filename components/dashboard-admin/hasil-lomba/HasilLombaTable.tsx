@@ -22,10 +22,11 @@ type HasilUjian = {
 // Definisikan props yang diterima komponen
 interface HasilLombaTableProps {
   hasil: HasilUjian[];
-  onDeleteItem: (id: number) => void; // <-- TAMBAHKAN PROPERTI INI
+  onDeleteItem: (id: number) => void;
+  onSelectItem?: (id: number) => void;
 }
 
-export default function HasilLombaTable({ hasil, onDeleteItem }: HasilLombaTableProps) {
+export default function HasilLombaTable({ hasil, onDeleteItem, onSelectItem }: HasilLombaTableProps) {
   return (
     <div className="mt-4 bg-white rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -53,7 +54,12 @@ export default function HasilLombaTable({ hasil, onDeleteItem }: HasilLombaTable
             {hasil.map((item, index) => (
               <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
                 <td className="w-4 p-4">
-                  <input type="checkbox" checked={item.isChecked} className="w-4 h-4 rounded" readOnly />
+                  <input 
+                    type="checkbox" 
+                    checked={item.isChecked} 
+                    onChange={() => onSelectItem?.(item.id)}
+                    className="w-4 h-4 rounded" 
+                  />
                 </td>
                 <td className="px-6 py-4 font-medium">{index + 1}</td>
                 <td className="px-6 py-4">{item.noPendaftaran}</td>

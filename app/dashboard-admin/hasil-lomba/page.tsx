@@ -30,25 +30,160 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Download, ChevronDown, Trash2, FileText } from 'lucide-react';
 import HasilLombaTable from '@/components/dashboard-admin/hasil-lomba/HasilLombaTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 
-// Data dummy. Di aplikasi nyata, data ini akan diambil dari API.
-const mockHasilUjian = [
-    { id: 1, noPendaftaran: '091301231', nama: 'Asep', cabor: 'OBN', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 90, soalSalah: 10, nilai: 90, isChecked: true },
-    { id: 2, noPendaftaran: '123123123', nama: 'Budi', cabor: 'OSA', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 40, soalSalah: 60, nilai: 40, isChecked: true },
-    { id: 3, noPendaftaran: '123123123', nama: 'Andi', cabor: 'CBN', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 80, soalSalah: 20, nilai: 80, isChecked: false },
-    { id: 4, noPendaftaran: '124124', nama: 'Dimas', cabor: 'OSA', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 50, soalSalah: 50, nilai: 50, isChecked: false },
-    { id: 5, noPendaftaran: '12412414', nama: 'Alfi', cabor: 'OBN', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 80, soalSalah: 20, nilai: 80, isChecked: false },
-    { id: 6, noPendaftaran: '124124124', nama: 'Azam', cabor: 'OBI', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 70, soalSalah: 30, nilai: 70, isChecked: true },
-    { id: 7, noPendaftaran: '5324234', nama: 'Muklis', cabor: 'OBN', mulai: '00:00', selesai: '00:00', jumlahSoal: 100, soalTerjawab: 100, soalBenar: 40, soalSalah: 60, nilai: 40, isChecked: false },
-];
+// Tipe data untuk hasil ujian
+type HasilUjian = {
+  id: number;
+  noPendaftaran: string;
+  nama: string;
+  cabor: string;
+  mulai: string;
+  selesai: string;
+  jumlahSoal: number;
+  soalTerjawab: number;
+  soalBenar: number;
+  soalSalah: number;
+  nilai: number;
+  asal_sekolah: string;
+  waktu_pengerjaan: string;
+  isChecked: boolean;
+};
+
+type Lomba = {
+  id: number;
+  nama_cabang: string;
+};
 
 export default function HasilUjianPage() {
+  const [hasilUjian, setHasilUjian] = useState<HasilUjian[]>([]);
+  const [lombaList, setLombaList] = useState<Lomba[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLomba, setSelectedLomba] = useState<string>('');
+  const [sortBy, setSortBy] = useState('nilai');
+  
+  // Modal states
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | string | null>(null);
+
+  // Fetch data hasil lomba
+  const fetchHasilLomba = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (selectedLomba) params.append('lomba_id', selectedLomba);
+
+      const response = await fetch(`http://localhost:8000/api/admin/hasil/lomba?${params}`);
+      const data = await response.json();
+
+      if (data.success) {
+        let hasil = data.data;
+        
+        // Sort data
+        hasil.sort((a: HasilUjian, b: HasilUjian) => {
+          switch (sortBy) {
+            case 'nilai':
+              return b.nilai - a.nilai;
+            case 'nama':
+              return a.nama.localeCompare(b.nama);
+            case 'waktu':
+              return new Date(b.selesai).getTime() - new Date(a.selesai).getTime();
+            default:
+              return b.nilai - a.nilai;
+          }
+        });
+
+        setHasilUjian(hasil);
+      } else {
+        setError(data.message || 'Gagal mengambil data hasil lomba');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan saat mengambil data');
+      console.error('Error fetching hasil lomba:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch daftar lomba untuk filter
+  const fetchLombaList = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/lomba');
+      const data = await response.json();
+      
+      if (data.success) {
+        setLombaList(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching lomba list:', err);
+    }
+  };
+
+  // Delete hasil peserta
+  const deleteHasilPeserta = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh data setelah delete
+        fetchHasilLomba();
+        alert('Hasil peserta berhasil dihapus');
+      } else {
+        alert(data.message || 'Gagal menghapus hasil peserta');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat menghapus data');
+      console.error('Error deleting hasil:', err);
+    }
+  };
+
+  // Export hasil ke Excel
+  const exportHasil = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin/export/excel');
+      const data = await response.json();
+      
+      if (data.success && data.data.download_url) {
+        // Download file
+        const link = document.createElement('a');
+        link.href = data.data.download_url;
+        link.download = data.data.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        alert('File berhasil didownload');
+      } else {
+        alert('Gagal melakukan export');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat export');
+      console.error('Error exporting:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchHasilLomba();
+    fetchLombaList();
+  }, []);
+
+  useEffect(() => {
+    const delayedSearch = setTimeout(() => {
+      fetchHasilLomba();
+    }, 500);
+
+    return () => clearTimeout(delayedSearch);
+  }, [searchTerm, selectedLomba, sortBy]);
 
   const handleOpenDeleteModal = (id: number | string) => {
     setItemToDelete(id);
@@ -56,10 +191,53 @@ export default function HasilUjianPage() {
   };
 
   const handleConfirmDelete = () => {
-    console.log(`Menghapus hasil ujian dengan ID: ${itemToDelete}`);
+    if (typeof itemToDelete === 'number') {
+      deleteHasilPeserta(itemToDelete);
+    } else if (itemToDelete === 'selected') {
+      // Handle bulk delete
+      const selectedIds = hasilUjian.filter(item => item.isChecked).map(item => item.id);
+      selectedIds.forEach(id => deleteHasilPeserta(id));
+    }
     setDeleteModalOpen(false);
     setItemToDelete(null);
   };
+
+  // Toggle all checkboxes
+  const handleSelectAll = () => {
+    const allChecked = hasilUjian.every(item => item.isChecked);
+    setHasilUjian(prev => prev.map(item => ({ ...item, isChecked: !allChecked })));
+  };
+
+  // Toggle individual checkbox
+  const handleSelectItem = (id: number) => {
+    setHasilUjian(prev => 
+      prev.map(item => 
+        item.id === id ? { ...item, isChecked: !item.isChecked } : item
+      )
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        <p>Error: {error}</p>
+        <button 
+          onClick={fetchHasilLomba}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -73,38 +251,67 @@ export default function HasilUjianPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Cari Ujian"
+                placeholder="Cari Nama atau No. Pendaftaran"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-64"
               />
             </div>
-            <button className="flex justify-between items-center w-full md:w-auto gap-2 px-4 py-2 border rounded-lg text-white bg-blue-500 hover:bg-blue-600">
-              <span>Nilai Tertinggi</span>
-              <ChevronDown size={16} />
-            </button>
-            <button className="flex justify-between items-center w-full md:w-auto gap-2 px-4 py-2 border rounded-lg text-white bg-blue-500 hover:bg-blue-600">
-              <Filter size={16} />
-              <span>Filter</span>
-              <ChevronDown size={16} />
-            </button>
+            
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border rounded-lg text-gray-700 bg-white"
+            >
+              <option value="nilai">Nilai Tertinggi</option>
+              <option value="nama">Nama A-Z</option>
+              <option value="waktu">Waktu Selesai</option>
+            </select>
+
+            <select
+              value={selectedLomba}
+              onChange={(e) => setSelectedLomba(e.target.value)}
+              className="px-4 py-2 border rounded-lg text-gray-700 bg-white"
+            >
+              <option value="">Semua Lomba</option>
+              {lombaList.map(lomba => (
+                <option key={lomba.id} value={lomba.id.toString()}>
+                  {lomba.nama_cabang}
+                </option>
+              ))}
+            </select>
+
             <div className="flex-grow hidden md:block"></div> {/* Spacer */}
+            
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <button className="w-full md:w-auto px-4 py-2 border rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300">
-                Pilih Semua
+              <button 
+                onClick={handleSelectAll}
+                className="w-full md:w-auto px-4 py-2 border rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300"
+              >
+                {hasilUjian.every(item => item.isChecked) ? 'Batal Pilih' : 'Pilih Semua'}
               </button>
               <button 
                 onClick={() => handleOpenDeleteModal('selected')}
-                className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                disabled={!hasilUjian.some(item => item.isChecked)}
+                className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
               >
                 Hapus Pilih
               </button>
-              <button className="flex w-full md:w-auto items-center justify-center gap-2 px-4 py-2 border rounded-lg text-white bg-blue-500 hover:bg-blue-600">
+              <button 
+                onClick={exportHasil}
+                className="flex w-full md:w-auto items-center justify-center gap-2 px-4 py-2 border rounded-lg text-white bg-blue-500 hover:bg-blue-600"
+              >
                 <Download size={16} />
                 <span>Export</span>
               </button>
             </div>
           </div>
 
-          <HasilLombaTable hasil={mockHasilUjian} onDeleteItem={handleOpenDeleteModal} />
+          <HasilLombaTable 
+            hasil={hasilUjian} 
+            onDeleteItem={handleOpenDeleteModal}
+            onSelectItem={handleSelectItem}
+          />
         </div>
       </div>
 
@@ -113,7 +320,11 @@ export default function HasilUjianPage() {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Hapus"
-        message="Apakah kamu yakin ingin menghapus hasil ujian peserta tersebut?"
+        message={
+          typeof itemToDelete === 'number' 
+            ? "Apakah kamu yakin ingin menghapus hasil ujian peserta tersebut?" 
+            : "Apakah kamu yakin ingin menghapus semua hasil ujian yang dipilih?"
+        }
       />
     </>
   );
