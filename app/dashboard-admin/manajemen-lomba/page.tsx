@@ -1,42 +1,87 @@
-/**
- * File                         : page.tsx (page for manajemen lomba in admin dashboard)
- * Created                      : 2025-07-19
- * Last Updated                 : 2025-07-19
- * Url                          : /dashboard-admin/daftar-lomba
- * Description                  : Halaman dashboard admin untuk daftar lomba pada aplikasi website perlombaan BFUB.
- *                                Menampilkan daftar lomba yang terdaftar dan fitur manajemen lomba.
- * Functional                   :
- *      - Menampilkan daftar semua lomba dengan paginasi.
- *      - Menyediakan fitur pencarian dan filter lomba.
- *      - Memungkinkan admin untuk menambah, melihat detail, mengedit, dan menghapus data lomba.
- *      - Menyediakan fitur bulk actions untuk operasi massal.
- * API Methods      / Endpoints :
- *      - GET       api/lomba                  (Untuk menampilkan seluruh data lomba dengan pagination)
- *      - POST      api/lomba                  (Untuk membuat/menambah data lomba baru)
- *      - GET       api/lomba/{id}             (Untuk menampilkan detail dari satu lomba)
- *      - PUT       api/lomba/{id}             (Untuk mengupdate data lomba yang dipilih)
- *      - DELETE    api/lomba/{id}             (Untuk menghapus data lomba yang dipilih)
- * Table Activities             :
- *      - SELECT lomba dari tabel cabang_lomba dengan filter dan pagination
- *      - INSERT lomba ke tabel cabang_lomba
- *      - UPDATE lomba di tabel cabang_lomba
- *      - DELETE lomba dari tabel cabang_lomba
- *      - SELECT COUNT(*) untuk pagination
- */
+'use client';
 
-
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import LombaTable from '@/components/dashboard-admin/manajemen-lomba/LombaTable';
 import { Plus, Search, Filter } from 'lucide-react';
 
-// Data dummy. Di aplikasi nyata, data ini akan diambil dari API.
-const mockLomba = [
-    { id: 1, namaLomba: 'OBN', kodeGrup: '091301231', kategori: 'PG dan Esai', durasi: '00:00', mulai: '00:00', akhir: '00:00', jumlahSoal: 110, isChecked: true },
-    { id: 2, namaLomba: 'OBI', kodeGrup: '123123123', kategori: 'PG dan Esai', durasi: '00:00', mulai: '00:00', akhir: '00:00', jumlahSoal: 110, isChecked: true },
-    { id: 3, namaLomba: 'OSA', kodeGrup: '13123123', kategori: 'PG dan Esai', durasi: '00:00', mulai: '00:00', akhir: '00:00', jumlahSoal: 105, isChecked: false },
-];
-
+// Interface untuk data lomba dari API
+interface LombaData {
+  id: number;
+  nama_cabang: string;
+  deskripsi_lomba: string;
+  waktu_mulai_pengerjaan: string;
+  waktu_akhir_pengerjaan: string;
+  jumlah_peserta: number;
+  jumlah_soal_pg: number;
+  jumlah_soal_essay: number;
+  jumlah_soal_isian: number;
+  total_soal: number;
+}
 
 export default function ManajemenLombaPage() {
+  const [lombaData, setLombaData] = useState<LombaData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState('');
+
+  // Fetch data lomba dari API
+  const fetchLomba = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8000/api/lomba', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setLombaData(data.data);
+        setError('');
+      } else {
+        setError(data.message || 'Gagal memuat data lomba');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Terjadi kesalahan koneksi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLomba();
+  }, []);
+
+  // Convert data untuk kompatibilitas dengan LombaTable yang sudah ada
+  const convertedLomba = lombaData.map(item => ({
+    id: item.id,
+    namaLomba: item.nama_cabang,
+    kodeGrup: `LOMBA-${item.id.toString().padStart(3, '0')}`,
+    kategori: `${item.jumlah_soal_pg > 0 ? 'PG' : ''}${item.jumlah_soal_pg > 0 && (item.jumlah_soal_essay > 0 || item.jumlah_soal_isian > 0) ? ', ' : ''}${item.jumlah_soal_essay > 0 ? 'Essay' : ''}${item.jumlah_soal_essay > 0 && item.jumlah_soal_isian > 0 ? ', ' : ''}${item.jumlah_soal_isian > 0 ? 'Isian' : ''}`,
+    durasi: '120 menit', // Default duration
+    mulai: item.waktu_mulai_pengerjaan ? new Date(item.waktu_mulai_pengerjaan).toLocaleDateString('id-ID') : '-',
+    akhir: item.waktu_akhir_pengerjaan ? new Date(item.waktu_akhir_pengerjaan).toLocaleDateString('id-ID') : '-',
+    jumlahSoal: item.total_soal,
+    isChecked: false
+  }));
+
+  // Filter data berdasarkan search term
+  const filteredLomba = convertedLomba.filter(lomba =>
+    lomba.namaLomba.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lomba.kodeGrup.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lomba.kategori.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle search
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-gray-800">Daftar Lomba</h1>
@@ -44,11 +89,27 @@ export default function ManajemenLombaPage() {
       <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
         {/* Tombol Aksi Utama */}
         <div>
-          <button className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
+          <Link 
+            href="/dashboard-admin/manajemen-lomba/tambah"
+            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors"
+          >
             <Plus size={18} />
             Tambah Lomba
-          </button>
+          </Link>
         </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600">{error}</p>
+            <button 
+              onClick={fetchLomba}
+              className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
 
         {/* Filter dan Aksi Tabel */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -56,7 +117,9 @@ export default function ManajemenLombaPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Cari Ujian"
+              placeholder="Cari Lomba"
+              value={searchTerm}
+              onChange={handleSearch}
               className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-80 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
@@ -74,9 +137,19 @@ export default function ManajemenLombaPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p className="mt-2 text-gray-600">Memuat data lomba...</p>
+          </div>
+        )}
+
         {/* Tabel Data Lomba */}
-        <LombaTable lomba={mockLomba} />
+        {!loading && (
+          <LombaTable lomba={filteredLomba} />
+        )}
       </div>
     </div>
-  )
+  );
 }

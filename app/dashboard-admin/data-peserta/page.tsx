@@ -42,7 +42,6 @@ import Link from 'next/link'; // Pastikan Link di-importe.tsx (page for data pes
 import { useState, useEffect } from 'react';
 // 👇 PERBAIKAN UTAMA ADA DI 3 BARIS IMPORT DI BAWAH INI 👇
 // import StatCard from '@/components/dashboard-admin/StatCard'; // Temporary disabled
-import PesertaTable from '@/components/dashboard-admin/data-peserta/PesertaTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
 import Link from 'next/link'; // Pastikan Link di-import

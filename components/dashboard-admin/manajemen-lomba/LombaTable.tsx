@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 // Tipe data untuk setiap Lomba
 type Lomba = {
@@ -59,10 +60,14 @@ export default function LombaTable({ lomba }: LombaTableProps) {
                 <td className="px-6 py-4">{item.jumlahSoal}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
-                    <button className="text-blue-600 hover:text-blue-800">
+                    <Link 
+                      href={`/dashboard-admin/manajemen-lomba/edit?id=${item.id}`}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Edit Lomba"
+                    >
                       <Pencil size={18} />
-                    </button>
-                    <button className="text-red-600 hover:text-red-800">
+                    </Link>
+                    <button className="text-red-600 hover:text-red-800" title="Hapus Lomba">
                       <Trash2 size={18} />
                     </button>
                   </div>
