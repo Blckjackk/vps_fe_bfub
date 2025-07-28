@@ -6,7 +6,6 @@ type Lomba = {
   id: number;
   namaLomba: string;
   kodeGrup: string;
-  kategori: string;
   durasi: string;
   mulai: string;
   akhir: string;
@@ -25,13 +24,10 @@ export default function LombaTable({ lomba }: LombaTableProps) {
         <table className="w-full text-sm text-left text-gray-600">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              <th scope="col" className="p-4">
-                <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
-              </th>
+              
               <th scope="col" className="px-6 py-3">No.</th>
               <th scope="col" className="px-6 py-3">Nama Lomba</th>
               <th scope="col" className="px-6 py-3">Kode Grup</th>
-              <th scope="col" className="px-6 py-3">Kategori</th>
               <th scope="col" className="px-6 py-3">Durasi</th>
               <th scope="col" className="px-6 py-3">Mulai</th>
               <th scope="col" className="px-6 py-3">Akhir</th>
@@ -42,18 +38,10 @@ export default function LombaTable({ lomba }: LombaTableProps) {
           <tbody>
             {lomba.map((item, index) => (
               <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
-                <td className="w-4 p-4">
-                  <input
-                    type="checkbox"
-                    checked={item.isChecked}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    readOnly
-                  />
-                </td>
+                
                 <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
                 <td className="px-6 py-4">{item.namaLomba}</td>
                 <td className="px-6 py-4">{item.kodeGrup}</td>
-                <td className="px-6 py-4">{item.kategori}</td>
                 <td className="px-6 py-4">{item.durasi}</td>
                 <td className="px-6 py-4">{item.mulai}</td>
                 <td className="px-6 py-4">{item.akhir}</td>

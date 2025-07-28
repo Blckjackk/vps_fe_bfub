@@ -1,6 +1,187 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+// Modal CRUD Tambah Soal
+interface ModalTambahSoalProps {
+  open: boolean;
+  tipe: 'pg' | 'essay' | 'isian' | null;
+  onClose: () => void;
+  lombaId: string | null;
+}
+
+interface ModalTambahSoalProps {
+  open: boolean;
+  tipe: 'pg' | 'essay' | 'isian' | null;
+  onClose: () => void;
+  lombaId: string | null;
+  editData?: any | null;
+}
+
+const ModalTambahSoal: React.FC<ModalTambahSoalProps> = ({ open, tipe, onClose, lombaId, editData }) => {
+  const [form, setForm] = React.useState<any>({});
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    if (open) {
+      if (editData) {
+        setForm(editData);
+      } else {
+        setForm({});
+      }
+    }
+    setLoading(false); // Always set loading to false when modal opens or changes
+    // eslint-disable-next-line
+  }, [open, tipe, editData]);
+
+  if (!open || !tipe) return null;
+
+  // Form submit handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    let endpoint = '';
+    let body: any = {};
+    let method = 'POST';
+    let url = '';
+    if (!lombaId) {
+      setError('Cabang lomba ID tidak ditemukan. Silakan akses halaman dari menu manajemen lomba.');
+      setLoading(false);
+      return;
+    }
+    if (tipe === 'pg') {
+      endpoint = 'pg';
+      body = {
+        lomba_id: lombaId,
+        pertanyaan: form.pertanyaan,
+        opsi_a: form.opsi_a,
+        opsi_b: form.opsi_b,
+        opsi_c: form.opsi_c,
+        opsi_d: form.opsi_d,
+        opsi_e: form.opsi_e,
+        jawaban_benar: form.jawaban_benar,
+      };
+    } else if (tipe === 'essay') {
+      endpoint = 'essay';
+      body = {
+        lomba_id: lombaId,
+        pertanyaan_essay: form.pertanyaan_essay,
+      };
+    } else if (tipe === 'isian') {
+      endpoint = 'isian-singkat';
+      body = {
+        lomba_id: lombaId,
+        pertanyaan_isian: form.pertanyaan_isian,
+        jawaban_benar: form.jawaban_benar,
+      };
+    }
+    if (editData && editData.id) {
+      // Edit mode
+      method = 'PUT';
+      url = `http://localhost:8000/api/admin/soal/${endpoint}/${editData.id}`;
+    } else {
+      // Add mode
+      url = `http://localhost:8000/api/admin/soal/${endpoint}`;
+    }
+    try {
+      const res = await fetch(url,
+        {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(body),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        onClose();
+      } else {
+        setError(data.message || (editData ? 'Gagal mengedit soal' : 'Gagal menambah soal'));
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      {/* Blurred overlay, darker and less blur */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur pointer-events-auto transition-all" />
+      <div className="relative z-10 w-full max-w-md mx-4 pointer-events-auto">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xl px-8 py-7 w-full">
+          <button onClick={onClose} type="button" className="absolute top-5 right-6 text-gray-400 hover:text-gray-600 text-2xl focus:outline-none">&times;</button>
+          <div className="mb-2">
+            <h2 className="text-xl font-semibold mb-1">{editData ? 'Edit Soal' : 'Tambah Soal Baru'}</h2>
+            <p className="text-gray-500 text-sm mb-3">{tipe === 'pg' ? 'Buat atau edit soal pilihan ganda' : tipe === 'essay' ? 'Buat atau edit soal essay' : 'Buat atau edit soal isian singkat'}</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+          {tipe === 'pg' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pertanyaan</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none" placeholder="Tulis pertanyaan..." value={form.pertanyaan||''} onChange={e=>setForm(f=>({...f, pertanyaan:e.target.value}))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Opsi A</label>
+                  <input required className="w-full border border-gray-200 rounded-lg px-3 py-2" placeholder="Opsi A" value={form.opsi_a||''} onChange={e=>setForm(f=>({...f, opsi_a:e.target.value}))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Opsi B</label>
+                  <input required className="w-full border border-gray-200 rounded-lg px-3 py-2" placeholder="Opsi B" value={form.opsi_b||''} onChange={e=>setForm(f=>({...f, opsi_b:e.target.value}))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Opsi C</label>
+                  <input required className="w-full border border-gray-200 rounded-lg px-3 py-2" placeholder="Opsi C" value={form.opsi_c||''} onChange={e=>setForm(f=>({...f, opsi_c:e.target.value}))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Opsi D</label>
+                  <input required className="w-full border border-gray-200 rounded-lg px-3 py-2" placeholder="Opsi D" value={form.opsi_d||''} onChange={e=>setForm(f=>({...f, opsi_d:e.target.value}))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Opsi E</label>
+                  <input required className="w-full border border-gray-200 rounded-lg px-3 py-2" placeholder="Opsi E" value={form.opsi_e||''} onChange={e=>setForm(f=>({...f, opsi_e:e.target.value}))} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Jawaban Benar</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="A/B/C/D/E" value={form.jawaban_benar||''} onChange={e=>setForm(f=>({...f, jawaban_benar:e.target.value}))} />
+              </div>
+            </>
+          )}
+          {tipe === 'essay' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pertanyaan Essay</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Tulis pertanyaan essay..." value={form.pertanyaan_essay||''} onChange={e=>setForm(f=>({...f, pertanyaan_essay:e.target.value}))} />
+              </div>
+            </>
+          )}
+          {tipe === 'isian' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pertanyaan Isian</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Tulis pertanyaan isian..." value={form.pertanyaan_isian||''} onChange={e=>setForm(f=>({...f, pertanyaan_isian:e.target.value}))} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Jawaban Benar</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Tulis jawaban benar..." value={form.jawaban_benar||''} onChange={e=>setForm(f=>({...f, jawaban_benar:e.target.value}))} />
+              </div>
+            </>
+          )}
+          {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+          <div className="flex flex-row-reverse gap-2 pt-2">
+            <button type="submit" disabled={loading} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">{loading ? 'Menyimpan...' : (editData ? 'Simpan Perubahan' : 'Simpan')}</button>
+            <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50">Batal</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
@@ -101,6 +282,8 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 };
 
 export default function EditLombaPage() {
+  // Modal tambah/edit soal
+  const [modalTambah, setModalTambah] = useState<{ open: boolean; tipe: 'pg' | 'essay' | 'isian' | null; editData?: any | null }>({ open: false, tipe: null });
   const searchParams = useSearchParams();
   const router = useRouter();
   const lombaId = searchParams.get('id');
@@ -111,7 +294,7 @@ export default function EditLombaPage() {
   const [activeTab, setActiveTab] = useState<'info' | 'pg' | 'essay' | 'isian'>('info');
   
   // Modal states
-  const [editingSoal, setEditingSoal] = useState<any>(null);
+  // const [editingSoal, setEditingSoal] = useState<any>(null);
   
   // Confirmation dialog states
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -157,7 +340,7 @@ export default function EditLombaPage() {
       setError('ID Lomba tidak ditemukan');
       setLoading(false);
     }
-  }, [lombaId]);
+  }, [lombaId, modalTambah.open]); // refresh after modal close
 
   // Handle delete soal
   const handleDeleteSoal = (type: 'pg' | 'essay' | 'isian', id: number) => {
@@ -245,6 +428,7 @@ export default function EditLombaPage() {
         <Link 
           href="/dashboard-admin/manajemen-lomba"
           className="flex items-center gap-2 px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+          passHref
         >
           <ArrowLeft size={16} />
           Kembali
@@ -334,7 +518,7 @@ export default function EditLombaPage() {
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Pilihan Ganda</h3>
                 <button
-                  onClick={() => alert('Fitur tambah soal akan segera hadir!')}
+                  onClick={() => setModalTambah({ open: true, tipe: 'pg' })}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   <Plus size={16} />
@@ -355,7 +539,7 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                            onClick={() => setModalTambah({ open: true, tipe: 'pg', editData: soal })}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
@@ -391,7 +575,7 @@ export default function EditLombaPage() {
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Essay</h3>
                 <button
-                  onClick={() => alert('Fitur tambah soal akan segera hadir!')}
+                  onClick={() => setModalTambah({ open: true, tipe: 'essay' })}
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                 >
                   <Plus size={16} />
@@ -412,7 +596,7 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                            onClick={() => setModalTambah({ open: true, tipe: 'essay', editData: soal })}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
@@ -438,7 +622,7 @@ export default function EditLombaPage() {
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Isian Singkat</h3>
                 <button
-                  onClick={() => alert('Fitur tambah soal akan segera hadir!')}
+                  onClick={() => setModalTambah({ open: true, tipe: 'isian' })}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                 >
                   <Plus size={16} />
@@ -459,7 +643,7 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                            onClick={() => setModalTambah({ open: true, tipe: 'isian', editData: soal })}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
@@ -484,6 +668,15 @@ export default function EditLombaPage() {
           )}
         </div>
       </div>
+
+      {/* Modal Tambah Soal */}
+      <ModalTambahSoal
+        open={modalTambah.open}
+        tipe={modalTambah.tipe}
+        onClose={() => setModalTambah({ open: false, tipe: null })}
+        lombaId={lombaId}
+        editData={modalTambah.editData}
+      />
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
