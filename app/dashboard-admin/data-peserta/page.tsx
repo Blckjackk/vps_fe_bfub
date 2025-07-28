@@ -50,6 +50,7 @@ import Link from 'next/link'; // Pastikan Link di-import
 interface Peserta {
   id: number;
   nama_lengkap: string;
+  password_hash: string;
   nomor_pendaftaran: string;
   asal_sekolah: string;
   kota_provinsi?: string;
@@ -81,6 +82,8 @@ export default function DataPesertaPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>('');
+
   
   // Modal states
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -91,13 +94,15 @@ export default function DataPesertaPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+  
       if (searchTerm) params.append('search', searchTerm);
-
+      if (filterStatus) params.append('status', filterStatus); // 👈 Tambahan penting di sini
+  
       const response = await fetch(`http://localhost:8000/api/admin/peserta?${params}`);
       const data = await response.json();
-
+  
       console.log('API Response:', data); // Debug log
-
+  
       if (data.success) {
         setPeserta(data.data || []);
         setStats(data.stats || null);
@@ -114,6 +119,7 @@ export default function DataPesertaPage() {
       setLoading(false);
     }
   };
+  
 
   // Load data saat component mount
   useEffect(() => {
@@ -127,7 +133,7 @@ export default function DataPesertaPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, filterStatus]);
 
   // Handlers
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,15 +248,37 @@ export default function DataPesertaPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">
-                <Filter size={16} /> Filter
-              </button>
+              {/* Dropdown filter status */}
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 border rounded-lg text-sm text-gray-700"
+              >
+                <option value="">Semua Status</option>
+                <option value="belum_mulai">Belum Mulai</option>
+                <option value="sedang_ujian">Sedang Ujian</option>
+                <option value="selesai">Selesai</option>
+              </select>
+
+              {/* Tombol reset filter */}
+              {filterStatus && (
+                <button
+                  onClick={() => setFilterStatus('')}
+                  className="px-3 py-2 border rounded-lg text-sm text-gray-500 hover:bg-gray-100"
+                >
+                  Reset
+                </button>
+              )}
+
+              {/* Tombol pilih semua / batal pilih */}
               <button 
                 onClick={handleSelectAll}
                 className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
               >
                 {selectedIds.length === peserta.length ? 'Batal Pilih' : 'Pilih Semua'}
               </button>
+
+              {/* Tombol hapus peserta terpilih */}
               {selectedIds.length > 0 && (
                 <button
                   onClick={() => handleOpenDeleteModal('selected')}
@@ -260,6 +288,7 @@ export default function DataPesertaPage() {
                 </button>
               )}
             </div>
+
           </div>
 
           {/* Temporary simple table instead of PesertaTable untuk debug */}
@@ -270,8 +299,10 @@ export default function DataPesertaPage() {
                   <tr>
                     <th className="px-6 py-3">No.</th>
                     <th className="px-6 py-3">Nama</th>
-                    <th className="px-6 py-3">No. Pendaftaran</th>
+                    <th className="px-6 py-3">Cabang Lomba</th>
+                    <th className="px-6 py-3">Password</th>
                     <th className="px-6 py-3">Asal Sekolah</th>
+                    <th className="px-6 py-3">kota_provinsi</th>
                     <th className="px-6 py-3">Status</th>
                   </tr>
                 </thead>
@@ -293,8 +324,11 @@ export default function DataPesertaPage() {
                       <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
                         <td className="px-6 py-4">{index + 1}</td>
                         <td className="px-6 py-4 font-medium">{item.nama_lengkap}</td>
-                        <td className="px-6 py-4">{item.nomor_pendaftaran}</td>
+                        {/* <td className="px-6 py-4">{item.cabang_lomba}</td> */}
+                        <td className="px-6 py-4">{item.cabang_lomba?.nama_cabang}</td>
+                        <td className="px-6 py-4">{item.password_hash} </td>
                         <td className="px-6 py-4">{item.asal_sekolah}</td>
+                        <td className="px-6 py-4">{item.kota_provinsi}</td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             item.status_ujian === 'selesai' ? 'bg-green-100 text-green-800' :
