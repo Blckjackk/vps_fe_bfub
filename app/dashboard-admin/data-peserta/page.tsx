@@ -213,19 +213,12 @@ export default function DataPesertaPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard-admin/data-peserta/tambah"
-            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
-            <Plus size={18} /> Tambah Peserta
-          </Link>
+          
           <Link
             href="/dashboard-admin/data-peserta/import"
             className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition-colors border">
             <Upload size={18} /> Import
           </Link>
-          <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-600 transition-colors">
-            <Download size={18} /> Export
-          </button>
         </div>
 
         {/* Error Message */}

@@ -1,109 +1,135 @@
-'use client';
+// "use client";
 
-export default function ExportPage() {
-  const handleExportPeserta = () => {
-    // Implementasi export data peserta
-    console.log('Exporting peserta data...');
-  };
+// import AdminSidebar from "@/components/admin/AdminSidebar";
+// import { Button } from "@/components/ui/button";
+// import { FaUpload } from "react-icons/fa";
+// import { useRouter } from "next/navigation";
+// import { useState } from "react";
 
-  const handleExportHasil = () => {
-    // Implementasi export hasil ujian
-    console.log('Exporting hasil ujian...');
-  };
+// const lombaOptions = [
+//   { value: "osa", label: "OSA" },
+//   { value: "obn", label: "OBN" },
+//   { value: "obi", label: "OBI" },
+//   { value: "semua", label: "Semua" },
+// ];
+// const soalTypeOptions = [
+//   { value: "pg", label: "PG" },
+//   { value: "esai", label: "Esai" },
+//   { value: "isian", label: "Isian Singkat" },
+//   { value: "semua", label: "Semua" },
+// ];
 
-  return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Ekspor Data</h1>
-        <p className="text-gray-600">Ekspor data peserta dan hasil ujian dalam format Excel atau PDF</p>
-      </div>
+// export default function ExportPage() {
+//   const router = useRouter();
+//   const [selected, setSelected] = useState({
+//     peserta: true,
+//     soal: true,
+//     hasil: true,
+//   });
+//   const [soalType, setSoalType] = useState("semua");
+//   const [soalLomba, setSoalLomba] = useState("semua");
+//   const [pesertaLomba, setPesertaLomba] = useState("semua");
+//   const [hasilLomba, setHasilLomba] = useState("semua");
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Export Data Peserta */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-900">Data Peserta</h3>
-              <p className="text-gray-600 text-sm">Ekspor daftar semua peserta lomba</p>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <button
-              onClick={handleExportPeserta}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Ekspor ke Excel
-            </button>
-            
-            <button
-              onClick={handleExportPeserta}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Ekspor ke PDF
-            </button>
-          </div>
-        </div>
+//   const handleSelectAll = () => {
+//     setSelected({ peserta: true, soal: true, hasil: true });
+//   };
 
-        {/* Export Hasil Ujian */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-900">Hasil Ujian</h3>
-              <p className="text-gray-600 text-sm">Ekspor hasil ujian dan nilai peserta</p>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <button
-              onClick={handleExportHasil}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Ekspor ke Excel
-            </button>
-            
-            <button
-              onClick={handleExportHasil}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Ekspor ke PDF
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Export History */}
-      <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Ekspor</h3>
-        <div className="text-gray-500 text-center py-8">
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p>Belum ada riwayat ekspor</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+//   return (
+//     <div className="flex min-h-screen bg-[#FAFBFF]">
+//       <AdminSidebar />
+//       <main className="flex-1 flex flex-col items-start py-10 px-2 md:px-8">
+//         <div className="w-full max-w-3xl mb-8 ml-0">
+//           <h1 className="text-2xl font-bold mb-8 ml-0">Export</h1>
+//           <div className="bg-white rounded-xl shadow p-6 mb-6">
+//             <div className="flex justify-between items-center mb-4">
+//               <span className="font-semibold">Pilih Data untuk Diekspor</span>
+//               <Button
+//                 type="button"
+//                 className="bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]"
+//                 onClick={handleSelectAll}
+//               >
+//                 Pilih Semua
+//               </Button>
+//             </div>
+//             {/* Data Peserta */}
+//             <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border border-[#E0E7EF]">
+//               <div className="flex items-center gap-2">
+//                 <input type="checkbox" checked={selected.peserta} onChange={e => setSelected(s => ({ ...s, peserta: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
+//                 <span className="font-bold text-lg">Data Peserta</span>
+//                 <select
+//                   className="ml-auto border rounded px-2 py-1 text-sm"
+//                   value={pesertaLomba}
+//                   onChange={e => setPesertaLomba(e.target.value)}
+//                 >
+//                   {lombaOptions.map(opt => (
+//                     <option key={opt.value} value={opt.value}>{opt.label}</option>
+//                   ))}
+//                 </select>
+//               </div>
+//               <div className="text-xs text-gray-600">
+//                 Tabel data peserta menampilkan informasi lengkap mengenai peserta yang terdaftar dalam sebuah lomba.
+//               </div>
+//             </div>
+//             {/* Soal */}
+//             <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border-2 border-[#2176FF]">
+//               <div className="flex items-center gap-2">
+//                 <input type="checkbox" checked={selected.soal} onChange={e => setSelected(s => ({ ...s, soal: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
+//                 <span className="font-bold text-lg">Soal</span>
+//                 <select
+//                   className="ml-auto border rounded px-2 py-1 text-sm"
+//                   value={soalType}
+//                   onChange={e => setSoalType(e.target.value)}
+//                 >
+//                   {soalTypeOptions.map(opt => (
+//                     <option key={opt.value} value={opt.value}>{opt.label}</option>
+//                   ))}
+//                 </select>
+//                 <select
+//                   className="ml-2 border rounded px-2 py-1 text-sm"
+//                   value={soalLomba}
+//                   onChange={e => setSoalLomba(e.target.value)}
+//                 >
+//                   {lombaOptions.map(opt => (
+//                     <option key={opt.value} value={opt.value}>{opt.label}</option>
+//                   ))}
+//                 </select>
+//               </div>
+//               <div className="text-xs text-gray-600">
+//                 Tabel data soal menampilkan informasi lengkap mengenai soal yang terdaftar dalam sebuah lomba. Baik itu Pilihan Ganda, Esai, atau Isian Singkat.
+//               </div>
+//             </div>
+//             {/* Hasil Peserta */}
+//             <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border border-[#E0E7EF]">
+//               <div className="flex items-center gap-2">
+//                 <input type="checkbox" checked={selected.hasil} onChange={e => setSelected(s => ({ ...s, hasil: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
+//                 <span className="font-bold text-lg">Hasil Peserta</span>
+//                 <select
+//                   className="ml-auto border rounded px-2 py-1 text-sm"
+//                   value={hasilLomba}
+//                   onChange={e => setHasilLomba(e.target.value)}
+//                 >
+//                   {lombaOptions.map(opt => (
+//                     <option key={opt.value} value={opt.value}>{opt.label}</option>
+//                   ))}
+//                 </select>
+//               </div>
+//               <div className="text-xs text-gray-600">
+//                 Tabel Hasil Peserta menampilkan informasi lengkap mengenai hasil ujian peserta yang terdaftar dalam sebuah lomba.
+//               </div>
+//             </div>
+//             <div className="flex justify-end mt-8">
+//               <Button
+//                 type="submit"
+//                 variant="default"
+//                 className="px-8 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60] flex items-center gap-2"
+//               >
+//                 Export <FaUpload />
+//               </Button>
+//             </div>
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
