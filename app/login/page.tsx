@@ -7,13 +7,30 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LuLockKeyhole } from "react-icons/lu";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState<'success' | 'error'>('success');
   const router = useRouter();
+
+  // Show custom popup
+  const showCustomPopup = (message: string, type: 'success' | 'error') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+  };
+
+  // Close popup
+  const closePopup = () => {
+    setShowPopup(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +60,10 @@ export default function LoginPage() {
         // Redirect berdasarkan role
         router.push(data.data.redirect);
       } else {
-        setError(data.message || "Login gagal");
+        showCustomPopup(data.message || "Login gagal", 'error');
       }
     } catch (err) {
-      setError("Terjadi kesalahan saat login. Periksa koneksi internet Anda.");
+      showCustomPopup("Terjadi kesalahan saat login. Periksa koneksi internet Anda.", 'error');
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);
@@ -87,11 +104,6 @@ export default function LoginPage() {
             Masukkan username dan password yang telah kamu buat.
           </p>
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 mb-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
             
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -115,15 +127,28 @@ export default function LoginPage() {
             </div>
             
             <div className="relative">
-              <LuLockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+              <LuLockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl z-10" />
               <Input
-                className="pl-10 rounded-full"
-                type="password"
+                className="pl-10 pr-12 rounded-full [&::-ms-reveal]:hidden [&::-webkit-textfield-decoration-container]:hidden"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none z-20 bg-white"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <FaEyeSlash className="w-4 h-4" />
+                ) : (
+                  <FaEye className="w-4 h-4" />
+                )}
+              </button>
             </div>
             
             <Button 
@@ -137,7 +162,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-black">
             Belum memiliki akun?{" "}
             <Link
-              href="/page_auth/register"
+              href="/register"
               className="text-primary font-semibold hover:underline"
             >
               Registrasi
@@ -145,6 +170,56 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Custom Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 transform transition-all">
+            <div className="text-center">
+              {/* Icon */}
+              <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                popupType === 'success' 
+                  ? 'bg-green-100' 
+                  : 'bg-red-100'
+              }`}>
+                {popupType === 'success' ? (
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className={`text-xl font-semibold mb-2 ${
+                popupType === 'success' ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {popupType === 'success' ? 'Berhasil!' : 'Gagal Login'}
+              </h3>
+
+              {/* Message */}
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                {popupMessage}
+              </p>
+
+              {/* Button */}
+              <button
+                onClick={closePopup}
+                className={`w-full py-3 px-6 rounded-xl font-semibold transition-colors ${
+                  popupType === 'success'
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -27,24 +27,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import TokenTable from '@/components/dashboard-admin/token-lomba/TokenTable';
+import GroupedTokenTable from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
+import type { GroupedToken } from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import { Search, Filter, ChevronDown, Plus } from 'lucide-react';
 
 // Types
-type Token = {
-  id: number;
-  peserta: string;
-  nomor_pendaftaran: string;
-  kodeToken: string;
-  cabor: string;
-  tipe: string;
-  status: string;
-  created_at: string;
-  expired_at: string;
-  peserta_id: number;
-};
-
 type Lomba = {
   id: number;
   nama_cabang: string;
@@ -57,7 +45,7 @@ type Peserta = {
 };
 
 export default function TokenPage() {
-  const [tokens, setTokens] = useState<Token[]>([]);
+  const [tokens, setTokens] = useState<GroupedToken[]>([]);
   const [lombaList, setLombaList] = useState<Lomba[]>([]);
   const [pesertaList, setPesertaList] = useState<Peserta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +77,7 @@ export default function TokenPage() {
       if (selectedLomba) params.append('lomba_id', selectedLomba);
       if (selectedStatus) params.append('status', selectedStatus);
 
-      const response = await fetch(`http://localhost:8000/api/admin/token?${params}`);
+      const response = await fetch(`http://localhost:8000/api/admin/token/grouped?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -181,14 +169,25 @@ export default function TokenPage() {
 
   // Mark selected tokens as expired
   const markTokensAsExpired = async () => {
-    const selectedTokens = tokens.filter(token => 
-      (token as any).isChecked && token.status !== 'digunakan'
+    const selectedPeserta = tokens.filter(peserta => 
+      (peserta as any).isChecked
     );
     
-    if (selectedTokens.length === 0) {
-      alert('Pilih token yang akan ditandai hangus');
+    if (selectedPeserta.length === 0) {
+      alert('Pilih peserta yang tokennya akan ditandai hangus');
       return;
     }
+
+    // Collect all token IDs from selected peserta
+    const tokenIds: number[] = [];
+    selectedPeserta.forEach(peserta => {
+      if (peserta.token_utama) {
+        tokenIds.push(peserta.token_utama.id);
+      }
+      peserta.token_cadangan.forEach(token => {
+        tokenIds.push(token.id);
+      });
+    });
 
     try {
       const response = await fetch('http://localhost:8000/api/admin/token/expire', {
@@ -197,7 +196,7 @@ export default function TokenPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          token_ids: selectedTokens.map(token => token.id)
+          token_ids: tokenIds
         }),
       });
       const data = await response.json();
@@ -242,16 +241,60 @@ export default function TokenPage() {
   };
 
   const handleSelectAll = () => {
-    const allChecked = tokens.every(token => (token as any).isChecked);
-    setTokens(prev => prev.map(token => ({ ...token, isChecked: !allChecked } as any)));
+    const allChecked = tokens.every(peserta => (peserta as any).isChecked);
+    setTokens(prev => prev.map(peserta => ({ ...peserta, isChecked: !allChecked } as any)));
   };
 
-  const handleSelectItem = (id: number) => {
+  const handleSelectItem = (peserta_id: number) => {
     setTokens(prev => 
-      prev.map(token => 
-        token.id === id ? { ...token, isChecked: !(token as any).isChecked } as any : token
+      prev.map(peserta => 
+        peserta.peserta_id === peserta_id ? { ...peserta, isChecked: !(peserta as any).isChecked } as any : peserta
       )
     );
+  };
+
+  // Update token status
+  const updateTokenStatus = async (token_id: number, status: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/token/${token_id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        fetchTokens();
+        alert('Status token berhasil diubah');
+      } else {
+        alert(data.message || 'Gagal mengubah status token');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat mengubah status token');
+      console.error('Error updating token status:', err);
+    }
+  };
+
+  // Set token as primary
+  const setPrimaryToken = async (token_id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/token/${token_id}/primary`, {
+        method: 'PUT',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        fetchTokens();
+        alert('Token berhasil dijadikan sebagai token utama');
+      } else {
+        alert(data.message || 'Gagal mengatur token utama');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat mengatur token utama');
+      console.error('Error setting primary token:', err);
+    }
   };
 
   if (loading) {
@@ -334,11 +377,11 @@ export default function TokenPage() {
                 onClick={handleSelectAll}
                 className="w-full md:w-auto px-4 py-2 border rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300"
               >
-                {tokens.every(token => (token as any).isChecked) ? 'Batal Pilih' : 'Pilih Semua'}
+                {tokens.every(peserta => (peserta as any).isChecked) ? 'Batal Pilih' : 'Pilih Semua'}
               </button>
               <button 
                 onClick={markTokensAsExpired}
-                disabled={!tokens.some(token => (token as any).isChecked)}
+                disabled={!tokens.some(peserta => (peserta as any).isChecked)}
                 className="w-full md:w-auto px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:bg-gray-400"
               >
                 Tandai Hangus
@@ -347,10 +390,12 @@ export default function TokenPage() {
           </div>
 
           {/* Tabel Token */}
-          <TokenTable 
+          <GroupedTokenTable 
             tokens={tokens} 
             onDeleteItem={handleOpenDeleteModal}
             onSelectItem={handleSelectItem}
+            onUpdateTokenStatus={updateTokenStatus}
+            onSetPrimaryToken={setPrimaryToken}
           />
         </div>
       </div>

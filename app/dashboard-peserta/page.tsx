@@ -36,6 +36,10 @@ export default function HalamanUjian() {
   const [showPopup, setShowPopup] = useState(false);
   const [inputToken, setInputToken] = useState("");
   const [userData, setUserData] = useState<any>(null);
+  const [cabangLomba, setCabangLomba] = useState<string>("Memuat...");
+  const [durasiUjian, setDurasiUjian] = useState<number>(0);
+  const [waktuMulaiUjian, setWaktuMulaiUjian] = useState<string>("--:--");
+  const [waktuAkhirUjian, setWaktuAkhirUjian] = useState<string>("--:--");
   
   // Data statis untuk demo - akan diganti dengan data dari API
   const [namaPeserta, setNamaPeserta] = useState("Ahmad Izzudin Azzam");
@@ -45,9 +49,24 @@ export default function HalamanUjian() {
   const [namaLomba, setNamaLomba] = useState<string>("-");
   const jumlahToken = 5;
   const jumlahSoal = 100;
-  const waktu = 60;
-  const waktuMulai = "16.00";
-  const waktuAkhir = "17.00";
+
+  // Fungsi untuk menghitung durasi dalam menit
+  const hitungDurasi = (waktuMulai: string, waktuAkhir: string): number => {
+    const mulai = new Date(waktuMulai);
+    const akhir = new Date(waktuAkhir);
+    const selisih = akhir.getTime() - mulai.getTime();
+    return Math.round(selisih / (1000 * 60)); // Convert to minutes
+  };
+
+  // Fungsi untuk memformat waktu ke HH:MM
+  const formatWaktu = (datetime: string): string => {
+    const date = new Date(datetime);
+    return date.toLocaleTimeString('id-ID', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  };
 
   useEffect(() => {
     // Ambil data user dari localStorage
@@ -59,8 +78,48 @@ export default function HalamanUjian() {
       setAsalSekolah(user.asal_sekolah || "SMAN 2 Bandung");
     }
 
-    // Ambil token aktif dari localStorage atau API
+    // Fungsi untuk mengambil data cabang lomba peserta
+    const fetchCabangLomba = async () => {
+      const storedUserData = localStorage.getItem("user_data");
+      if (!storedUserData) {
+        setCabangLomba("Belum login");
+        return;
+      }
+      
+      try {
+        const user = JSON.parse(storedUserData);
+        const pesertaId = user.id;
+        
+        if (!pesertaId) {
+          setCabangLomba("ID peserta tidak ditemukan");
+          return;
+        }
 
+        // Ambil data peserta lengkap dengan cabang lomba
+        const response = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
+        const data = await response.json();
+        
+        if (data.success && data.data.cabang_lomba) {
+          const lomba = data.data.cabang_lomba;
+          setCabangLomba(lomba.nama_cabang);
+          
+          // Hitung durasi dan format waktu jika data tersedia
+          if (lomba.waktu_mulai_pengerjaan && lomba.waktu_akhir_pengerjaan) {
+            const durasi = hitungDurasi(lomba.waktu_mulai_pengerjaan, lomba.waktu_akhir_pengerjaan);
+            setDurasiUjian(durasi);
+            setWaktuMulaiUjian(formatWaktu(lomba.waktu_mulai_pengerjaan));
+            setWaktuAkhirUjian(formatWaktu(lomba.waktu_akhir_pengerjaan));
+          }
+        } else {
+          setCabangLomba("Cabang lomba tidak ditemukan");
+        }
+      } catch (error) {
+        console.error("Gagal fetch cabang lomba:", error);
+        setCabangLomba("Gagal mengambil data lomba");
+      }
+    };
+
+    // Ambil token aktif dari localStorage atau API
     const fetchTokenPeserta = async () => {
       const storedUserData = localStorage.getItem("user_data");
       if (!storedUserData) {
@@ -94,13 +153,14 @@ export default function HalamanUjian() {
       }
     };
 
+    fetchCabangLomba();
     fetchTokenPeserta();
   }, []);
 
   return (
     <>
       <h1 className="text-2xl font-semibold mb-2">
-        Selamat Datang {namaPeserta}!
+        Selamat Datang {namaPeserta}
       </h1>
       <h2 className="text-xl font-bold text-gray-800 mb-4">
         Ujian - {namaLomba}
@@ -115,7 +175,7 @@ export default function HalamanUjian() {
           <h3 className="font-semibold text-lg mb-4">Instruksi Pengerjaan</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
             <li>
-              Durasi ujian selama {waktu} menit termasuk pengerjaan tipe soal
+              Durasi ujian selama {durasiUjian > 0 ? durasiUjian : "..."} menit termasuk pengerjaan tipe soal
               PG dan Esai.
             </li>
             <li>
@@ -179,10 +239,10 @@ export default function HalamanUjian() {
                 </span>
               </div>
               <ul className="text-sm text-gray-700 space-y-1 text-center">
-                <li>Waktu : {waktu} Menit</li>
+                <li>Waktu : {durasiUjian > 0 ? durasiUjian : "..."} Menit</li>
                 <li>Jumlah Soal : {jumlahSoal}</li>
-                <li>Mulai : {waktuMulai}</li>
-                <li>Akhir : {waktuAkhir}</li>
+                <li>Mulai : {waktuMulaiUjian}</li>
+                <li>Akhir : {waktuAkhirUjian}</li>
               </ul>
             </div>
 
@@ -210,10 +270,10 @@ export default function HalamanUjian() {
               {namaLomba}
             </h2>
             <div className="text-center text-sm mb-4">
-              <div>Durasi : {waktu} Menit</div>
+              <div>Durasi : {durasiUjian > 0 ? durasiUjian : "..."} Menit</div>
               <div>Jumlah Soal : {jumlahSoal}</div>
-              <div>Waktu Mulai : {waktuMulai}</div>
-              <div>Waktu Akhir : {waktuAkhir}</div>
+              <div>Waktu Mulai : {waktuMulaiUjian}</div>
+              <div>Waktu Akhir : {waktuAkhirUjian}</div>
             </div>
             <label className="block text-center text-gray-700 font-medium mb-2">
               Masukkan Token
