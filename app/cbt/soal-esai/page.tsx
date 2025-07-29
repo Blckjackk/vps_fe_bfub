@@ -42,19 +42,48 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import HeaderExam from "@/components/cbt/HeaderExam";
 import SidebarSoal from "@/components/cbt/SidebarSoal";
 import TokenPopup from "@/components/cbt/TokenPopup";
-
-export default function SoalEsaiPage() {
+export default function Page() {
+  // Masuk fullscreen jika belum
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    if (document.fullscreenElement) return;
+    const el = document.documentElement;
+    const goFullscreen = () => {
+      if (el.requestFullscreen) {
+        return el.requestFullscreen();
+      } else if ((el as any).webkitRequestFullscreen) {
+        return (el as any).webkitRequestFullscreen();
+      } else if ((el as any).msRequestFullscreen) {
+        return (el as any).msRequestFullscreen();
+      }
+      return Promise.resolve();
+    };
+    try {
+      const result = goFullscreen();
+      if (result && typeof result.then === "function") {
+        result.catch(() => {
+          // Optionally, show a warning or ignore
+        });
+      }
+    } catch (e) {
+      // Ignore permission errors or unsupported
+    }
+  }, []);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answer, setAnswer] = useState("");
   const [showTokenPopup, setShowTokenPopup] = useState(false);
+  const [inputToken, setInputToken] = useState("");
+  const [errorToken, setErrorToken] = useState("");
+  const [tokenAktif, setTokenAktif] = useState<string>("");
   const router = useRouter();
+  const tokenRef = useRef<string>("");
 
   useEffect(() => {
     if (showTokenPopup) {
@@ -67,13 +96,66 @@ export default function SoalEsaiPage() {
     };
   }, [showTokenPopup]);
 
+  // Ambil token aktif dari localStorage (atau API jika perlu)
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token_aktif");
+    if (storedToken) {
+      setTokenAktif(storedToken);
+      tokenRef.current = storedToken;
+      // Pakai token ulang jika reload (web restart)
+      fetch("http://localhost:8000/api/peserta/pakai-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kode_token: storedToken }),
+      });
+    }
+  }, []);
+
+  // Deteksi keluar tab dan hanguskan token
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "hidden") {
+        const kodeToken = tokenRef.current;
+        if (kodeToken) {
+          await fetch("http://localhost:8000/api/peserta/hanguskan-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ kode_token: kodeToken }),
+          });
+          localStorage.removeItem("token_aktif");
+        }
+      }
+      if (document.visibilityState === "visible") {
+        setShowTokenPopup(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
   const handleBack = () => {
     setShowTokenPopup(true);
   };
 
-  const handleTokenSubmit = (token: string) => {
-    setShowTokenPopup(false);
-    // Token handling logic here (demo: just close)
+  const handleTokenSubmit = async () => {
+    setErrorToken("");
+    // Validasi token ke backend
+    const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kode_token: inputToken }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setShowTokenPopup(false);
+      setInputToken("");
+      setErrorToken("");
+      setTokenAktif(inputToken);
+      tokenRef.current = inputToken;
+      localStorage.setItem("token_aktif", inputToken);
+    } else {
+      setErrorToken("Kode token tidak valid atau sudah hangus. Minta token baru ke admin.");
+    }
   };
 
   return (
@@ -147,11 +229,30 @@ export default function SoalEsaiPage() {
           />
         </div>
       </div>
-      <TokenPopup 
-        open={showTokenPopup} 
-        onClose={() => setShowTokenPopup(false)} 
-        onSubmit={handleTokenSubmit}
-      />
+      {/* Popup Token Ulang */}
+      {showTokenPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
+            <h2 className="text-2xl font-bold text-center mb-4">Masukkan Token Ujian</h2>
+            <input
+              type="text"
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2 text-center"
+              placeholder="Token Ujian"
+              value={inputToken}
+              onChange={(e) => setInputToken(e.target.value)}
+            />
+            {errorToken && (
+              <div className="w-full text-center text-red-600 text-sm mb-2">{errorToken}</div>
+            )}
+            <Button
+              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
+              onClick={handleTokenSubmit}
+            >
+              Submit
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

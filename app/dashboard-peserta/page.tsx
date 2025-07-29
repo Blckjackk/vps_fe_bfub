@@ -42,6 +42,7 @@ export default function HalamanUjian() {
   const [asalSekolah, setAsalSekolah] = useState("SMAN 2 Bandung");
   const token = "OSA-TOKEN-001";
   const [tokenAktif, setTokenAktif] = useState<string | null>("Memuat...");
+  const [namaLomba, setNamaLomba] = useState<string>("-");
   const jumlahToken = 5;
   const jumlahSoal = 100;
   const waktu = 60;
@@ -77,12 +78,19 @@ export default function HalamanUjian() {
         const data = await response.json();
         if (data.success) {
           setTokenAktif(data.data.kode_token || "Tidak ada token aktif");
+          setNamaLomba(
+            (data.data.cabangLomba && data.data.cabangLomba.nama_cabang) ||
+            (data.data.cabang_lomba && data.data.cabang_lomba.nama_cabang) ||
+            "-"
+          );
         } else {
           setTokenAktif("Token tidak ditemukan");
+          setNamaLomba("-");
         }
       } catch (error) {
         console.error("Gagal fetch token:", error);
         setTokenAktif("Gagal mengambil token");
+        setNamaLomba("-");
       }
     };
 
@@ -95,7 +103,7 @@ export default function HalamanUjian() {
         Selamat Datang {namaPeserta}!
       </h1>
       <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Ujian - Olimpiade Biologi
+        Ujian - {namaLomba}
       </h2>
       <p className="text-gray-600 mb-8">
         Silakan baca instruksi di bawah ini sebelum memulai ujian.
@@ -163,7 +171,7 @@ export default function HalamanUjian() {
           <div className="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full">
             <div>
               <h4 className="text-center font-bold text-md text-gray-800 mb-2">
-                Olimpiade Biologi
+                {namaLomba}
               </h4>
               <div className="text-center text-sm mb-4">
                 <span className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -199,7 +207,7 @@ export default function HalamanUjian() {
               <FaTimes size={22} />
             </button>
             <h2 className="text-2xl font-bold text-center mb-4">
-              Olimpiade Biologi
+              {namaLomba}
             </h2>
             <div className="text-center text-sm mb-4">
               <div>Durasi : {waktu} Menit</div>
@@ -219,11 +227,26 @@ export default function HalamanUjian() {
             />
             <button
               className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
-              onClick={() => {
-                // Validasi token di sini
-                setShowPopup(false);
-                window.location.href = "/cbt";
-                // Lanjut ke ujian...
+              onClick={async () => {
+                // Validasi dan pakai token ke backend
+                if (!inputToken) return;
+                try {
+                  const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ kode_token: inputToken }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    setShowPopup(false);
+                    localStorage.setItem("token_aktif", inputToken);
+                    window.location.href = "/cbt/soal-pg";
+                  } else {
+                    alert("Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
+                  }
+                } catch (err) {
+                  alert("Gagal menghubungi server. Coba lagi.");
+                }
               }}
             >
               Mulai
