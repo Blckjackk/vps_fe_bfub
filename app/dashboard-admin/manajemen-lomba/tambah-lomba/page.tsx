@@ -87,22 +87,9 @@ export default function TambahLomba() {
               />
             </label>
             <label className="font-medium text-sm">
-              Kategori
-              <select
-                name="kategori"
-                value={form.kategori}
-                onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
-                required
-              >
-                <option value="Pilihan Ganda">Pilihan Ganda</option>
-                <option value="Esai">Esai</option>
-              </select>
-            </label>
-            <label className="font-medium text-sm">
               Waktu Mulai
               <input
-                type="text"
+                type="time"
                 name="waktuMulai"
                 value={form.waktuMulai}
                 onChange={handleChange}
@@ -113,20 +100,9 @@ export default function TambahLomba() {
             <label className="font-medium text-sm">
               Waktu Akhir
               <input
-                type="text"
+                type="time"
                 name="waktuAkhir"
                 value={form.waktuAkhir}
-                onChange={handleChange}
-                className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
-                required
-              />
-            </label>
-            <label className="font-medium text-sm">
-              Jumlah Soal
-              <input
-                type="text"
-                name="jumlahSoal"
-                value={form.jumlahSoal}
                 onChange={handleChange}
                 className="mt-1 w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#B94A48]"
                 required
