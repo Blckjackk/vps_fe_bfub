@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link'; // <-- IMPORT Link
+import Link from 'next/link';
 import { FileText, Trash2 } from 'lucide-react';
 
 // Tipe data untuk setiap baris hasil ujian
