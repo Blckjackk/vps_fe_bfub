@@ -90,8 +90,8 @@ export default function ManajemenLombaPage() {
         {/* Tombol Aksi Utama */}
         <div>
           <Link 
-            href="/dashboard-admin/manajemen-lomba/tambah"
-            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors"
+            href="/dashboard-admin/manajemen-lomba/tambah-lomba"
+            className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-[#ac5555] transition-colors"
           >
             <Plus size={18} />
             Tambah Lomba
