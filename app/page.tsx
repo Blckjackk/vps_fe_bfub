@@ -74,12 +74,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-2 h-full">
           <div className="h-12 w-auto flex items-center">
             <Image
-              src="/images/logos/brand/logo-BFUB-polos.png"
-              alt="BFUB Logo"
-              width={100}
-              height={100}
-              className="h-25 w-auto object-contain"
-            />
+              src="/images/logos/brand/logo-BFUB-polos.png"alt="BFUB Logo"width={100}height={100}className="h-25 w-auto object-contain"/>
           </div>
         </div>
         <nav className="hidden md:flex gap-6 text-sm font-medium leading-none transition-colors duration-200">
@@ -142,11 +137,13 @@ export default function LandingPage() {
             Untuk mengikuti lomba, silakan login terlebih dahulu dengan menekan
             tombol di bawah.
           </p>
-          <Link href="/login">
-            <Button className="bg-[#C13F3F] text-white rounded-full px-6 py-2 min-w-[120px] hover:bg-[#ac5555]  hover:border-[#a03030]">
-              Login
-            </Button>
-          </Link>
+          <div className="w-fit">
+            <Link href="/login">
+              <Button className="bg-[#C13F3F] text-white rounded-full px-6 py-2 min-w-[120px] hover:bg-[#ac5555] hover:border-[#a03030]">
+                Login
+              </Button>
+            </Link>
+          </div>
         </div>
         <div className="flex-1 flex justify-center">
           <Image
@@ -235,68 +232,66 @@ export default function LandingPage() {
         </div>
       </section>
 
-     {/* Footer */}
-    <footer className="bg-gradient-to-b from-[#FF5959] to-[#BE3E3E] text-white px-6 py-12 md:px-20">
-      <div className="flex flex-col md:flex-row md:justify-between gap-8 max-w-6xl mx-auto">
-        {/* Kolom Kiri – Logo & Deskripsi */}
-        <div className="flex-1 flex flex-col gap-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Image
-              src="/images/logos/brand/logo-BFUB-Polos.png"
-              alt="BFUB Logo"
-              width={48}
-              height={48}
-            />
-            <span className="font-bold text-lg">BFUB XXVII</span>
+      {/* Footer */}
+      <footer className="bg-gradient-to-b from-[#FF5959] to-[#BE3E3E] text-white px-6 py-12 md:px-20">
+        <div className="flex flex-col md:flex-row md:justify-between gap-8 max-w-6xl mx-auto">
+          {/* Kolom Kiri – Logo & Deskripsi */}
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Image
+                src="/images/logos/brand/logo-BFUB-Polos.png"
+                alt="BFUB Logo"
+                width={48}
+                height={48}
+              />
+              <span className="font-bold text-lg">BFUB XXVII</span>
+            </div>
+            <p className="text-xs text-primary-foreground/80 max-w-xs">
+              BFUB XXVII merupakan ajang tahunan BEM HMBF FPMIPA UPI yang
+              terdiri dari berbagai lomba di bidang sains dan biologi, mulai
+              dari OSA hingga OBN.
+            </p>
           </div>
-          <p className="text-xs text-primary-foreground/80 max-w-xs">
-            BFUB XXVII merupakan ajang tahunan BEM HMBF FPMIPA UPI yang
-            terdiri dari berbagai lomba di bidang sains dan biologi, mulai
-            dari OSA hingga OBN.
-          </p>
+
+          {/* Kolom Kanan – Navigate & Contact Us */}
+          <div className="flex-1 flex flex-col md:flex-row justify-end gap-x-40 pr-30">
+            {/* Navigate */}
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold mb-1">Navigate</span>
+              <Link
+                href="#"className="text-primary-foreground/80 text-xs hover:underline">Home
+              </Link>
+              <Link
+                href="#about"
+                className="text-primary-foreground/80 text-xs hover:underline"
+              >
+                About
+              </Link>
+              <Link
+                href="#cabang-lomba"className="text-primary-foreground/80 text-xs hover:underline">Cabang Lomba</Link>
+            </div>
+
+            {/* Contact Us */}
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold mb-1">Contact Us</span>
+              <a
+                href="mailto:bfubxxvii@gmail.com"
+                className="text-xs hover:underline"
+              >
+                bfubxxvii@gmail.com
+              </a>
+              <a href="https://wa.me/6282119890414"target="_blank"rel="noopener noreferrer"className="text-xs hover:underline"> 0821 1989 0414 (Shafa)</a>
+              <a href="https://instagram.com/bfub_formica" target="_blank" rel="noopener noreferrer"className="text-xs hover:underline">@bfub_formica</a>
+              <a href="https://instagram.com/hmbfupi"target="_blank"rel="noopener noreferrer"className="text-xs hover:underline"> @hmbfupi</a>
+            </div>
+          </div>
         </div>
 
-        {/* Kolom Kanan – Navigate & Contact Us */}
-        <div className="flex-1 flex flex-col md:flex-row justify-end gap-x-40 pr-30">
-          {/* Navigate */}
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold mb-1">Navigate</span>
-            <Link
-              href="#"
-              className="text-primary-foreground/80 text-xs hover:underline"
-            >
-              Home
-            </Link>
-            <Link
-              href="#about"
-              className="text-primary-foreground/80 text-xs hover:underline"
-            >
-              About
-            </Link>
-            <Link
-              href="#cabang-lomba"
-              className="text-primary-foreground/80 text-xs hover:underline"
-            >
-              Cabang Lomba
-            </Link>
-          </div>
-
-          {/* Contact Us */}
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold mb-1">Contact Us</span>
-            <span className="text-xs">bfubxxvii@gmail.com</span>
-            <span className="text-xs">0821 1989 0414 (Shafa)</span>
-            <span className="text-xs">@bfub_formica</span>
-            <span className="text-xs">@hmbfupi</span>
-          </div>
+        {/* Copyright */}
+        <div className="border-t border-primary-foreground/20 mt-8 pt-4 text-xs text-center text-primary-foreground/60">
+          ©BFUB XXVII 2025. All rights reserved
         </div>
-      </div>
-
-      {/* Copyright */}
-      <div className="border-t border-primary-foreground/20 mt-8 pt-4 text-xs text-center text-primary-foreground/60">
-        ©BFUB XXVII 2025. All rights reserved
-      </div>
-    </footer>
+      </footer>
     </div>
   );
 }

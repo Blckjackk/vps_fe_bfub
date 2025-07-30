@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { FileText, Trash2 } from 'lucide-react';
@@ -65,7 +65,7 @@ export default function HasilLombaTable({ hasil, onDeleteItem, onSelectItem, onS
                     type="checkbox" 
                     checked={item.isChecked} 
                     onChange={() => onSelectItem?.(item.id)}
-                    className="w-4 h-4 rounded" 
+                    className="w-4 h-4 rounded"
                   />
                 </td>
                 <td className="w-12 px-2 py-4 font-medium">{index + 1}</td>

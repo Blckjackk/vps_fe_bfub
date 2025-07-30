@@ -91,7 +91,7 @@ export default function DaftarLomba() {
   return (
     <div className="w-full">
       <h1 className="text-2xl font-bold mb-8">Manajemen Lomba</h1>
-      <Link href="/dashboard-admin/manajemen-lomba/tambah" className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c] mb-4">
+      <Link href="/dashboard-admin/manajemen-lomba/tambah" className="inline-flex items-center gap-2 w-fit bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#B94A48] mb-4">
         <span className="text-lg">+</span> Tambah Lomba
       </Link>
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 w-full">
