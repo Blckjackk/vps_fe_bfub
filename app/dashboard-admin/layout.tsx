@@ -24,12 +24,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode; }
 
   return (
     <AuthWrapper requiredRole="admin">
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
+        <div className="fixed top-0 left-0 h-full">
+          <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
+        </div>
 
-        <main className={`flex-1 p-8 transition-all duration-300 ${showLogoutModal ? 'blur-sm pointer-events-none' : ''}`}>
-          {children}
-        </main>
+        <div className="flex-1 ml-64"> {/* Sesuaikan margin-left dengan lebar sidebar */}
+          <main className={`h-screen overflow-y-auto p-8 transition-all duration-300 ${showLogoutModal ? 'blur-sm pointer-events-none' : ''}`}>
+            {children}
+          </main>
+        </div>
 
         {/* 👇 PERUBAHAN DI SINI 👇 */}
         <ConfirmationDialog

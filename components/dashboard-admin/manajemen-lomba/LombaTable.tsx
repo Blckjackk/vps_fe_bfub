@@ -5,11 +5,12 @@ import Link from 'next/link';
 type Lomba = {
   id: number;
   namaLomba: string;
-  kodeGrup: string;
   durasi: string;
   mulai: string;
   akhir: string;
-  jumlahSoal: number;
+  jumlahSoalPG: number;
+  jumlahSoalIsian: number;
+  jumlahSoalEsai: number;
   isChecked: boolean;
 };
 
@@ -40,11 +41,12 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection 
               </th>
               <th scope="col" className="px-6 py-3">No.</th>
               <th scope="col" className="px-6 py-3">Nama Lomba</th>
-              <th scope="col" className="px-6 py-3">Kode Grup</th>
               <th scope="col" className="px-6 py-3">Durasi</th>
-              <th scope="col" className="px-6 py-3">Mulai</th>
-              <th scope="col" className="px-6 py-3">Akhir</th>
-              <th scope="col" className="px-6 py-3">Jumlah Soal</th>
+              <th scope="col" className="px-6 py-3">Waktu Mulai</th>
+              <th scope="col" className="px-6 py-3">Waktu Berakhir</th>
+              <th scope="col" className="px-6 py-3">Soal PG</th>
+              <th scope="col" className="px-6 py-3">Soal Isian</th>
+              <th scope="col" className="px-6 py-3">Soal Esai</th>
               <th scope="col" className="px-6 py-3 text-center">Aksi</th>
             </tr>
           </thead>
@@ -61,11 +63,24 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection 
                 </td>
                 <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
                 <td className="px-6 py-4">{item.namaLomba}</td>
-                <td className="px-6 py-4">{item.kodeGrup}</td>
                 <td className="px-6 py-4">{item.durasi}</td>
                 <td className="px-6 py-4">{item.mulai}</td>
                 <td className="px-6 py-4">{item.akhir}</td>
-                <td className="px-6 py-4">{item.jumlahSoal}</td>
+                <td className="px-6 py-4 text-center">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalPG > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {item.jumlahSoalPG}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalIsian > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {item.jumlahSoalIsian}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalEsai > 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {item.jumlahSoalEsai}
+                  </span>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
                     <Link 
