@@ -74,9 +74,10 @@ export default function ImportPesertaPage() {
               </p>
             </li>
           </ol>
-          <a href="#" className="text-blue-600 hover:underline mt-4 inline-block">
+          <a href="/template-peserta.csv" download className="text-blue-600 hover:underline mt-4 inline-block">
             Download template file
           </a>
+
         </div>
 
         {/* Card Upload File */}
@@ -109,7 +110,7 @@ export default function ImportPesertaPage() {
         
         {/* Tombol Aksi */}
         <div className="flex justify-center gap-4 pt-4">
-          <Link href="/dashboard-admin/data-peserta" className="px-10 py-2.5 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors">
+          <Link href="/dashboard-admin/data-peserta" className="px-10 py-2.5 bg-[#D14D42] text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors">
             Back
           </Link>
           <button type="submit" className="px-10 py-2.5 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors">
