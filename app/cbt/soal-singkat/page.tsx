@@ -49,7 +49,31 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 import TokenPopup from "@/components/cbt/TokenPopup";
 export default function Page() {
   // Masuk fullscreen jika belum
+  // Ambil nama lomba dari API
+  const [namaLomba, setNamaLomba] = useState<string>("-");
   useEffect(() => {
+    // Fetch nama lomba dari API
+    const fetchNamaLomba = async () => {
+      if (typeof window === "undefined") return;
+      const storedUserData = localStorage.getItem("user_data");
+      if (!storedUserData) return;
+      try {
+        const user = JSON.parse(storedUserData);
+        const pesertaId = user.id;
+        if (!pesertaId) return;
+        const response = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
+        const data = await response.json();
+        setNamaLomba(
+          (data.data.cabangLomba && data.data.cabangLomba.nama_cabang) ||
+          (data.data.cabang_lomba && data.data.cabang_lomba.nama_cabang) ||
+          "-"
+        );
+      } catch (error) {
+        setNamaLomba("-");
+      }
+    };
+    fetchNamaLomba();
+    // Fullscreen logic
     if (typeof window === "undefined" || typeof document === "undefined") return;
     if (document.fullscreenElement) return;
     const el = document.documentElement;
@@ -161,7 +185,7 @@ export default function Page() {
     <div className="min-h-screen bg-[#F7F8FA]">
       <div className={showTokenPopup ? "blur-sm pointer-events-none select-none" : ""}>
         <HeaderExam 
-          examTitle="Olimpiade Biologi" 
+          examTitle={`Ujian - ${namaLomba}`} 
           timeLeft="59:36" 
         />
 
@@ -233,10 +257,22 @@ export default function Page() {
       {showTokenPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-center mb-4">Masukkan Token Ujian</h2>
+            {/* Close Icon */}
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowTokenPopup(false)}
+              aria-label="Tutup"
+            >
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6L16 16M16 6L6 16" stroke="#888" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <h2 className="text-2xl font-bold text-center mb-2">Masukan Token Baru</h2>
+            <div className="text-center text-gray-600 text-sm mb-4">Harap meminta token baru kepada panitia untuk dapat mengerjakan soal kembali</div>
+            <label className="block text-center text-gray-700 font-medium mb-2">Masukkan Token</label>
             <input
               type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2 text-center"
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-4 text-center"
               placeholder="Token Ujian"
               value={inputToken}
               onChange={(e) => setInputToken(e.target.value)}
@@ -245,10 +281,11 @@ export default function Page() {
               <div className="w-full text-center text-red-600 text-sm mb-2">{errorToken}</div>
             )}
             <Button
-              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
+              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition text-lg"
+              style={{ minHeight: 48 }}
               onClick={handleTokenSubmit}
             >
-              Submit
+              Mulai
             </Button>
           </div>
         </div>
