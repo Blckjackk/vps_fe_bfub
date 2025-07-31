@@ -15,16 +15,29 @@ type Lomba = {
 
 interface LombaTableProps {
   lomba: Lomba[];
+  selectedItems?: number[];
+  onItemSelection?: (id: number) => void;
 }
 
-export default function LombaTable({ lomba }: LombaTableProps) {
+export default function LombaTable({ lomba, selectedItems = [], onItemSelection }: LombaTableProps) {
   return (
     <div className="mt-4 bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-600">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              
+              <th scope="col" className="px-6 py-3">
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  checked={selectedItems.length === lomba.length && lomba.length > 0}
+                  onChange={() => {
+                    if (onItemSelection) {
+                      lomba.forEach(item => onItemSelection(item.id));
+                    }
+                  }}
+                />
+              </th>
               <th scope="col" className="px-6 py-3">No.</th>
               <th scope="col" className="px-6 py-3">Nama Lomba</th>
               <th scope="col" className="px-6 py-3">Kode Grup</th>
@@ -38,7 +51,14 @@ export default function LombaTable({ lomba }: LombaTableProps) {
           <tbody>
             {lomba.map((item, index) => (
               <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
-                
+                <td className="px-6 py-4">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => onItemSelection && onItemSelection(item.id)}
+                  />
+                </td>
                 <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
                 <td className="px-6 py-4">{item.namaLomba}</td>
                 <td className="px-6 py-4">{item.kodeGrup}</td>
