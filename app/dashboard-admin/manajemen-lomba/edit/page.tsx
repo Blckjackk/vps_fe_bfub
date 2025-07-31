@@ -1,355 +1,48 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 // Modal CRUD Tambah Soal
 interface ModalTambahSoalProps {
   open: boolean;
-  tipe: "pg" | "essay" | "isian" | null;
+  tipe: 'pg' | 'essay' | 'isian' | null;
   onClose: () => void;
   lombaId: string | null;
 }
 
-interface ModalTambahSoalProps {
-  open: boolean;
-  tipe: "pg" | "essay" | "isian" | null;
-  onClose: () => void;
-  lombaId: string | null;
-  editData?: any | null;
-}
-
-const ModalTambahSoal: React.FC<ModalTambahSoalProps> = ({
-  open,
-  tipe,
-  onClose,
-  lombaId,
-  editData,
-}) => {
-  const [form, setForm] = React.useState<any>({});
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-
-  React.useEffect(() => {
-    if (open) {
-      if (editData) {
-        setForm(editData);
-      } else {
-        setForm({});
-      }
-    }
-    setLoading(false); // Always set loading to false when modal opens or changes
-    // eslint-disable-next-line
-  }, [open, tipe, editData]);
-
+const ModalTambahSoal: React.FC<ModalTambahSoalProps> = ({ open, tipe, onClose, lombaId }) => {
   if (!open || !tipe) return null;
-
-  // Form submit handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    let endpoint = "";
-    let body: any = {};
-    let method = "POST";
-    let url = "";
-    if (!lombaId) {
-      setError(
-        "Cabang lomba ID tidak ditemukan. Silakan akses halaman dari menu manajemen lomba."
-      );
-      setLoading(false);
-      return;
-    }
-    if (tipe === "pg") {
-      endpoint = "pg";
-      body = {
-        lomba_id: lombaId,
-        pertanyaan: form.pertanyaan,
-        opsi_a: form.opsi_a,
-        opsi_b: form.opsi_b,
-        opsi_c: form.opsi_c,
-        opsi_d: form.opsi_d,
-        opsi_e: form.opsi_e,
-        jawaban_benar: form.jawaban_benar,
-      };
-    } else if (tipe === "essay") {
-      endpoint = "essay";
-      body = {
-        lomba_id: lombaId,
-        pertanyaan_essay: form.pertanyaan_essay,
-      };
-    } else if (tipe === "isian") {
-      endpoint = "isian-singkat";
-      body = {
-        lomba_id: lombaId,
-        pertanyaan_isian: form.pertanyaan_isian,
-        jawaban_benar: form.jawaban_benar,
-      };
-    }
-    if (editData && editData.id) {
-      // Edit mode
-      method = "PUT";
-      url = `http://localhost:8000/api/admin/soal/${endpoint}/${editData.id}`;
-    } else {
-      // Add mode
-      url = `http://localhost:8000/api/admin/soal/${endpoint}`;
-    }
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (data.success) {
-        onClose();
-      } else {
-        setError(
-          data.message ||
-            (editData ? "Gagal mengedit soal" : "Gagal menambah soal")
-        );
-      }
-    } catch (err) {
-      setError("Terjadi kesalahan");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      {/* Blurred overlay, darker and less blur */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur pointer-events-auto transition-all" />
-      <div className="relative z-10 w-full max-w-md mx-4 pointer-events-auto">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-xl px-8 py-7 w-full">
-          <button
-            onClick={onClose}
-            type="button"
-            className="absolute top-5 right-6 text-gray-400 hover:text-gray-600 text-2xl focus:outline-none"
-          >
-            &times;
-          </button>
-          <div className="mb-2">
-            <h2 className="text-xl font-semibold mb-1">
-              {editData ? "Edit Soal" : "Tambah Soal Baru"}
-            </h2>
-            <p className="text-gray-500 text-sm mb-3">
-              {tipe === "pg"
-                ? "Buat atau edit soal pilihan ganda"
-                : tipe === "essay"
-                ? "Buat atau edit soal essay"
-                : "Buat atau edit soal isian singkat"}
-            </p>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full mx-4 relative">
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        {tipe === 'pg' && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Tambah Soal Pilihan Ganda</h3>
+            {/* TODO: Ganti dengan form PG asli jika sudah ada */}
+            <p className="text-gray-600">Form tambah soal PG akan ditampilkan di sini.</p>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {tipe === "pg" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pertanyaan
-                  </label>
-                  <input
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
-                    placeholder="Tulis pertanyaan..."
-                    value={form.pertanyaan || ""}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        pertanyaan: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Opsi A
-                    </label>
-                    <input
-                      required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                      placeholder="Opsi A"
-                      value={form.opsi_a || ""}
-                      onChange={(e) =>
-                        setForm((f: any) => ({ ...f, opsi_a: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Opsi B
-                    </label>
-                    <input
-                      required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                      placeholder="Opsi B"
-                      value={form.opsi_b || ""}
-                      onChange={(e) =>
-                        setForm((f: any) => ({ ...f, opsi_b: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Opsi C
-                    </label>
-                    <input
-                      required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                      placeholder="Opsi C"
-                      value={form.opsi_c || ""}
-                      onChange={(e) =>
-                        setForm((f: any) => ({ ...f, opsi_c: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Opsi D
-                    </label>
-                    <input
-                      required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                      placeholder="Opsi D"
-                      value={form.opsi_d || ""}
-                      onChange={(e) =>
-                        setForm((f: any) => ({ ...f, opsi_d: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Opsi E
-                    </label>
-                    <input
-                      required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                      placeholder="Opsi E"
-                      value={form.opsi_e || ""}
-                      onChange={(e) =>
-                        setForm((f: any) => ({ ...f, opsi_e: e.target.value }))
-                      }
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Jawaban Benar
-                  </label>
-                  <input
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="A/B/C/D/E"
-                    value={form.jawaban_benar || ""}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        jawaban_benar: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </>
-            )}
-            {tipe === "essay" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pertanyaan Essay
-                  </label>
-                  <input
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="Tulis pertanyaan essay..."
-                    value={form.pertanyaan_essay || ""}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        pertanyaan_essay: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </>
-            )}
-            {tipe === "isian" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pertanyaan Isian
-                  </label>
-                  <input
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="Tulis pertanyaan isian..."
-                    value={form.pertanyaan_isian || ""}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        pertanyaan_isian: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Jawaban Benar
-                  </label>
-                  <input
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    placeholder="Tulis jawaban benar..."
-                    value={form.jawaban_benar || ""}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        jawaban_benar: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </>
-            )}
-            {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-            <div className="flex flex-row-reverse gap-2 pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading
-                  ? "Menyimpan..."
-                  : editData
-                  ? "Simpan Perubahan"
-                  : "Simpan"}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2 border border-gray-300 rounded-lg font-medium bg-white hover:bg-gray-50"
-              >
-                Batal
-              </button>
-            </div>
-          </form>
-        </div>
+        )}
+        {tipe === 'essay' && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Tambah Soal Essay</h3>
+            {/* TODO: Ganti dengan form Essay asli jika sudah ada */}
+            <p className="text-gray-600">Form tambah soal Essay akan ditampilkan di sini.</p>
+          </div>
+        )}
+        {tipe === 'isian' && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Tambah Soal Isian Singkat</h3>
+            {/* TODO: Ganti dengan form Isian asli jika sudah ada */}
+            <p className="text-gray-600">Form tambah soal Isian Singkat akan ditampilkan di sini.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  FileText,
-  BookOpen,
-  PenTool,
-  ArrowLeft,
-} from "lucide-react";
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
 
 // Interface untuk data lomba detail
 interface LombaDetail {
@@ -416,7 +109,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   message,
   onConfirm,
   onCancel,
-  isLoading,
+  isLoading
 }) => {
   if (!isOpen) return null;
 
@@ -438,7 +131,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             disabled={isLoading}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
           >
-            {isLoading ? "Menghapus..." : "Hapus"}
+            {isLoading ? 'Menghapus...' : 'Hapus'}
           </button>
         </div>
       </div>
@@ -447,33 +140,27 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 };
 
 export default function EditLombaPage() {
-  // Modal tambah/edit soal
-  const [modalTambah, setModalTambah] = useState<{
-    open: boolean;
-    tipe: "pg" | "essay" | "isian" | null;
-    editData?: any | null;
-  }>({ open: false, tipe: null });
+  // Modal tambah soal
+  const [modalTambah, setModalTambah] = useState<{ open: boolean; tipe: 'pg' | 'essay' | 'isian' | null }>({ open: false, tipe: null });
   const searchParams = useSearchParams();
   const router = useRouter();
-  const lombaId = searchParams.get("id");
+  const lombaId = searchParams.get('id');
 
   const [lombaData, setLombaData] = useState<LombaData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"info" | "pg" | "essay" | "isian">(
-    "info"
-  );
-
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'info' | 'pg' | 'essay' | 'isian'>('info');
+  
   // Modal states
-  // const [editingSoal, setEditingSoal] = useState<any>(null);
-
+  const [editingSoal, setEditingSoal] = useState<any>(null);
+  
   // Confirmation dialog states
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationConfig, setConfirmationConfig] = useState({
-    title: "",
-    message: "",
+    title: '',
+    message: '',
     onConfirm: () => {},
-    isLoading: false,
+    isLoading: false
   });
 
   // Fetch detail lomba berdasarkan ID
@@ -481,24 +168,24 @@ export default function EditLombaPage() {
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:8000/api/lomba/${id}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
 
       const data = await response.json();
-
+      
       if (data.success) {
         setLombaData(data.data);
-        setError("");
+        setError('');
       } else {
-        setError(data.message || "Gagal memuat detail lomba");
+        setError(data.message || 'Gagal memuat detail lomba');
       }
     } catch (error) {
-      console.error("Error:", error);
-      setError("Terjadi kesalahan saat memuat detail lomba");
+      console.error('Error:', error);
+      setError('Terjadi kesalahan saat memuat detail lomba');
     } finally {
       setLoading(false);
     }
@@ -508,42 +195,38 @@ export default function EditLombaPage() {
     if (lombaId) {
       fetchLombaDetail(lombaId);
     } else {
-      setError("ID Lomba tidak ditemukan");
+      setError('ID Lomba tidak ditemukan');
       setLoading(false);
     }
-  }, [lombaId, modalTambah.open]); // refresh after modal close
+  }, [lombaId]);
 
   // Handle delete soal
-  const handleDeleteSoal = (type: "pg" | "essay" | "isian", id: number) => {
+  const handleDeleteSoal = (type: 'pg' | 'essay' | 'isian', id: number) => {
     setConfirmationConfig({
-      title: "Konfirmasi Hapus",
+      title: 'Konfirmasi Hapus',
       message: `Apakah Anda yakin ingin menghapus soal ${type.toUpperCase()} ini?`,
       onConfirm: () => deleteSoal(type, id),
-      isLoading: false,
+      isLoading: false
     });
     setShowConfirmation(true);
   };
 
   // Delete soal
-  const deleteSoal = async (type: "pg" | "essay" | "isian", id: number) => {
+  const deleteSoal = async (type: 'pg' | 'essay' | 'isian', id: number) => {
     try {
-      setConfirmationConfig((prev) => ({ ...prev, isLoading: true }));
-
-      const endpoint =
-        type === "pg" ? "pg" : type === "essay" ? "essay" : "isian-singkat";
-      const response = await fetch(
-        `http://localhost:8000/api/admin/soal/${endpoint}/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
+      setConfirmationConfig(prev => ({ ...prev, isLoading: true }));
+      
+      const endpoint = type === 'pg' ? 'pg' : type === 'essay' ? 'essay' : 'isian-singkat';
+      const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
 
       const data = await response.json();
-
+      
       if (data.success) {
         // Refresh data setelah delete
         if (lombaId) {
@@ -551,13 +234,13 @@ export default function EditLombaPage() {
         }
         setShowConfirmation(false);
       } else {
-        throw new Error(data.message || "Gagal menghapus soal");
+        throw new Error(data.message || 'Gagal menghapus soal');
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Terjadi kesalahan saat menghapus soal");
+      console.error('Error:', error);
+      alert('Terjadi kesalahan saat menghapus soal');
     } finally {
-      setConfirmationConfig((prev) => ({ ...prev, isLoading: false }));
+      setConfirmationConfig(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -577,7 +260,7 @@ export default function EditLombaPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Link
+          <Link 
             href="/dashboard-admin/manajemen-lomba"
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
@@ -597,13 +280,12 @@ export default function EditLombaPage() {
             Edit Lomba: {lombaData.lomba.nama_cabang}
           </h1>
           <p className="text-gray-600 mt-1">
-            Kelola soal PG, Essay, dan Isian Singkat
+            Kelola soal PG, Essay, dan Isian Singkat (ID: {lombaId})
           </p>
         </div>
-        <Link
+        <Link 
           href="/dashboard-admin/manajemen-lomba"
           className="flex items-center gap-2 px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-          passHref
         >
           <ArrowLeft size={16} />
           Kembali
@@ -615,30 +297,18 @@ export default function EditLombaPage() {
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { key: "info", label: "Info Lomba", icon: FileText },
-              {
-                key: "pg",
-                label: `Soal PG (${lombaData.stats.total_soal_pg})`,
-                icon: BookOpen,
-              },
-              {
-                key: "essay",
-                label: `Soal Essay (${lombaData.stats.total_soal_essay})`,
-                icon: PenTool,
-              },
-              {
-                key: "isian",
-                label: `Soal Isian (${lombaData.stats.total_soal_isian})`,
-                icon: Edit,
-              },
+              { key: 'info', label: 'Info Lomba', icon: FileText },
+              { key: 'pg', label: `Soal PG (${lombaData.stats.total_soal_pg})`, icon: BookOpen },
+              { key: 'essay', label: `Soal Essay (${lombaData.stats.total_soal_essay})`, icon: PenTool },
+              { key: 'isian', label: `Soal Isian (${lombaData.stats.total_soal_isian})`, icon: Edit }
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key as any)}
                 className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === key
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <Icon size={16} />
@@ -650,7 +320,7 @@ export default function EditLombaPage() {
 
         <div className="p-6">
           {/* Tab Content */}
-          {activeTab === "info" && (
+          {activeTab === 'info' && (
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Informasi Lomba</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -664,20 +334,17 @@ export default function EditLombaPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Total Soal
                   </label>
-                  <p className="text-gray-800">
-                    {lombaData.stats.total_semua_soal} soal
-                  </p>
+                  <p className="text-gray-800">{lombaData.stats.total_semua_soal} soal</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Waktu Mulai
                   </label>
                   <p className="text-gray-800">
-                    {lombaData.lomba.waktu_mulai_pengerjaan
-                      ? new Date(
-                          lombaData.lomba.waktu_mulai_pengerjaan
-                        ).toLocaleString("id-ID")
-                      : "Belum ditentukan"}
+                    {lombaData.lomba.waktu_mulai_pengerjaan ? 
+                      new Date(lombaData.lomba.waktu_mulai_pengerjaan).toLocaleString('id-ID') : 
+                      'Belum ditentukan'
+                    }
                   </p>
                 </div>
                 <div>
@@ -685,11 +352,10 @@ export default function EditLombaPage() {
                     Waktu Akhir
                   </label>
                   <p className="text-gray-800">
-                    {lombaData.lomba.waktu_akhir_pengerjaan
-                      ? new Date(
-                          lombaData.lomba.waktu_akhir_pengerjaan
-                        ).toLocaleString("id-ID")
-                      : "Belum ditentukan"}
+                    {lombaData.lomba.waktu_akhir_pengerjaan ? 
+                      new Date(lombaData.lomba.waktu_akhir_pengerjaan).toLocaleString('id-ID') : 
+                      'Belum ditentukan'
+                    }
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -697,19 +363,19 @@ export default function EditLombaPage() {
                     Deskripsi
                   </label>
                   <p className="text-gray-800">
-                    {lombaData.lomba.deskripsi_lomba || "Tidak ada deskripsi"}
+                    {lombaData.lomba.deskripsi_lomba || 'Tidak ada deskripsi'}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === "pg" && (
+          {activeTab === 'pg' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Pilihan Ganda</h3>
                 <button
-                  onClick={() => setModalTambah({ open: true, tipe: "pg" })}
+                  onClick={() => setModalTambah({ open: true, tipe: 'pg' })}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   <Plus size={16} />
@@ -730,19 +396,13 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() =>
-                              setModalTambah({
-                                open: true,
-                                tipe: "pg",
-                                editData: soal,
-                              })
-                            }
+                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteSoal("pg", soal.id)}
+                            onClick={() => handleDeleteSoal('pg', soal.id)}
                             className="text-red-600 hover:text-red-800"
                           >
                             <Trash2 size={16} />
@@ -751,24 +411,13 @@ export default function EditLombaPage() {
                       </div>
                       <p className="text-gray-700 mb-2">{soal.pertanyaan}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <p>
-                          <span className="font-medium">A.</span> {soal.opsi_a}
-                        </p>
-                        <p>
-                          <span className="font-medium">B.</span> {soal.opsi_b}
-                        </p>
-                        <p>
-                          <span className="font-medium">C.</span> {soal.opsi_c}
-                        </p>
-                        <p>
-                          <span className="font-medium">D.</span> {soal.opsi_d}
-                        </p>
-                        <p>
-                          <span className="font-medium">E.</span> {soal.opsi_e}
-                        </p>
+                        <p><span className="font-medium">A.</span> {soal.opsi_a}</p>
+                        <p><span className="font-medium">B.</span> {soal.opsi_b}</p>
+                        <p><span className="font-medium">C.</span> {soal.opsi_c}</p>
+                        <p><span className="font-medium">D.</span> {soal.opsi_d}</p>
+                        <p><span className="font-medium">E.</span> {soal.opsi_e}</p>
                         <p className="text-green-600">
-                          <span className="font-medium">Jawaban:</span>{" "}
-                          {soal.jawaban_benar}
+                          <span className="font-medium">Jawaban:</span> {soal.jawaban_benar}
                         </p>
                       </div>
                     </div>
@@ -778,12 +427,12 @@ export default function EditLombaPage() {
             </div>
           )}
 
-          {activeTab === "essay" && (
+          {activeTab === 'essay' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Essay</h3>
                 <button
-                  onClick={() => setModalTambah({ open: true, tipe: "essay" })}
+                  onClick={() => setModalTambah({ open: true, tipe: 'essay' })}
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                 >
                   <Plus size={16} />
@@ -804,19 +453,13 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() =>
-                              setModalTambah({
-                                open: true,
-                                tipe: "essay",
-                                editData: soal,
-                              })
-                            }
+                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteSoal("essay", soal.id)}
+                            onClick={() => handleDeleteSoal('essay', soal.id)}
                             className="text-red-600 hover:text-red-800"
                           >
                             <Trash2 size={16} />
@@ -830,13 +473,13 @@ export default function EditLombaPage() {
               )}
             </div>
           )}
-
-          {activeTab === "isian" && (
+          
+          {activeTab === 'isian' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Isian Singkat</h3>
                 <button
-                  onClick={() => setModalTambah({ open: true, tipe: "isian" })}
+                  onClick={() => setModalTambah({ open: true, tipe: 'isian' })}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                 >
                   <Plus size={16} />
@@ -857,31 +500,22 @@ export default function EditLombaPage() {
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
                           <button
-                            onClick={() =>
-                              setModalTambah({
-                                open: true,
-                                tipe: "isian",
-                                editData: soal,
-                              })
-                            }
+                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteSoal("isian", soal.id)}
+                            onClick={() => handleDeleteSoal('isian', soal.id)}
                             className="text-red-600 hover:text-red-800"
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700 mb-2">
-                        {soal.pertanyaan_isian}
-                      </p>
+                      <p className="text-gray-700 mb-2">{soal.pertanyaan_isian}</p>
                       <p className="text-green-600">
-                        <span className="font-medium">Jawaban:</span>{" "}
-                        {soal.jawaban_benar}
+                        <span className="font-medium">Jawaban:</span> {soal.jawaban_benar}
                       </p>
                     </div>
                   ))}
@@ -898,7 +532,6 @@ export default function EditLombaPage() {
         tipe={modalTambah.tipe}
         onClose={() => setModalTambah({ open: false, tipe: null })}
         lombaId={lombaId}
-        editData={modalTambah.editData}
       />
 
       {/* Confirmation Dialog */}
