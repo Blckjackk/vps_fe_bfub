@@ -5,8 +5,9 @@ interface ConfirmationSubmitPopupProps {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  jumlahSoal: number;
-  totalSoal: number;
+  soalPGDikerjakan: number;
+  soalSingkatDikerjakan: number;
+  soalEsaiDikerjakan: number;
   sisaWaktu: string;
 }
 
@@ -14,8 +15,9 @@ export default function ConfirmationSubmitPopup({
   open,
   onClose,
   onConfirm,
-  jumlahSoal,
-  totalSoal,
+  soalPGDikerjakan,
+  soalSingkatDikerjakan,
+  soalEsaiDikerjakan,
   sisaWaktu,
 }: ConfirmationSubmitPopupProps) {
   if (!open) return null;
@@ -34,9 +36,11 @@ export default function ConfirmationSubmitPopup({
           <p className="font-semibold text-lg mb-2">
             Pastikan semua jawaban sudah diisi. Apakah Anda yakin ingin menyelesaikan ujian ini sekarang?
           </p>
-          <div className="text-sm text-gray-700 mt-4">
-            <div>Soal Dikerjakan : {jumlahSoal}/{totalSoal}</div>
-            <div>Sisa Waktu : {sisaWaktu}</div>
+          <div className="text-sm text-gray-700 mt-4 space-y-1">
+            <div>Soal Pilihan Ganda: {soalPGDikerjakan}/100</div>
+            <div>Soal Jawaban Singkat: {soalSingkatDikerjakan}/20</div>
+            <div>Soal Esai: {soalEsaiDikerjakan}/20</div>
+            <div className="pt-2">Sisa Waktu: {sisaWaktu}</div>
           </div>
         </div>
         <div className="flex gap-6 mt-6 w-full justify-center">
