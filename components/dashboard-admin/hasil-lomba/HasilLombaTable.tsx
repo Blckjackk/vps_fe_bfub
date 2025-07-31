@@ -44,7 +44,6 @@ export default function HasilLombaTable({ hasil, onDeleteItem, onSelectItem, onS
                 />
               </th>
               <th scope="col" className="w-12 px-2 py-3">No.</th>
-              <th scope="col" className="w-24 px-2 py-3 hidden md:table-cell">No.Pendaftaran</th>
               <th scope="col" className="w-32 px-2 py-3">Nama</th>
               <th scope="col" className="w-24 px-2 py-3 hidden lg:table-cell">Cabang Lomba</th>
               <th scope="col" className="w-20 px-2 py-3 hidden xl:table-cell">Mulai</th>
@@ -69,7 +68,6 @@ export default function HasilLombaTable({ hasil, onDeleteItem, onSelectItem, onS
                   />
                 </td>
                 <td className="w-12 px-2 py-4 font-medium">{index + 1}</td>
-                <td className="w-24 px-2 py-4 hidden md:table-cell text-xs truncate" title={item.noPendaftaran}>{item.noPendaftaran}</td>
                 <td className="w-32 px-2 py-4 font-medium text-gray-900 truncate" title={item.nama}>{item.nama}</td>
                 <td className="w-24 px-2 py-4 hidden lg:table-cell text-xs truncate" title={item.cabor}>{item.cabor}</td>
                 <td className="w-20 px-2 py-4 hidden xl:table-cell text-xs">{item.mulai}</td>
