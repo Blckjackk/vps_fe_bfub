@@ -31,6 +31,8 @@ interface GroupedTokenTableProps {
   tokens: GroupedToken[];
   onDeleteItem?: (id: number) => void;
   onSelectItem?: (peserta_id: number) => void;
+  onSelectAll?: () => void;
+  allChecked?: boolean;
   onUpdateTokenStatus?: (token_id: number, status: string) => void;
   onSetPrimaryToken?: (token_id: number) => void;
 }
@@ -39,6 +41,8 @@ export default function GroupedTokenTable({
   tokens, 
   onDeleteItem, 
   onSelectItem, 
+  onSelectAll,
+  allChecked,
   onUpdateTokenStatus, 
   onSetPrimaryToken 
 }: GroupedTokenTableProps) {
@@ -95,7 +99,8 @@ export default function GroupedTokenTable({
               <th className="text-left p-4 font-medium text-gray-700">
                 <input
                   type="checkbox"
-                  onChange={() => {/* Handle select all */}}
+                  onChange={onSelectAll}
+                  checked={allChecked || false}
                   className="rounded border-gray-300"
                 />
               </th>

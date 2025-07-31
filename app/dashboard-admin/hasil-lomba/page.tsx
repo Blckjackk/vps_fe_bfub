@@ -285,24 +285,11 @@ export default function HasilUjianPage() {
             
             <div className="flex items-center gap-2 w-full md:w-auto">
               <button 
-                onClick={handleSelectAll}
-                className="w-full md:w-auto px-4 py-2 border rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300"
-              >
-                {hasilUjian.every(item => item.isChecked) ? 'Batal Pilih' : 'Pilih Semua'}
-              </button>
-              <button 
                 onClick={() => handleOpenDeleteModal('selected')}
                 disabled={!hasilUjian.some(item => item.isChecked)}
                 className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
               >
                 Hapus Pilih
-              </button>
-              <button 
-                onClick={exportHasil}
-                className="flex w-full md:w-auto items-center justify-center gap-2 px-4 py-2 border rounded-lg text-white bg-blue-500 hover:bg-blue-600"
-              >
-                <Download size={16} />
-                <span>Export</span>
               </button>
             </div>
           </div>
@@ -311,6 +298,8 @@ export default function HasilUjianPage() {
             hasil={hasilUjian} 
             onDeleteItem={handleOpenDeleteModal}
             onSelectItem={handleSelectItem}
+            onSelectAll={handleSelectAll}
+            allChecked={hasilUjian.length > 0 && hasilUjian.every(item => item.isChecked)}
           />
         </div>
       </div>

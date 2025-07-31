@@ -30,7 +30,7 @@ import { useState, useEffect } from 'react';
 import GroupedTokenTable from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import type { GroupedToken } from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
-import { Search, Filter, ChevronDown, Plus } from 'lucide-react';
+import { Search, Filter, ChevronDown } from 'lucide-react';
 
 // Types
 type Lomba = {
@@ -38,16 +38,9 @@ type Lomba = {
   nama_cabang: string;
 };
 
-type Peserta = {
-  id: number;
-  nama_lengkap: string;
-  nomor_pendaftaran: string;
-};
-
 export default function TokenPage() {
   const [tokens, setTokens] = useState<GroupedToken[]>([]);
   const [lombaList, setLombaList] = useState<Lomba[]>([]);
-  const [pesertaList, setPesertaList] = useState<Peserta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,15 +51,7 @@ export default function TokenPage() {
 
   // Modal states
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isGenerateModalOpen, setGenerateModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-
-  // Generate token form states
-  const [generateForm, setGenerateForm] = useState({
-    peserta_id: '',
-    cabang_lomba_id: '',
-    jumlah_token: 1
-  });
 
   // Fetch data tokens
   const fetchTokens = async () => {
@@ -107,20 +92,6 @@ export default function TokenPage() {
     }
   };
 
-  // Fetch daftar peserta
-  const fetchPesertaList = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/admin/peserta');
-      const data = await response.json();
-      
-      if (data.success) {
-        setPesertaList(data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching peserta:', err);
-    }
-  };
-
   // Delete token
   const deleteToken = async (id: number) => {
     try {
@@ -141,31 +112,7 @@ export default function TokenPage() {
     }
   };
 
-  // Generate tokens
-  const generateTokens = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/admin/token/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(generateForm),
-      });
-      const data = await response.json();
 
-      if (data.success) {
-        fetchTokens();
-        setGenerateModalOpen(false);
-        setGenerateForm({ peserta_id: '', cabang_lomba_id: '', jumlah_token: 1 });
-        alert('Token berhasil dibuat');
-      } else {
-        alert(data.message || 'Gagal membuat token');
-      }
-    } catch (err) {
-      alert('Terjadi kesalahan saat membuat token');
-      console.error('Error generating tokens:', err);
-    }
-  };
 
   // Mark selected tokens as expired
   const markTokensAsExpired = async () => {
@@ -213,10 +160,55 @@ export default function TokenPage() {
     }
   };
 
+  // Delete selected tokens
+  const deleteSelectedTokens = async () => {
+    const selectedPeserta = tokens.filter(peserta => 
+      (peserta as any).isChecked
+    );
+    
+    if (selectedPeserta.length === 0) {
+      alert('Pilih peserta yang tokennya akan dihapus');
+      return;
+    }
+
+    // Collect all token IDs from selected peserta
+    const tokenIds: number[] = [];
+    selectedPeserta.forEach(peserta => {
+      if (peserta.token_utama) {
+        tokenIds.push(peserta.token_utama.id);
+      }
+      peserta.token_cadangan.forEach(token => {
+        tokenIds.push(token.id);
+      });
+    });
+
+    try {
+      const response = await fetch('http://localhost:8000/api/admin/token/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token_ids: tokenIds
+        }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        fetchTokens();
+        alert('Token berhasil dihapus');
+      } else {
+        alert(data.message || 'Gagal menghapus token');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat menghapus token');
+      console.error('Error deleting tokens:', err);
+    }
+  };
+
   useEffect(() => {
     fetchTokens();
     fetchLombaList();
-    fetchPesertaList();
   }, []);
 
   useEffect(() => {
@@ -323,13 +315,6 @@ export default function TokenPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-800">Token Peserta</h1>
-          <button
-            onClick={() => setGenerateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            <Plus size={16} />
-            Generate Token
-          </button>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -374,17 +359,18 @@ export default function TokenPage() {
 
             <div className="flex items-center gap-2 w-full md:w-auto">
               <button 
-                onClick={handleSelectAll}
-                className="w-full md:w-auto px-4 py-2 border rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300"
-              >
-                {tokens.every(peserta => (peserta as any).isChecked) ? 'Batal Pilih' : 'Pilih Semua'}
-              </button>
-              <button 
                 onClick={markTokensAsExpired}
                 disabled={!tokens.some(peserta => (peserta as any).isChecked)}
                 className="w-full md:w-auto px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:bg-gray-400"
               >
                 Tandai Hangus
+              </button>
+              <button 
+                onClick={deleteSelectedTokens}
+                disabled={!tokens.some(peserta => (peserta as any).isChecked)}
+                className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
+              >
+                Hapus Dipilih
               </button>
             </div>
           </div>
@@ -394,90 +380,15 @@ export default function TokenPage() {
             tokens={tokens} 
             onDeleteItem={handleOpenDeleteModal}
             onSelectItem={handleSelectItem}
+            onSelectAll={handleSelectAll}
+            allChecked={tokens.length > 0 && tokens.every(peserta => (peserta as any).isChecked)}
             onUpdateTokenStatus={updateTokenStatus}
             onSetPrimaryToken={setPrimaryToken}
           />
         </div>
       </div>
 
-      {/* Modal Generate Token */}
-      {isGenerateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">Generate Token Baru</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Peserta
-                </label>
-                <select
-                  value={generateForm.peserta_id}
-                  onChange={(e) => setGenerateForm(prev => ({ ...prev, peserta_id: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
-                >
-                  <option value="">Pilih Peserta</option>
-                  {pesertaList.map(peserta => (
-                    <option key={peserta.id} value={peserta.id.toString()}>
-                      {peserta.nama_lengkap} - {peserta.nomor_pendaftaran}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cabang Lomba
-                </label>
-                <select
-                  value={generateForm.cabang_lomba_id}
-                  onChange={(e) => setGenerateForm(prev => ({ ...prev, cabang_lomba_id: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
-                >
-                  <option value="">Pilih Lomba</option>
-                  {lombaList.map(lomba => (
-                    <option key={lomba.id} value={lomba.id.toString()}>
-                      {lomba.nama_cabang}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Jumlah Token
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={generateForm.jumlah_token}
-                  onChange={(e) => setGenerateForm(prev => ({ ...prev, jumlah_token: parseInt(e.target.value) || 1 }))}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setGenerateModalOpen(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={generateTokens}
-                disabled={!generateForm.peserta_id || !generateForm.cabang_lomba_id}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
-              >
-                Generate
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal Konfirmasi Hapus */}
       <ConfirmationDialog
