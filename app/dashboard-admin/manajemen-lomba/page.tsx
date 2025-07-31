@@ -12,11 +12,10 @@ interface LombaData {
   deskripsi_lomba: string;
   waktu_mulai_pengerjaan: string;
   waktu_akhir_pengerjaan: string;
-  jumlah_peserta: number;
-  jumlah_soal_pg: number;
-  jumlah_soal_essay: number;
-  jumlah_soal_isian: number;
-  total_soal: number;
+  total_peserta: number;
+  total_soal_pg: number;
+  total_soal_essay: number;
+  total_soal_isian: number;
 }
 
 export default function ManajemenLombaPage() {
@@ -61,20 +60,32 @@ export default function ManajemenLombaPage() {
   const convertedLomba = lombaData.map(item => ({
     id: item.id,
     namaLomba: item.nama_cabang,
-    kodeGrup: `LOMBA-${item.id.toString().padStart(3, '0')}`,
-    kategori: `${item.jumlah_soal_pg > 0 ? 'PG' : ''}${item.jumlah_soal_pg > 0 && (item.jumlah_soal_essay > 0 || item.jumlah_soal_isian > 0) ? ', ' : ''}${item.jumlah_soal_essay > 0 ? 'Essay' : ''}${item.jumlah_soal_essay > 0 && item.jumlah_soal_isian > 0 ? ', ' : ''}${item.jumlah_soal_isian > 0 ? 'Isian' : ''}`,
     durasi: '120 menit', // Default duration
-    mulai: item.waktu_mulai_pengerjaan ? new Date(item.waktu_mulai_pengerjaan).toLocaleDateString('id-ID') : '-',
-    akhir: item.waktu_akhir_pengerjaan ? new Date(item.waktu_akhir_pengerjaan).toLocaleDateString('id-ID') : '-',
-    jumlahSoal: item.total_soal,
+    mulai: item.waktu_mulai_pengerjaan ? new Date(item.waktu_mulai_pengerjaan).toLocaleString('id-ID', { 
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', ' -') : '-',
+    akhir: item.waktu_akhir_pengerjaan ? new Date(item.waktu_akhir_pengerjaan).toLocaleString('id-ID', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', ' -') : '-',
+    jumlahSoalPG: item.total_soal_pg || 0,
+    jumlahSoalIsian: item.total_soal_isian || 0,
+    jumlahSoalEsai: item.total_soal_essay || 0,
     isChecked: false
   }));
 
   // Filter data berdasarkan search term
   const filteredLomba = convertedLomba.filter(lomba =>
-    lomba.namaLomba.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lomba.kodeGrup.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lomba.kategori.toLowerCase().includes(searchTerm.toLowerCase())
+    lomba.namaLomba.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Handle search

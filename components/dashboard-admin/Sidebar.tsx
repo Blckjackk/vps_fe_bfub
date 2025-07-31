@@ -24,7 +24,7 @@ export default function Sidebar({ onLogoutClick }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-white shadow-md flex flex-col p-4">
+    <aside className="w-64 bg-white shadow-md flex flex-col p-4 h-full">
       <div className="flex items-center gap-x-3 mb-4">
         <img src="/images/logos/brand/logo-BFUB.png" alt="BFUB Logo" className="w-20 h-20 object-contain"/>
         <div className="flex flex-col">
