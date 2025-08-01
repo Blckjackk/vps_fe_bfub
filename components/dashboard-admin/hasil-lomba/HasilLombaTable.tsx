@@ -80,7 +80,7 @@ export default function HasilLombaTable({ hasil, onDeleteItem, onSelectItem, onS
                 <td className="w-20 px-2 py-4">
                   <div className="flex items-center justify-center gap-1">
                     <Link
-                      href={`/dashboard-admin/hasil-lomba/detail/${item.id}`}
+                      href={`/dashboard-admin/hasil-lomba/detail?id=${item.id}`}
                       className="text-gray-500 hover:text-blue-600"
                       title="Lihat Detail">
                       <FileText size={16} />
