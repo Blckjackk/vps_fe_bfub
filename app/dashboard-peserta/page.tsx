@@ -47,8 +47,50 @@ export default function HalamanUjian() {
   const token = "OSA-TOKEN-001";
   const [tokenAktif, setTokenAktif] = useState<string | null>("Memuat...");
   const [namaLomba, setNamaLomba] = useState<string>("-");
+  const [lombaId, setLombaId] = useState<string | null>(null);
   const jumlahToken = 5;
   const jumlahSoal = 100;
+
+  // Fungsi untuk validasi dan menggunakan token
+  const validateAndUseToken = async (token: string) => {
+    const storedUserData = localStorage.getItem("user_data");
+    if (!storedUserData) {
+      throw new Error("Sesi login tidak ditemukan. Silakan login ulang.");
+    }
+
+    const user = JSON.parse(storedUserData);
+    
+    if (!user.id || !lombaId) {
+      throw new Error("Data peserta atau lomba tidak lengkap. Silakan refresh halaman.");
+    }
+
+    console.log("Mengirim data token:", {
+      kode_token: token,
+      peserta_id: user.id,
+      cabang_lomba_id: lombaId
+    });
+
+    const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        kode_token: token,
+        peserta_id: user.id,
+        cabang_lomba_id: lombaId
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log("Response validasi token:", data);
+    return data;
+  };
 
   // Fungsi untuk menghitung durasi dalam menit
   const hitungDurasi = (waktuMulai: string, waktuAkhir: string): number => {
@@ -133,23 +175,32 @@ export default function HalamanUjian() {
         return;
       }
       try {
+        // Pertama ambil data profil peserta untuk mendapatkan cabang lomba
+        const profileResponse = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
+        const profileData = await profileResponse.json();
+        
+        if (profileData.success && profileData.data.cabang_lomba) {
+          setNamaLomba(profileData.data.cabang_lomba.nama_cabang);
+          setLombaId(profileData.data.cabang_lomba.id);
+        }
+
+        // Kemudian ambil token aktif
         const response = await fetch(`http://localhost:8000/api/peserta/ambil-token?peserta_id=${pesertaId}`);
         const data = await response.json();
-        if (data.success) {
+        
+        if (data.success && data.data) {
           setTokenAktif(data.data.kode_token || "Tidak ada token aktif");
-          setNamaLomba(
-            (data.data.cabangLomba && data.data.cabangLomba.nama_cabang) ||
-            (data.data.cabang_lomba && data.data.cabang_lomba.nama_cabang) ||
-            "-"
-          );
+          // Update nama lomba jika belum diset dari profile
+          if (!profileData.success && data.data.cabang_lomba) {
+            setNamaLomba(data.data.cabang_lomba.nama_cabang);
+            setLombaId(data.data.cabang_lomba.id);
+          }
         } else {
           setTokenAktif("Token tidak ditemukan");
-          setNamaLomba("-");
         }
       } catch (error) {
         console.error("Gagal fetch token:", error);
         setTokenAktif("Gagal mengambil token");
-        setNamaLomba("-");
       }
     };
 
@@ -289,22 +340,48 @@ export default function HalamanUjian() {
               className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
               onClick={async () => {
                 // Validasi dan pakai token ke backend
-                if (!inputToken) return;
+                if (!inputToken) {
+                  alert("Mohon masukkan token");
+                  return;
+                }
+
+                const userData = localStorage.getItem("user_data");
+                if (!userData) {
+                  alert("Sesi login tidak ditemukan. Silakan login ulang.");
+                  return;
+                }
+
+                const user = JSON.parse(userData);
+                
                 try {
                   const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ kode_token: inputToken }),
+                    headers: { 
+                      "Content-Type": "application/json",
+                      "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                      kode_token: inputToken,
+                      peserta_id: user.id,
+                      cabang_lomba_id: lombaId
+                    }),
                   });
+
                   const data = await res.json();
+                  console.log("Response pakai token:", data); // Debug response
+
                   if (data.success) {
+                    // Simpan informasi token dan redirect
                     setShowPopup(false);
                     localStorage.setItem("token_aktif", inputToken);
-                    window.location.href = "/cbt/soal-pg";
+                    localStorage.setItem("waktu_mulai", new Date().toISOString());
+                    localStorage.setItem("durasi_ujian", String(durasiUjian));
+                    window.location.href = "/cbt";
                   } else {
-                    alert("Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
+                    alert(data.message || "Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
                   }
                 } catch (err) {
+                  console.error("Error validasi token:", err);
                   alert("Gagal menghubungi server. Coba lagi.");
                 }
               }}
