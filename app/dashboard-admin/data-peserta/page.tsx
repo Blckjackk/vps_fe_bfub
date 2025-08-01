@@ -269,15 +269,6 @@ export default function DataPesertaPage() {
                   Reset
                 </button>
               )}
-
-              {/* Tombol pilih semua / batal pilih */}
-              <button 
-                onClick={handleSelectAll}
-                className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
-              >
-                {selectedIds.length === peserta.length ? 'Batal Pilih' : 'Pilih Semua'}
-              </button>
-
               {/* Tombol hapus peserta terpilih */}
               {selectedIds.length > 0 && (
                 <button
@@ -294,43 +285,72 @@ export default function DataPesertaPage() {
           {/* Temporary simple table instead of PesertaTable untuk debug */}
           <div className="mt-4 bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left text-gray-600">
+              <table className="w-full text-sm text-left text-gray-600 table-fixed">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3">No.</th>
-                    <th className="px-6 py-3">Nama</th>
-                    <th className="px-6 py-3">Cabang Lomba</th>
-                    <th className="px-6 py-3">Password</th>
-                    <th className="px-6 py-3">Asal Sekolah</th>
-                    <th className="px-6 py-3">kota_provinsi</th>
-                    <th className="px-6 py-3">Status</th>
+                    <th className="w-12 px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length === peserta.length && peserta.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                    </th>
+                    <th className="w-16 px-3 py-3">No.</th>
+                    <th className="w-48 px-3 py-3">Nama</th>
+                    <th className="w-40 px-3 py-3">Cabang Lomba</th>
+                    <th className="w-32 px-3 py-3">Password</th>
+                    <th className="w-48 px-3 py-3">Asal Sekolah</th>
+                    <th className="w-40 px-3 py-3">Kota/Provinsi</th>
+                    <th className="w-32 px-3 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center">
+                      <td colSpan={8} className="px-6 py-4 text-center">
                         Memuat data...
                       </td>
                     </tr>
                   ) : peserta.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                         Tidak ada data peserta
                       </td>
                     </tr>
                   ) : (
                     peserta.map((item, index) => (
                       <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
-                        <td className="px-6 py-4">{index + 1}</td>
-                        <td className="px-6 py-4 font-medium">{item.nama_lengkap}</td>
-                        {/* <td className="px-6 py-4">{item.cabang_lomba}</td> */}
-                        <td className="px-6 py-4">{item.cabang_lomba?.nama_cabang}</td>
-                        <td className="px-6 py-4">{item.password_hash} </td>
-                        <td className="px-6 py-4">{item.asal_sekolah}</td>
-                        <td className="px-6 py-4">{item.kota_provinsi}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
+                        <td className="px-3 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                        </td>
+                        <td className="px-3 py-4">{index + 1}</td>
+                        <td className="px-3 py-4 font-medium truncate" title={item.nama_lengkap}>
+                          {item.nama_lengkap}
+                        </td>
+                        <td className="px-3 py-4 truncate" title={item.cabang_lomba?.nama_cabang}>
+                          {item.cabang_lomba?.nama_cabang}
+                        </td>
+                        <td className="px-3 py-4">
+                          <div className="truncate max-w-24" title={item.password_hash}>
+                            {item.password_hash.length > 20 
+                              ? `${item.password_hash.substring(0, 20)}...` 
+                              : item.password_hash}
+                          </div>
+                        </td>
+                        <td className="px-3 py-4 truncate" title={item.asal_sekolah}>
+                          {item.asal_sekolah}
+                        </td>
+                        <td className="px-3 py-4 truncate" title={item.kota_provinsi}>
+                          {item.kota_provinsi}
+                        </td>
+                        <td className="px-3 py-4">
+                          <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                             item.status_ujian === 'selesai' ? 'bg-green-100 text-green-800' :
                             item.status_ujian === 'sedang_ujian' ? 'bg-yellow-100 text-yellow-800' : 
                             'bg-gray-100 text-gray-800'

@@ -234,12 +234,6 @@ export default function ManajemenLombaPage() {
               </div>
             )}
           </div>
-          <button 
-            className="bg-gray-400 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-gray-500"
-            onClick={handleSelectAll}
-          >
-            {selectedItems.length === filteredLomba.length && filteredLomba.length > 0 ? 'Batal Pilih' : 'Pilih Semua'}
-          </button>
           {selectedItems.length > 0 && (
             <button 
               className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]"
