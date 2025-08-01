@@ -395,12 +395,12 @@ export default function EditLombaPage() {
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                          <Link
+                            href={`/dashboard-admin/manajemen-lomba/edit-soal?lombaId=${lombaId}&soalId=${soal.id}&tipe=pg`}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
-                          </button>
+                          </Link>
                           <button
                             onClick={() => handleDeleteSoal('pg', soal.id)}
                             className="text-red-600 hover:text-red-800"
@@ -452,12 +452,12 @@ export default function EditLombaPage() {
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                          <Link
+                            href={`/dashboard-admin/manajemen-lomba/edit-soal?lombaId=${lombaId}&soalId=${soal.id}&tipe=essay`}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
-                          </button>
+                          </Link>
                           <button
                             onClick={() => handleDeleteSoal('essay', soal.id)}
                             className="text-red-600 hover:text-red-800"
@@ -499,12 +499,12 @@ export default function EditLombaPage() {
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">Soal {soal.nomor_soal}</h4>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => alert('Fitur edit soal akan segera hadir!')}
+                          <Link
+                            href={`/dashboard-admin/manajemen-lomba/edit-soal?lombaId=${lombaId}&soalId=${soal.id}&tipe=isian`}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             <Edit size={16} />
-                          </button>
+                          </Link>
                           <button
                             onClick={() => handleDeleteSoal('isian', soal.id)}
                             className="text-red-600 hover:text-red-800"
