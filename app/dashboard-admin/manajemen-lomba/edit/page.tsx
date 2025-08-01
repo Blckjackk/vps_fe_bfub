@@ -280,7 +280,7 @@ export default function EditLombaPage() {
             Edit Lomba: {lombaData.lomba.nama_cabang}
           </h1>
           <p className="text-gray-600 mt-1">
-            Kelola soal PG, Essay, dan Isian Singkat (ID: {lombaId})
+            Kelola soal PG, Essay, dan Isian Singkat
           </p>
         </div>
         <Link 
@@ -374,13 +374,13 @@ export default function EditLombaPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Pilihan Ganda</h3>
-                <button
-                  onClick={() => setModalTambah({ open: true, tipe: 'pg' })}
+                <Link
+                  href={`/dashboard-admin/manajemen-lomba/tambah-soal?id=${lombaId}&tipe=pg`}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   <Plus size={16} />
                   Tambah Soal PG
-                </button>
+                </Link>
               </div>
 
               {lombaData.soal_pg.length === 0 ? (
@@ -431,13 +431,13 @@ export default function EditLombaPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Essay</h3>
-                <button
-                  onClick={() => setModalTambah({ open: true, tipe: 'essay' })}
+                <Link
+                  href={`/dashboard-admin/manajemen-lomba/tambah-soal?id=${lombaId}&tipe=essay`}
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                 >
                   <Plus size={16} />
                   Tambah Soal Essay
-                </button>
+                </Link>
               </div>
 
               {lombaData.soal_essay.length === 0 ? (
@@ -478,13 +478,13 @@ export default function EditLombaPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Soal Isian Singkat</h3>
-                <button
-                  onClick={() => setModalTambah({ open: true, tipe: 'isian' })}
+                <Link
+                  href={`/dashboard-admin/manajemen-lomba/tambah-soal?id=${lombaId}&tipe=isian`}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                 >
                   <Plus size={16} />
                   Tambah Soal Isian
-                </button>
+                </Link>
               </div>
 
               {lombaData.soal_isian_singkat.length === 0 ? (
