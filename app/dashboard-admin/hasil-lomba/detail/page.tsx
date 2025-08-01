@@ -1,8 +1,8 @@
 /**
  * File                         : page.tsx (for hasil lomba detail)
- * Created                      : 2025-07-19
- * Last Updated                 : 2025-07-19
- * Url                          : /dashboard-admin/hasil-lomba/detail/[id]
+ * Created                      : 2025-08-01
+ * Last Updated                 : 2025-08-01
+ * Url                          : /dashboard-admin/hasil-lomba/detail?id={peserta_id}
  * Description                  : Halaman detail hasil lomba pilihan ganda untuk admin pada aplikasi website perlombaan BFUB.
  *                                Menampilkan detail hasil perlombaan, peserta, dan peringkat.
  * Functional                   :
@@ -11,26 +11,18 @@
  *      - Menyediakan fitur pencarian atau filter pada daftar peserta.
  *      - Menampilkan analisis jawaban dan statistik soal.
  * API Methods      / Endpoints :
- *      - GET       api/lomba/{id}                 (Untuk mendapatkan detail informasi lomba)
- *      - GET       api/pendaftaran/lomba/{id}     (Untuk mendapatkan daftar peserta yang terdaftar di lomba ini)
- *      - GET       api/nilai                      (Untuk mendapatkan data nilai yang kemudian dicocokkan dengan peserta)
- *      - GET       api/admin/jawaban/peserta      (Untuk analisis jawaban peserta)
+ *      - GET       api/admin/hasil/peserta/{id}     (Untuk mendapatkan detail hasil peserta)
  * Table Activities             :
- *      - SELECT lomba dari tabel cabang_lomba berdasarkan ID
- *      - SELECT pendaftaran dari tabel pendaftaran dengan filter lomba_id
- *      - SELECT nilai dari tabel nilai dengan join ke peserta
- *      - SELECT peserta dari tabel peserta
- *      - SELECT jawaban dari tabel jawaban untuk analisis
- * Anchor Links                 :
- *      - hasil_lomba.tsx       (untuk kembali ke daftar hasil lomba)
- *      - data_peserta.tsx      (untuk melihat detail peserta)
+ *      - SELECT peserta dari tabel peserta berdasarkan ID
+ *      - SELECT jawaban dari tabel jawaban dengan join ke soal
+ *      - SELECT jawaban_essay dari tabel jawaban_essay dengan join ke soal_essay
+ *      - SELECT jawaban_isian_singkat dari tabel jawaban_isian_singkat dengan join ke soal_isian_singkat
  */
-
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import JawabanTable from '@/components/dashboard-admin/hasil-lomba/JawabanTable';
@@ -57,27 +49,31 @@ type JawabanPG = {
   pilihan_c: string;
   pilihan_d: string;
   jawaban_benar: string;
-  jawaban_peserta: string;
+  jawaban_peserta: string | null;
   benar: boolean;
-  waktu_jawab: string;
+  waktu_jawab: string | null;
 };
 
 type JawabanEssay = {
   nomor_soal: number;
   pertanyaan: string;
-  jawaban_peserta: string;
+  jawaban_peserta: string | null;
   file_path?: string;
   file_name?: string;
-  waktu_jawab: string;
+  waktu_jawab: string | null;
+  score: number; // Tambah field score
+  jawaban_id: number | null; // Tambah jawaban ID
 };
 
 type JawabanIsianSingkat = {
   nomor_soal: number;
   pertanyaan: string;
-  jawaban_peserta: string;
+  jawaban_peserta: string | null;
   jawaban_benar: string;
   benar: boolean;
-  waktu_jawab: string;
+  waktu_jawab: string | null;
+  score: number; // Tambah field score
+  jawaban_id: number | null; // Tambah jawaban ID
 };
 
 type Statistik = {
@@ -86,7 +82,7 @@ type Statistik = {
   total_soal_isian: number;
   jawaban_pg_benar: number;
   jawaban_pg_salah: number;
-  jawaban_pg_dijawab: number; // Add this field
+  jawaban_pg_dijawab: number;
   jawaban_essay_count: number;
   jawaban_isian_count: number;
   persentase_ketepatan: number;
@@ -101,15 +97,44 @@ type DetailHasil = {
 };
 
 export default function DetailHasilPage() {
-  const params = useParams();
-  const id = params?.id as string;
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   
   const [detailHasil, setDetailHasil] = useState<DetailHasil | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Handler untuk update nilai essay dan isian singkat
+  const handleUpdateNilai = (id: number, nilai: number, tipeSoal: 'esai' | 'singkat') => {
+    if (!detailHasil) return;
+
+    if (tipeSoal === 'esai') {
+      const updatedEssay = detailHasil.jawaban_essay.map(item =>
+        item.nomor_soal === id ? { ...item, score: nilai } : item
+      );
+      setDetailHasil({
+        ...detailHasil,
+        jawaban_essay: updatedEssay as any
+      });
+    } else if (tipeSoal === 'singkat') {
+      const updatedIsian = detailHasil.jawaban_isian_singkat.map(item =>
+        item.nomor_soal === id ? { ...item, score: nilai } : item
+      );
+      setDetailHasil({
+        ...detailHasil,
+        jawaban_isian_singkat: updatedIsian as any
+      });
+    }
+  };
+
   // Fetch detail hasil peserta
   const fetchDetailHasil = async () => {
+    if (!id) {
+      setError('ID peserta tidak ditemukan');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`);
@@ -129,9 +154,7 @@ export default function DetailHasilPage() {
   };
 
   useEffect(() => {
-    if (id) {
-      fetchDetailHasil();
-    }
+    fetchDetailHasil();
   }, [id]);
 
   if (loading) {
@@ -196,6 +219,8 @@ export default function DetailHasilPage() {
     // Ensure jawaban_pg is an array before filtering
     const jawabanPG = Array.isArray(detailHasil.jawaban_pg) ? detailHasil.jawaban_pg : [];
     
+    console.log('Raw jawaban_pg data:', jawabanPG);
+    
     const benar = jawabanPG
       .filter(j => j.benar && j.jawaban_peserta !== null)
       .map(j => j.nomor_soal);
@@ -208,6 +233,8 @@ export default function DetailHasilPage() {
     const dijawab = jawabanPG
       .filter(j => j.jawaban_peserta !== null)
       .map(j => j.nomor_soal);
+
+    console.log('Processed jawaban data:', { benar, salah, dijawab });
 
     return { benar, salah, dijawab };
   };
@@ -223,10 +250,11 @@ export default function DetailHasilPage() {
       jawabanPeserta: jawaban.jawaban_peserta || '', // Kosong jika tidak dijawab
       filePath: jawaban.file_path,
       fileName: jawaban.file_name,
-      waktuJawab: jawaban.waktu_jawab,
+      waktuJawab: jawaban.waktu_jawab ?? undefined,
       bobot: 10, // Default bobot
-      score: 0, // Perlu penilaian manual
-      isChecked: false
+      score: jawaban.score || 0, // Gunakan score dari database
+      isChecked: false,
+      jawabanId: jawaban.jawaban_id || undefined // Tambah jawaban ID untuk update
     }));
   };
 
@@ -241,10 +269,11 @@ export default function DetailHasilPage() {
       jawabanPeserta: jawaban.jawaban_peserta || '', // Kosong jika tidak dijawab
       jawabanBenar: jawaban.jawaban_benar,
       benar: jawaban.benar,
-      waktuJawab: jawaban.waktu_jawab,
+      waktuJawab: jawaban.waktu_jawab ?? undefined,
       bobot: 5, // Default bobot
-      score: jawaban.benar ? 5 : 0,
-      isChecked: false
+      score: jawaban.score || 0, // Gunakan score dari database
+      isChecked: false,
+      jawabanId: jawaban.jawaban_id || undefined // Tambah jawaban ID untuk update
     }));
   };
 
@@ -337,19 +366,6 @@ export default function DetailHasilPage() {
             jawabanSalah={jawabanData.salah}
             jawabanDijawab={jawabanData.dijawab}
           />
-
-          {/* Bagian Summary Jawaban PG */}
-          <div className="flex items-center justify-center gap-4">
-            <div className="bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-full">
-              Benar: {detailHasil.statistik?.jawaban_pg_benar || 0}
-            </div>
-            <div className="bg-red-100 text-red-800 font-semibold px-4 py-2 rounded-full">
-              Salah: {detailHasil.statistik?.jawaban_pg_salah || 0}
-            </div>
-            <div className="bg-gray-100 text-gray-800 font-semibold px-4 py-2 rounded-full">
-              Tidak Dijawab: {totalSoalPG - jawabanPGDijawab}
-            </div>
-          </div>
         </>
       )}
 
@@ -358,7 +374,8 @@ export default function DetailHasilPage() {
         <JawabanTable 
           title="Hasil Ujian - Essay" 
           data={getEssayTableData()} 
-          tipeSoal="esai" 
+          tipeSoal="esai"
+          onUpdateNilai={(id, nilai) => handleUpdateNilai(id, nilai, 'esai')}
         />
       )}
 
@@ -367,7 +384,8 @@ export default function DetailHasilPage() {
         <JawabanTable 
           title="Hasil Ujian - Isian Singkat" 
           data={getIsianSingkatTableData()} 
-          tipeSoal="singkat" 
+          tipeSoal="singkat"
+          onUpdateNilai={(id, nilai) => handleUpdateNilai(id, nilai, 'singkat')}
         />
       )}
 

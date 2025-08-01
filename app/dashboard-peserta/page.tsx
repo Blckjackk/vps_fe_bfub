@@ -118,6 +118,36 @@ export default function HalamanUjian() {
       setUserData(user);
       setNamaPeserta(user.nama_lengkap || "Ahmad Izzudin Azzam");
       setAsalSekolah(user.asal_sekolah || "SMAN 2 Bandung");
+
+      // Cek apakah peserta memiliki token yang sedang digunakan
+      const checkActiveToken = async () => {
+        try {
+          const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({ 
+              kode_token: "", // kosong karena hanya mengecek
+              peserta_id: user.id,
+              cabang_lomba_id: user.cabang_lomba_id
+            }),
+          });
+
+          const data = await res.json();
+          if (data.success && data.data?.token) {
+            // Jika ada token yang sedang digunakan, redirect ke CBT
+            localStorage.setItem("token_aktif", data.data.token);
+            localStorage.setItem("waktu_mulai", data.data.waktu_mulai);
+            window.location.href = "/cbt";
+          }
+        } catch (error) {
+          console.error("Error checking active token:", error);
+        }
+      };
+
+      checkActiveToken();
     }
 
     // Fungsi untuk mengambil data cabang lomba peserta
