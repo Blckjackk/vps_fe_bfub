@@ -32,6 +32,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, Download, ChevronDown, Trash2, FileText } from 'lucide-react';
+import { toast, Toaster } from 'sonner';
 import HasilLombaTable from '@/components/dashboard-admin/hasil-lomba/HasilLombaTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 
@@ -130,20 +131,34 @@ export default function HasilUjianPage() {
   // Delete hasil peserta
   const deleteHasilPeserta = async (id: number) => {
     try {
+      console.log('Deleting item with ID:', id); // Debug log
+      
       const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
 
+      console.log('Delete response:', data); // Debug log
+
       if (data.success) {
         // Refresh data setelah delete
         fetchHasilLomba();
-        alert('Hasil peserta berhasil dihapus');
+        
+        // Show success toast
+        toast.success('Berhasil!', {
+          description: 'Data berhasil dihapus dari sistem.',
+        });
+        
+        console.log('Success toast should be shown'); // Debug log
       } else {
-        alert(data.message || 'Gagal menghapus hasil peserta');
+        toast.error('Gagal!', {
+          description: data.message || 'Terjadi kesalahan saat menghapus data.',
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat menghapus data');
+      toast.error('Error!', {
+        description: 'Terjadi kesalahan saat menghapus data.',
+      });
       console.error('Error deleting hasil:', err);
     }
   };
@@ -162,12 +177,21 @@ export default function HasilUjianPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        alert('File berhasil didownload');
+        toast.success('File berhasil didownload!', {
+          description: 'File hasil lomba telah berhasil diunduh.',
+          duration: 3000,
+        });
       } else {
-        alert('Gagal melakukan export');
+        toast.error('Gagal melakukan export', {
+          description: 'Terjadi kesalahan saat mengekspor data.',
+          duration: 4000,
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat export');
+      toast.error('Terjadi kesalahan saat export', {
+        description: 'Silakan coba lagi atau hubungi administrator.',
+        duration: 4000,
+      });
       console.error('Error exporting:', err);
     }
   };
@@ -175,6 +199,11 @@ export default function HasilUjianPage() {
   useEffect(() => {
     fetchHasilLomba();
     fetchLombaList();
+    
+    // Test toast saat komponen dimount
+    setTimeout(() => {
+      toast.success('Halaman berhasil dimuat!');
+    }, 1000);
   }, []);
 
   useEffect(() => {
@@ -191,12 +220,37 @@ export default function HasilUjianPage() {
   };
 
   const handleConfirmDelete = () => {
+    console.log('Confirm delete called with:', itemToDelete); // Debug log
+    
     if (typeof itemToDelete === 'number') {
       deleteHasilPeserta(itemToDelete);
     } else if (itemToDelete === 'selected') {
       // Handle bulk delete
       const selectedIds = hasilUjian.filter(item => item.isChecked).map(item => item.id);
-      selectedIds.forEach(id => deleteHasilPeserta(id));
+      console.log('Selected IDs for bulk delete:', selectedIds); // Debug log
+      
+      if (selectedIds.length > 0) {
+        // Simple bulk delete with success notification
+        Promise.all(selectedIds.map(id => 
+          fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
+            method: 'DELETE',
+          }).then(response => response.json())
+        )).then(results => {
+          const successCount = results.filter(result => result.success).length;
+          
+          if (successCount > 0) {
+            toast.success(`${successCount} data berhasil dihapus!`);
+          } else {
+            toast.error('Gagal menghapus data');
+          }
+          
+          // Refresh data
+          fetchHasilLomba();
+        }).catch(err => {
+          toast.error('Terjadi kesalahan saat menghapus data');
+          console.error('Error bulk deleting:', err);
+        });
+      }
     }
     setDeleteModalOpen(false);
     setItemToDelete(null);
@@ -243,6 +297,14 @@ export default function HasilUjianPage() {
     <>
       <div className={`space-y-6 transition-all duration-300 ${isDeleteModalOpen ? 'blur-sm pointer-events-none' : ''}`}>
         <h1 className="text-2xl font-semibold text-gray-800">Hasil Lomba</h1>
+
+        {/* Test button untuk memastikan toast berfungsi */}
+        <button 
+          onClick={() => toast.success('Test toast berhasil!')}
+          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+        >
+          Test Toast
+        </button>
 
         <div className="bg-white p-4 rounded-lg shadow-sm">
           {/* Baris Filter dan Aksi */}
@@ -315,6 +377,8 @@ export default function HasilUjianPage() {
             : "Apakah kamu yakin ingin menghapus semua hasil ujian yang dipilih?"
         }
       />
+      
+      <Toaster position="top-right" richColors />
     </>
   );
 }
