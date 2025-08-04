@@ -35,6 +35,7 @@
 import StatCard from '@/components/dashboard-admin/StatCard';
 import { Users, LayoutGrid, Wifi } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { withAuth } from '@/lib/auth';
 
 interface DashboardStats {
   total_peserta: number;
@@ -46,7 +47,7 @@ interface DashboardStats {
   token_terpakai: number;
 }
 
-export default function AdminDashboardPage() {
+function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     total_peserta: 0,
     total_lomba: 0,
@@ -116,3 +117,6 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+// Protect this page with admin-only access
+export default withAuth(AdminDashboardPage, ['admin']);

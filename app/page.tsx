@@ -11,6 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { useAuth } from "@/lib/auth";
 
 const competitions = [
   {
@@ -47,43 +48,12 @@ const competitions = [
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState<'admin' | 'peserta' | null>(null);
-  const [userName, setUserName] = useState<string>('');
-
-  // Check login status from localStorage
-  useEffect(() => {
-    const token = localStorage.getItem('session_token');
-    const userData = localStorage.getItem('user_data');
-    const userRole = localStorage.getItem('user_role');
-    
-    if (token && userRole) {
-      setIsLoggedIn(true);
-      setUserType(userRole as 'admin' | 'peserta');
-      
-      // Parse user data to get name
-      if (userData) {
-        try {
-          const parsedUserData = JSON.parse(userData);
-          setUserName(parsedUserData.nama_lengkap || parsedUserData.nama || '');
-        } catch (e) {
-          console.error('Error parsing user data:', e);
-        }
-      }
-    }
-  }, []);
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('session_token');
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('user_role');
-    setIsLoggedIn(false);
-    setUserType(null);
-    setUserName('');
-  };
+  const { user, isAuthenticated, isAdmin, isPeserta, logout } = useAuth();
 
   useEffect(() => {
+    // Check if we're in the browser before using document
+    if (typeof window === 'undefined') return;
+
     const sections = document.querySelectorAll("section[id]");
     const observer = new IntersectionObserver(
       (entries) => {
@@ -145,7 +115,7 @@ export default function LandingPage() {
           </Link>
         </nav>
         <div className="flex gap-2 items-center">
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             // Tampilkan tombol Login dan Register jika belum login
             <>
               <Link href="/login">
@@ -162,14 +132,14 @@ export default function LandingPage() {
           ) : (
             // Tampilkan tombol Dashboard dan Logout jika sudah login
             <div className="flex items-center gap-2 md:gap-3">
-              
-              <Link href={userType === 'admin' ? '/dashboard-admin' : '/dashboard-peserta'}>
+            
+              <Link href={isAdmin ? '/dashboard-admin' : '/dashboard-peserta'}>
                 <Button className="bg-[#C13F3F] text-white rounded-full px-4 md:px-6 py-2 text-sm md:text-base min-w-[100px] md:min-w-[120px] hover:bg-[#ac5555] hover:border-[#a03030]">
                   Dashboard
                 </Button>
               </Link>
               <Button 
-                onClick={handleLogout}
+                onClick={logout}
                 className="bg-transparent border border-[#C13F3F] text-[#C13F3F] rounded-full px-4 md:px-6 py-2 text-sm md:text-base min-w-[80px] md:min-w-[100px] hover:bg-[#fceaea] hover:text-[#a03030] hover:border-[#a03030]"
               >
                 Logout
@@ -189,7 +159,7 @@ export default function LandingPage() {
             Selamat Datang di Website{" "}
             <span className="text-primary">BFUB XXVII</span>
           </h1>
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <>
               <p className="text-gray-600 max-w-md">
                 Untuk mengikuti lomba, silakan login terlebih dahulu dengan menekan
@@ -206,14 +176,14 @@ export default function LandingPage() {
           ) : (
             <>
               <p className="text-gray-600 max-w-md">
-                Selamat datang kembali{userName && `, ${userName}`}! 
-                {userType === 'admin' 
+                Selamat datang kembali{user?.nama_lengkap && `, ${user.nama_lengkap}`}! 
+                {isAdmin 
                   ? ' Anda dapat mengelola sistem lomba melalui dashboard admin.' 
                   : ' Anda dapat mengikuti lomba dan melihat hasil melalui dashboard peserta.'
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-3 w-fit">
-                <Link href={userType === 'admin' ? '/dashboard-admin' : '/dashboard-peserta'}>
+                <Link href={isAdmin ? '/dashboard-admin' : '/dashboard-peserta'}>
                   <Button className="bg-[#C13F3F] text-white rounded-full px-6 py-2 min-w-[140px] hover:bg-[#ac5555] hover:border-[#a03030]">
                     Buka Dashboard
                   </Button>

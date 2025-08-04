@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LuLockKeyhole } from "react-icons/lu";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState<'success' | 'error'>('success');
   const router = useRouter();
+  const { login } = useAuth();
 
   // Show custom popup
   const showCustomPopup = (message: string, type: 'success' | 'error') => {
@@ -52,13 +54,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Simpan data login ke localStorage
-        localStorage.setItem("session_token", data.data.session_token);
-        localStorage.setItem("user_data", JSON.stringify(data.data.user));
-        localStorage.setItem("user_role", data.data.role);
-
-        // Redirect berdasarkan role
-        router.push(data.data.redirect);
+        // Use the auth context login function
+        login(data.data.session_token, data.data.user, data.data.role);
+        showCustomPopup("Login berhasil!", 'success');
       } else {
         showCustomPopup(data.message || "Login gagal", 'error');
       }

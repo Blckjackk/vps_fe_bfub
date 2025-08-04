@@ -28,11 +28,12 @@ import { FaTimes } from "react-icons/fa";
  */
 
 import { useEffect, useState } from "react";
+import { withAuth } from '@/lib/auth';
 
 // State untuk popup dan input token
 // Dideklarasikan di dalam komponen utama
 
-export default function HalamanUjian() {
+function HalamanUjian() {
   const [showPopup, setShowPopup] = useState(false);
   const [inputToken, setInputToken] = useState("");
   const [userData, setUserData] = useState<any>(null);
@@ -439,3 +440,6 @@ export default function HalamanUjian() {
     </>
   );
 }
+
+// Protect this page with peserta-only access
+export default withAuth(HalamanUjian, ['peserta']);
