@@ -50,9 +50,19 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 
 interface PilihanGandaProps {
   onSwitchType: (type: 'pg' | 'singkat' | 'esai') => void;
+  markedQuestions?: number[];
+  onMarkQuestion?: () => void;
+  answeredQuestions?: number[];
+  onSaveAnswer?: (answer: string) => void;
 }
 
-export default function PilihanGanda({ onSwitchType }: PilihanGandaProps) {
+export default function PilihanGanda({ 
+  onSwitchType, 
+  markedQuestions = [], 
+  onMarkQuestion,
+  answeredQuestions = [],
+  onSaveAnswer
+}: PilihanGandaProps) {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const router = useRouter();
@@ -104,7 +114,13 @@ export default function PilihanGanda({ onSwitchType }: PilihanGandaProps) {
                       ? "bg-[#B94A48] bg-opacity-10 border-2 border-[#B94A48]"
                       : "bg-white border border-gray-200 hover:border-[#B94A48] hover:border-opacity-50"
                   }`}
-                  onClick={() => setSelectedOption(option.label)}
+                  onClick={() => {
+                    setSelectedOption(option.label);
+                    // Auto-save immediately when option is selected
+                    if (onSaveAnswer) {
+                      onSaveAnswer(option.label);
+                    }
+                  }}
                 >
                   <div className={`w-7 h-7 rounded flex items-center justify-center text-sm font-medium
                     ${selectedOption === option.label 
@@ -131,13 +147,23 @@ export default function PilihanGanda({ onSwitchType }: PilihanGandaProps) {
             </Button>
             <Button 
               variant="secondary"
-              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className={`px-6 py-2 ${
+                markedQuestions.includes(currentQuestion)
+                  ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              onClick={onMarkQuestion}
             >
-              Tandai Soal
+              {markedQuestions.includes(currentQuestion) ? "Batal Tandai" : "Tandai Soal"}
             </Button>
             <Button 
               className="px-6 py-2 bg-[#B94A48] text-white hover:bg-[#A43D3B]"
               onClick={() => {
+                // Simpan jawaban otomatis sebelum pindah
+                if (selectedOption && onSaveAnswer) {
+                  onSaveAnswer(selectedOption);
+                }
+                
                 if (currentQuestion === 100) {
                   onSwitchType('singkat');
                 } else {
@@ -155,6 +181,8 @@ export default function PilihanGanda({ onSwitchType }: PilihanGandaProps) {
         totalQuestions={100}
         currentQuestion={currentQuestion}
         onQuestionClick={setCurrentQuestion}
+        answeredQuestions={answeredQuestions}
+        markedQuestions={markedQuestions}
       />
     </div>
   );

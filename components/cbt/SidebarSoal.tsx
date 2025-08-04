@@ -7,13 +7,15 @@ interface SidebarSoalProps {
   currentQuestion: number;
   onQuestionClick: (questionNumber: number) => void;
   answeredQuestions?: number[]; // Array of question numbers that have been answered
+  markedQuestions?: number[]; // Array of question numbers that have been marked
 }
 
 export default function SidebarSoal({ 
   totalQuestions, 
   currentQuestion,
   onQuestionClick,
-  answeredQuestions = []
+  answeredQuestions = [],
+  markedQuestions = []
 }: SidebarSoalProps) {
   const questionNumbers = Array.from({ length: totalQuestions }, (_, i) => i + 1);
 
@@ -23,6 +25,7 @@ export default function SidebarSoal({
         <div className="grid grid-cols-5 gap-2">
           {questionNumbers.map((num) => {
             const isAnswered = answeredQuestions.includes(num);
+            const isMarked = markedQuestions.includes(num);
             const isCurrent = num === currentQuestion;
             
             return (
@@ -34,6 +37,8 @@ export default function SidebarSoal({
                     ? "bg-[#B94A48] text-white"
                     : isAnswered
                     ? "bg-green-500 text-white hover:bg-green-600"
+                    : isMarked
+                    ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                     : "bg-white border border-gray-200 text-gray-700 hover:border-[#B94A48] hover:border-opacity-50"
                 }`}
               >

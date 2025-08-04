@@ -86,6 +86,15 @@ export default function CBTPage() {
   const [pgAnswers, setPGAnswers] = useState<PGAnswer[]>([]);
   const [isianSingkatAnswers, setIsianSingkatAnswers] = useState<IsianSingkatAnswer[]>([]);
   const [essayAnswers, setEssayAnswers] = useState<EssayAnswer[]>([]);
+  const [markedQuestions, setMarkedQuestions] = useState<{
+    pg: number[];
+    singkat: number[];
+    esai: number[];
+  }>({
+    pg: [],
+    singkat: [],
+    esai: []
+  });
 
   const saveAnswer = (answerText: string) => {
     const activeQuestion = questions[questionType][currentQuestion - 1];
@@ -167,7 +176,40 @@ export default function CBTPage() {
       }
       return [...prev, newAnswer];
     });
+
+    // Remove mark when answer is saved
+    setMarkedQuestions(prev => {
+      const currentMarked = prev[questionType];
+      const isMarked = currentMarked.includes(currentQuestion);
+      
+      if (isMarked) {
+        return {
+          ...prev,
+          [questionType]: currentMarked.filter(q => q !== currentQuestion)
+        };
+      }
+      return prev;
+    });
   };
+
+  // Fungsi untuk menandai soal
+  const toggleMarkQuestion = () => {
+    const activeQuestion = questions[questionType][currentQuestion - 1];
+    if (!activeQuestion) return;
+
+    setMarkedQuestions(prev => {
+      const currentMarked = prev[questionType];
+      const isMarked = currentMarked.includes(currentQuestion);
+      
+      return {
+        ...prev,
+        [questionType]: isMarked
+          ? currentMarked.filter(q => q !== currentQuestion)
+          : [...currentMarked, currentQuestion]
+      };
+    });
+  };
+
   const [availableTypes, setAvailableTypes] = useState<QuestionType[]>([]);
   const [examTitle, setExamTitle] = useState<string>("");
   const [isLoadingQuestions, setIsLoadingQuestions] = useState<boolean>(true);
@@ -352,6 +394,29 @@ export default function CBTPage() {
     };
   }, [showTokenPopup, showConfirmationPopup]);
 
+  // Auto-save when user tries to leave the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Auto-save current answer before leaving
+      if (questionType === 'pg' && selectedOption) {
+        saveAnswer(selectedOption);
+      } else if (questionType === 'singkat' && answer.trim()) {
+        saveAnswer(answer.trim());
+      } else if (questionType === 'esai' && answer.trim()) {
+        saveAnswer(answer.trim());
+      }
+      
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [questionType, selectedOption, answer]);
+
   // Reset currentQuestion when switching question types and load saved answer
   useEffect(() => {
     if (questions[questionType].length > 0) {
@@ -522,6 +587,15 @@ export default function CBTPage() {
   };
 
   const handleBack = () => {
+    // Auto-save current answer before navigation
+    if (questionType === 'pg' && selectedOption) {
+      saveAnswer(selectedOption);
+    } else if (questionType === 'singkat' && answer.trim()) {
+      saveAnswer(answer.trim());
+    } else if (questionType === 'esai' && answer.trim()) {
+      saveAnswer(answer.trim());
+    }
+
     if (currentQuestion === 1) {
       // Find previous available question type
       const currentTypeIndex = availableTypes.indexOf(questionType);
@@ -664,7 +738,29 @@ export default function CBTPage() {
     }
   };
 
+  const handleQuestionClick = (questionNumber: number) => {
+    // Auto-save current answer before navigation
+    if (questionType === 'pg' && selectedOption) {
+      saveAnswer(selectedOption);
+    } else if (questionType === 'singkat' && answer.trim()) {
+      saveAnswer(answer.trim());
+    } else if (questionType === 'esai' && answer.trim()) {
+      saveAnswer(answer.trim());
+    }
+
+    setCurrentQuestion(questionNumber);
+  };
+
   const handleNext = () => {
+    // Auto-save current answer before navigation
+    if (questionType === 'pg' && selectedOption) {
+      saveAnswer(selectedOption);
+    } else if (questionType === 'singkat' && answer.trim()) {
+      saveAnswer(answer.trim());
+    } else if (questionType === 'esai' && answer.trim()) {
+      saveAnswer(answer.trim());
+    }
+
     const currentTypeQuestions = questions[questionType];
     
     if (currentQuestion === currentTypeQuestions.length) {
@@ -763,6 +859,15 @@ export default function CBTPage() {
                   : "text-gray-700 hover:bg-gray-50 font-medium"
                 }
                 onClick={() => {
+                  // Auto-save current answer before switching question type
+                  if (questionType === 'pg' && selectedOption) {
+                    saveAnswer(selectedOption);
+                  } else if (questionType === 'singkat' && answer.trim()) {
+                    saveAnswer(answer.trim());
+                  } else if (questionType === 'esai' && answer.trim()) {
+                    saveAnswer(answer.trim());
+                  }
+
                   setQuestionType(type);
                   setCurrentQuestion(1);
                   setSelectedOption(null);
@@ -835,14 +940,14 @@ export default function CBTPage() {
                           </div>
                         );
                       })}
-                      {selectedOption && (
+                      {/* {selectedOption && (
                         <Button 
                           onClick={() => saveAnswer(selectedOption)} 
                           className="w-full bg-green-500 hover:bg-green-600 text-white mt-4"
                         >
                           Simpan
                         </Button>
-                      )}
+                      )} */}
                     </>
                   )}
                   {questionType === 'singkat' && questions[questionType][currentQuestion - 1] && (
@@ -854,12 +959,12 @@ export default function CBTPage() {
                         placeholder="Tulis jawaban singkat Anda di sini..."
                         className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:border-[#B94A48] focus:ring-1 focus:ring-[#B94A48]"
                       />
-                      <Button 
+                      {/* <Button 
                         onClick={() => saveAnswer(answer)} 
                         className="w-full bg-green-500 hover:bg-green-600 text-white"
                       >
                         Simpan
-                      </Button>
+                      </Button> */}
                     </>
                   )}
                   {questionType === 'esai' && questions[questionType][currentQuestion - 1] && (
@@ -870,12 +975,12 @@ export default function CBTPage() {
                         placeholder="Tulis jawaban esai Anda di sini..."
                         className="w-full h-64 p-4 border border-gray-200 rounded-lg focus:outline-none focus:border-[#B94A48] focus:ring-1 focus:ring-[#B94A48] resize-none"
                       />
-                      <Button 
+                      {/* <Button 
                         onClick={() => saveAnswer(answer)} 
                         className="w-full bg-green-500 hover:bg-green-600 text-white"
                       >
                         Simpan
-                      </Button>
+                      </Button> */}
                     </>
                   )}
                 </div>
@@ -892,10 +997,15 @@ export default function CBTPage() {
                 </Button>
                 <Button 
                   variant="secondary"
-                  className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  className={`px-6 py-2 ${
+                    markedQuestions[questionType].includes(currentQuestion)
+                      ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                  onClick={toggleMarkQuestion}
                   disabled={questions[questionType].length === 0 || isLoadingQuestions}
                 >
-                  Tandai Soal
+                  {markedQuestions[questionType].includes(currentQuestion) ? "Batal Tandai" : "Tandai Soal"}
                 </Button>
                 <Button 
                   className={`px-6 py-2 text-white ${
@@ -916,8 +1026,9 @@ export default function CBTPage() {
           <SidebarSoal 
             totalQuestions={questions[questionType]?.length || 0}
             currentQuestion={currentQuestion}
-            onQuestionClick={setCurrentQuestion}
+            onQuestionClick={handleQuestionClick}
             answeredQuestions={getAnsweredQuestions()}
+            markedQuestions={markedQuestions[questionType]}
           />
         </div>
       </div>

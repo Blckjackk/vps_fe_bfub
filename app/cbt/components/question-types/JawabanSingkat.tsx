@@ -40,7 +40,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,12 +48,42 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 
 interface JawabanSingkatProps {
   onSwitchType: (type: 'pg' | 'singkat' | 'esai') => void;
+  markedQuestions?: number[];
+  onMarkQuestion?: () => void;
+  answeredQuestions?: number[];
+  onSaveAnswer?: (answer: string) => void;
 }
 
-export default function JawabanSingkat({ onSwitchType }: JawabanSingkatProps) {
+export default function JawabanSingkat({ 
+  onSwitchType, 
+  markedQuestions = [], 
+  onMarkQuestion,
+  answeredQuestions = [],
+  onSaveAnswer
+}: JawabanSingkatProps) {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answer, setAnswer] = useState("");
   const router = useRouter();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-save dengan debounce ketika user mengetik
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (answer.trim() && onSaveAnswer) {
+      timeoutRef.current = setTimeout(() => {
+        onSaveAnswer(answer.trim());
+      }, 1000); // Save after 1 second of no typing
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [answer, onSaveAnswer]);
 
   return (
     <div className="container mx-auto px-6 py-4 flex gap-8">
@@ -80,12 +110,6 @@ export default function JawabanSingkat({ onSwitchType }: JawabanSingkatProps) {
                 placeholder="Tulis jawaban singkat Anda di sini..."
                 className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:border-[#B94A48] focus:ring-1 focus:ring-[#B94A48]"
               />
-              <Button 
-                onClick={() => {}} 
-                className="w-full bg-green-500 hover:bg-green-600 text-white"
-              >
-                Simpan
-              </Button>
             </div>
           </div>
 
@@ -105,13 +129,23 @@ export default function JawabanSingkat({ onSwitchType }: JawabanSingkatProps) {
             </Button>
             <Button 
               variant="secondary"
-              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className={`px-6 py-2 ${
+                markedQuestions.includes(currentQuestion)
+                  ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              onClick={onMarkQuestion}
             >
-              Tandai Soal
+              {markedQuestions.includes(currentQuestion) ? "Batal Tandai" : "Tandai Soal"}
             </Button>
             <Button 
               className="px-6 py-2 bg-[#B94A48] text-white hover:bg-[#A43D3B]"
               onClick={() => {
+                // Simpan jawaban otomatis sebelum pindah
+                if (answer.trim() && onSaveAnswer) {
+                  onSaveAnswer(answer.trim());
+                }
+                
                 if (currentQuestion === 20) {
                   onSwitchType('esai');
                 } else {
@@ -129,6 +163,8 @@ export default function JawabanSingkat({ onSwitchType }: JawabanSingkatProps) {
         totalQuestions={20}
         currentQuestion={currentQuestion}
         onQuestionClick={setCurrentQuestion}
+        answeredQuestions={answeredQuestions}
+        markedQuestions={markedQuestions}
       />
     </div>
   );
