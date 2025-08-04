@@ -139,11 +139,69 @@ export default function ManajemenLombaPage() {
   };
 
   // Handle delete selected
-  const handleDeleteSelected = () => {
-    if (selectedItems.length > 0) {
-      // Implement delete functionality here
-      console.log('Deleting items:', selectedItems);
-      setSelectedItems([]);
+  const handleDeleteSelected = async () => {
+    if (selectedItems.length === 0) return;
+
+    const confirmDelete = confirm(`Apakah Anda yakin ingin menghapus ${selectedItems.length} lomba yang dipilih? Tindakan ini tidak dapat dibatalkan.`);
+    
+    if (!confirmDelete) return;
+
+    try {
+      const deletePromises = selectedItems.map(id => 
+        fetch(`http://localhost:8000/api/lomba/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        })
+      );
+
+      const results = await Promise.all(deletePromises);
+      const responses = await Promise.all(results.map(res => res.json()));
+      
+      const successCount = responses.filter(res => res.success).length;
+      const failCount = responses.length - successCount;
+
+      if (successCount > 0) {
+        alert(`Berhasil menghapus ${successCount} lomba${failCount > 0 ? `, gagal menghapus ${failCount} lomba` : ''}`);
+        setSelectedItems([]);
+        fetchLomba(); // Refresh data
+      } else {
+        alert('Gagal menghapus lomba yang dipilih');
+      }
+    } catch (error) {
+      console.error('Error deleting lomba:', error);
+      alert('Terjadi kesalahan saat menghapus lomba');
+    }
+  };
+
+  // Handle delete single lomba
+  const handleDeleteSingle = async (id: number, namaLomba: string) => {
+    const confirmDelete = confirm(`Apakah Anda yakin ingin menghapus lomba "${namaLomba}"? Tindakan ini tidak dapat dibatalkan.`);
+    
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/lomba/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(result.message);
+        fetchLomba(); // Refresh data
+      } else {
+        alert(result.message || 'Gagal menghapus lomba');
+      }
+    } catch (error) {
+      console.error('Error deleting lomba:', error);
+      alert('Terjadi kesalahan saat menghapus lomba');
     }
   };
 
@@ -264,6 +322,7 @@ export default function ManajemenLombaPage() {
             lomba={filteredLomba} 
             selectedItems={selectedItems}
             onItemSelection={handleItemSelection}
+            onDeleteSingle={handleDeleteSingle}
           />
         )}
       </div>

@@ -30,10 +30,61 @@
  */
 
 
+'use client';
+
 import StatCard from '@/components/dashboard-admin/StatCard';
 import { Users, LayoutGrid, Wifi } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+interface DashboardStats {
+  total_peserta: number;
+  total_lomba: number;
+  peserta_online: number;
+  peserta_selesai: number;
+  peserta_belum_mulai: number;
+  token_aktif: number;
+  token_terpakai: number;
+}
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    total_peserta: 0,
+    total_lomba: 0,
+    peserta_online: 0,
+    peserta_selesai: 0,
+    peserta_belum_mulai: 0,
+    token_aktif: 0,
+    token_terpakai: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin/dashboard/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setStats(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-800">Selamat Datang Admin!</h1>
@@ -44,18 +95,18 @@ export default function AdminDashboardPage() {
           <StatCard
             Icon={Users}
             title="Peserta"
-            value={99}
+            value={loading ? 'Loading...' : stats.total_peserta}
           />
           <StatCard
             Icon={LayoutGrid}
             title="Lomba"
-            value={10}
+            value={loading ? 'Loading...' : stats.total_lomba}
             iconColor="text-blue-500"
           />
           <StatCard
             Icon={Wifi}
             title="Peserta Online"
-            value={99}
+            value={loading ? 'Loading...' : stats.peserta_online}
             iconColor="text-green-500"
           />
         </div>

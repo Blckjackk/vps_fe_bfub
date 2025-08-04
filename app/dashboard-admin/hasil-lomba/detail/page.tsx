@@ -277,6 +277,64 @@ export default function DetailHasilPage() {
     }));
   };
 
+  // Calculate dynamic score based on question types
+  const calculateDynamicScore = () => {
+    let totalScore = 0;
+    let maxScore = 0;
+
+    // PG Score calculation: each correct answer = 1 point
+    const pgBenar = detailHasil.statistik?.jawaban_pg_benar || 0;
+    const totalPG = detailHasil.statistik?.total_soal_pg || 0;
+    
+    if (totalPG > 0) {
+      totalScore += pgBenar;
+      maxScore += totalPG;
+    }
+
+    // Essay Score calculation: sum of actual scores from essay answers
+    const essayAnswers = Array.isArray(detailHasil.jawaban_essay) ? detailHasil.jawaban_essay : [];
+    const totalEssay = detailHasil.statistik?.total_soal_essay || 0;
+    
+    if (totalEssay > 0) {
+      // Each essay question has default weight of 10 points
+      const essayMaxPoints = totalEssay * 10;
+      // Sum actual scores from essay answers (need to get from backend)
+      const essayActualScore = essayAnswers.reduce((sum, answer) => {
+        // Score is stored in the answer object from database
+        return sum + (answer.score || 0);
+      }, 0);
+      
+      totalScore += essayActualScore;
+      maxScore += essayMaxPoints;
+    }
+
+    // Isian Singkat Score calculation: each correct = 5 points
+    const isianAnswers = Array.isArray(detailHasil.jawaban_isian_singkat) ? detailHasil.jawaban_isian_singkat : [];
+    const totalIsian = detailHasil.statistik?.total_soal_isian || 0;
+    
+    if (totalIsian > 0) {
+      const isianMaxPoints = totalIsian * 5;
+      const isianActualScore = isianAnswers.reduce((sum, answer) => {
+        return sum + (answer.score || 0);
+      }, 0);
+      
+      totalScore += isianActualScore;
+      maxScore += isianMaxPoints;
+    }
+
+    return {
+      totalScore,
+      maxScore,
+      percentage: maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0
+    };
+  };
+
+  const dynamicScore = calculateDynamicScore();
+  
+  // Extract answers for display
+  const essayAnswers = Array.isArray(detailHasil.jawaban_essay) ? detailHasil.jawaban_essay : [];
+  const isianAnswers = Array.isArray(detailHasil.jawaban_isian_singkat) ? detailHasil.jawaban_isian_singkat : [];
+
   const jawabanData = getJawabanData();
   const totalSoalPG = detailHasil.statistik?.total_soal_pg || 0;
   const totalSoalEssay = detailHasil.statistik?.total_soal_essay || 0;
@@ -347,13 +405,32 @@ export default function DetailHasilPage() {
         {/* Kolom Nilai */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
           <p className="text-lg text-gray-600">Nilai</p>
-          <p className="text-5xl font-bold text-gray-800">
-            {Math.round(detailHasil.peserta.nilai_total || 0)}
-            <span className="text-2xl text-gray-400">/100</span>
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Ketepatan: {detailHasil.statistik?.persentase_ketepatan || 0}%
-          </p>
+          <div className="text-center">
+            <p className="text-5xl font-bold text-gray-800">
+              {dynamicScore.totalScore}
+              <span className="text-2xl text-gray-400">/{dynamicScore.maxScore}</span>
+            </p>
+            <p className="text-lg text-gray-600 mt-1">
+              ({dynamicScore.percentage}%)
+            </p>
+          </div>
+          <div className="text-xs text-gray-500 mt-3 text-center space-y-1">
+            {detailHasil.statistik?.total_soal_pg > 0 && (
+              <p>PG: {detailHasil.statistik?.jawaban_pg_benar || 0}/{detailHasil.statistik?.total_soal_pg || 0} soal</p>
+            )}
+            {detailHasil.statistik?.total_soal_essay > 0 && (
+              <p>Essay: {essayAnswers.reduce((sum: number, answer) => sum + (answer.score || 0), 0)}/{(detailHasil.statistik?.total_soal_essay || 0) * 10} poin</p>
+            )}
+            {detailHasil.statistik?.total_soal_isian > 0 && (
+              <p>Isian: {isianAnswers.reduce((sum: number, answer) => sum + (answer.score || 0), 0)}/{(detailHasil.statistik?.total_soal_isian || 0) * 5} poin</p>
+            )}
+          </div>
+          {/* Show legacy score for reference if different */}
+          {Math.round(detailHasil.peserta.nilai_total || 0) !== dynamicScore.percentage && (
+            <div className="text-xs text-gray-400 mt-2 border-t pt-2">
+              <p>Legacy: {Math.round(detailHasil.peserta.nilai_total || 0)}/100</p>
+            </div>
+          )}
         </div>
       </div>
 

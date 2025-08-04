@@ -145,19 +145,31 @@ export default function TambahSoalPage() {
 
       const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
         body: formData,
       });
 
       const data = await response.json();
 
       if (data.success) {
+        alert('Soal berhasil ditambahkan!');
         router.push(`/dashboard-admin/manajemen-lomba/edit?id=${lombaId}`);
       } else {
-        throw new Error(data.message || 'Gagal menambah soal');
+        // Show detailed error message
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat().join('\n');
+          alert(`Validation Error:\n${errorMessages}`);
+        } else {
+          alert(data.message || 'Gagal menambah soal');
+        }
+        console.error('Error response:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Terjadi kesalahan saat menambah soal');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Terjadi kesalahan saat menambah soal: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -308,7 +320,27 @@ export default function TambahSoalPage() {
                         placeholder={`Tuliskan opsi ${opsi} di sini...`}
                         required
                       />
-                    ) : null}
+                    ) : (
+                      <textarea
+                        value={
+                          opsi === 'A' ? opsiA :
+                          opsi === 'B' ? opsiB :
+                          opsi === 'C' ? opsiC :
+                          opsi === 'D' ? opsiD :
+                          opsiE
+                        }
+                        onChange={(e) => {
+                          if (opsi === 'A') setOpsiA(e.target.value);
+                          if (opsi === 'B') setOpsiB(e.target.value);
+                          if (opsi === 'C') setOpsiC(e.target.value);
+                          if (opsi === 'D') setOpsiD(e.target.value);
+                          if (opsi === 'E') setOpsiE(e.target.value);
+                        }}
+                        className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder={`Teks tambahan untuk opsi ${opsi} (opsional)`}
+                      />
+                    )}
                     {/* File upload untuk opsi */}
                     {formatSoal === 'gambar' && (
                       <div className="mt-2">

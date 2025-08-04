@@ -18,9 +18,10 @@ interface LombaTableProps {
   lomba: Lomba[];
   selectedItems?: number[];
   onItemSelection?: (id: number) => void;
+  onDeleteSingle?: (id: number, namaLomba: string) => void;
 }
 
-export default function LombaTable({ lomba, selectedItems = [], onItemSelection }: LombaTableProps) {
+export default function LombaTable({ lomba, selectedItems = [], onItemSelection, onDeleteSingle }: LombaTableProps) {
   return (
     <div className="mt-4 bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -90,7 +91,11 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection 
                     >
                       <Pencil size={18} />
                     </Link>
-                    <button className="text-red-600 hover:text-red-800" title="Hapus Lomba">
+                    <button 
+                      className="text-red-600 hover:text-red-800" 
+                      title="Hapus Lomba"
+                      onClick={() => onDeleteSingle && onDeleteSingle(item.id, item.namaLomba)}
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>

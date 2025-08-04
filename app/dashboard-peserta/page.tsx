@@ -40,6 +40,7 @@ export default function HalamanUjian() {
   const [durasiUjian, setDurasiUjian] = useState<number>(0);
   const [waktuMulaiUjian, setWaktuMulaiUjian] = useState<string>("--:--");
   const [waktuAkhirUjian, setWaktuAkhirUjian] = useState<string>("--:--");
+  const [statusUjian, setStatusUjian] = useState<string>("belum_mulai"); // Tambah state untuk status ujian
   
   // Data statis untuk demo - akan diganti dengan data dari API
   const [namaPeserta, setNamaPeserta] = useState("Ahmad Izzudin Azzam");
@@ -118,6 +119,7 @@ export default function HalamanUjian() {
       setUserData(user);
       setNamaPeserta(user.nama_lengkap || "Ahmad Izzudin Azzam");
       setAsalSekolah(user.asal_sekolah || "SMAN 2 Bandung");
+      setStatusUjian(user.status_ujian || "belum_mulai"); // Set status ujian dari user data
 
       // Cek apakah peserta memiliki token yang sedang digunakan
       const checkActiveToken = async () => {
@@ -173,7 +175,10 @@ export default function HalamanUjian() {
         
         if (data.success && data.data.cabang_lomba) {
           const lomba = data.data.cabang_lomba;
+          const peserta = data.data;
+          
           setCabangLomba(lomba.nama_cabang);
+          setStatusUjian(peserta.status_ujian || "belum_mulai"); // Update status ujian dari API
           
           // Hitung durasi dan format waktu jika data tersedia
           if (lomba.waktu_mulai_pengerjaan && lomba.waktu_akhir_pengerjaan) {
@@ -327,10 +332,20 @@ export default function HalamanUjian() {
               </ul>
             </div>
 
-            <button className="mt-6 bg-[#D84C3B] hover:bg-red-600 text-white text-sm font-medium py-2 rounded-md transition"
-            onClick={() => setShowPopup(true)}
+            <button 
+              className={`mt-6 text-sm font-medium py-2 rounded-md transition ${
+                statusUjian === 'selesai' 
+                  ? 'bg-gray-400 text-white cursor-not-allowed' 
+                  : 'bg-[#D84C3B] hover:bg-red-600 text-white'
+              }`}
+              onClick={() => {
+                if (statusUjian !== 'selesai') {
+                  setShowPopup(true);
+                }
+              }}
+              disabled={statusUjian === 'selesai'}
             >
-              Mulai
+              {statusUjian === 'selesai' ? 'Waktu Ujian Sudah Selesai' : 'Mulai'}
             </button>
           </div>
         </div>

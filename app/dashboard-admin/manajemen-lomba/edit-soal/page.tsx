@@ -69,15 +69,17 @@ export default function EditSoalPage() {
         console.log('Response data:', data); // Debug log
         
         if (data.success) {
-          const soalData = data.data || data.soal;
+          const soalData = data.data;
           console.log('Soal data:', soalData); // Debug log
           
           if (jenisSoal === 'pg') {
             // Set question data
-            setFormatSoal(soalData.media_soal ? 'gambar' : 'text');
+            setFormatSoal(soalData.tipe_soal || 'text');
             setSoal(soalData.pertanyaan || '');
+            
+            // Set media preview if exists
             if (soalData.media_soal) {
-              setMediaSoalPreview(`http://localhost:8000/storage/${soalData.media_soal}`);
+              setMediaSoalPreview(`http://localhost:8000/${soalData.media_soal}`);
             }
 
             // Set options data
@@ -87,14 +89,14 @@ export default function EditSoalPage() {
             setOpsiD(soalData.opsi_d || '');
             setOpsiE(soalData.opsi_e || '');
 
-            // Set options media if exists
-            if (soalData.opsi_a_media) setOpsiAMediaPreview(`http://localhost:8000/storage/${soalData.opsi_a_media}`);
-            if (soalData.opsi_b_media) setOpsiBMediaPreview(`http://localhost:8000/storage/${soalData.opsi_b_media}`);
-            if (soalData.opsi_c_media) setOpsiCMediaPreview(`http://localhost:8000/storage/${soalData.opsi_c_media}`);
-            if (soalData.opsi_d_media) setOpsiDMediaPreview(`http://localhost:8000/storage/${soalData.opsi_d_media}`);
-            if (soalData.opsi_e_media) setOpsiEMediaPreview(`http://localhost:8000/storage/${soalData.opsi_e_media}`);
+            // Set options media previews if exist
+            if (soalData.opsi_a_media) setOpsiAMediaPreview(`http://localhost:8000/${soalData.opsi_a_media}`);
+            if (soalData.opsi_b_media) setOpsiBMediaPreview(`http://localhost:8000/${soalData.opsi_b_media}`);
+            if (soalData.opsi_c_media) setOpsiCMediaPreview(`http://localhost:8000/${soalData.opsi_c_media}`);
+            if (soalData.opsi_d_media) setOpsiDMediaPreview(`http://localhost:8000/${soalData.opsi_d_media}`);
+            if (soalData.opsi_e_media) setOpsiEMediaPreview(`http://localhost:8000/${soalData.opsi_e_media}`);
 
-            setJawabanBenar(soalData.jawaban_benar);
+            setJawabanBenar(soalData.jawaban_benar || '');
           } 
           else if (jenisSoal === 'essay') {
             setSoal(soalData.pertanyaan_essay || '');
@@ -103,6 +105,9 @@ export default function EditSoalPage() {
             setSoal(soalData.pertanyaan_isian || '');
             setJawabanBenar(soalData.jawaban_benar || '');
           }
+        } else {
+          console.error('API Error:', data.message);
+          alert('Gagal mengambil data soal: ' + data.message);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

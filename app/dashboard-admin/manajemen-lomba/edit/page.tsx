@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
+
 // Modal CRUD Tambah Soal
 interface ModalTambahSoalProps {
   open: boolean;
@@ -40,9 +44,6 @@ const ModalTambahSoal: React.FC<ModalTambahSoalProps> = ({ open, tipe, onClose, 
     </div>
   );
 };
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
 
 // Interface untuk data lomba detail
 interface LombaDetail {
@@ -64,6 +65,12 @@ interface SoalPG {
   opsi_e: string;
   jawaban_benar: string;
   tipe_soal: string;
+  media_soal?: string;
+  opsi_a_media?: string;
+  opsi_b_media?: string;
+  opsi_c_media?: string;
+  opsi_d_media?: string;
+  opsi_e_media?: string;
   deskripsi_soal?: string;
 }
 
@@ -180,6 +187,8 @@ export default function EditLombaPage() {
       if (data.success) {
         setLombaData(data.data);
         setError('');
+        // Debug: Log the soal data to check media fields
+        console.log('Soal PG data:', data.data.soal_pg);
       } else {
         setError(data.message || 'Gagal memuat detail lomba');
       }
@@ -409,17 +418,52 @@ export default function EditLombaPage() {
                           </button>
                         </div>
                       </div>
+
+                      {/* Question Text */}
                       <p className="text-gray-700 mb-2">{soal.pertanyaan}</p>
+                      
+                      {/* Question Image */}
+                      {soal.media_soal && (
+                        <div className="mb-4">
+                          <img 
+                            src={`http://localhost:8000/${soal.media_soal}`} 
+                            alt="Soal" 
+                            className="w-full max-w-md h-48 object-contain rounded-md border bg-gray-50"
+                          />
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <p><span className="font-medium">A.</span> {soal.opsi_a}</p>
-                        <p><span className="font-medium">B.</span> {soal.opsi_b}</p>
-                        <p><span className="font-medium">C.</span> {soal.opsi_c}</p>
-                        <p><span className="font-medium">D.</span> {soal.opsi_d}</p>
-                        <p><span className="font-medium">E.</span> {soal.opsi_e}</p>
-                        <p className="text-green-600">
+                        {['A', 'B', 'C', 'D', 'E'].map((option) => {
+                          const optionKey = option.toLowerCase();
+                          const optionText = soal[`opsi_${optionKey}` as keyof SoalPG] as string;
+                          const optionMedia = soal[`opsi_${optionKey}_media` as keyof SoalPG] as string;
+
+                          return (
+                            <div key={option}>
+                              <p><span className="font-medium">{option}.</span> {optionText}</p>
+                              {/* Show option image if exists */}
+                              {optionMedia && (
+                                <div className="mt-1 ml-4">
+                                  <img 
+                                    src={`http://localhost:8000/${optionMedia}`} 
+                                    alt={`Opsi ${option}`} 
+                                    className="w-24 h-24 object-contain rounded border bg-gray-50"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        <p className="text-green-600 md:col-span-2">
                           <span className="font-medium">Jawaban:</span> {soal.jawaban_benar}
+                          <span className="ml-4 text-gray-500">
+                            (Tipe: {soal.tipe_soal === 'gambar' ? 'Gambar' : 'Teks'})
+                          </span>
                         </p>
                       </div>
+
                     </div>
                   ))}
                 </div>

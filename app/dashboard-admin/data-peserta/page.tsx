@@ -161,12 +161,55 @@ export default function DataPesertaPage() {
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    // Di sini letakkan logika untuk menghapus data dari database
-    console.log(`Menghapus item: ${itemToDelete}`);
-    
-    // Refresh data setelah delete
-    fetchPeserta();
+  const handleConfirmDelete = async () => {
+    try {
+      if (itemToDelete === 'selected') {
+        // Batch delete
+        const response = await fetch('http://localhost:8000/api/admin/peserta/delete-batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          },
+          body: JSON.stringify({
+            ids: selectedIds
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          setSelectedIds([]);
+          alert(result.message);
+        } else {
+          alert(result.message || 'Gagal menghapus peserta');
+        }
+      } else {
+        // Single delete
+        const response = await fetch(`http://localhost:8000/api/admin/peserta/${itemToDelete}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          alert(result.message);
+        } else {
+          alert(result.message || 'Gagal menghapus peserta');
+        }
+      }
+
+      // Refresh data setelah delete
+      fetchPeserta();
+      
+    } catch (error) {
+      console.error('Error deleting peserta:', error);
+      alert('Terjadi kesalahan saat menghapus peserta');
+    }
     
     // Tutup modal setelah selesai
     setDeleteModalOpen(false);
@@ -297,6 +340,14 @@ export default function DataPesertaPage() {
               <table className="w-full text-sm text-left text-gray-600">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length === peserta.length && peserta.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300"
+                      />
+                    </th>
                     <th className="px-6 py-3">No.</th>
                     <th className="px-6 py-3">Nama</th>
                     <th className="px-6 py-3">Cabang Lomba</th>
@@ -304,29 +355,38 @@ export default function DataPesertaPage() {
                     <th className="px-6 py-3">Asal Sekolah</th>
                     <th className="px-6 py-3">kota_provinsi</th>
                     <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center">
+                      <td colSpan={9} className="px-6 py-4 text-center">
                         Memuat data...
                       </td>
                     </tr>
                   ) : peserta.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
                         Tidak ada data peserta
                       </td>
                     </tr>
                   ) : (
                     peserta.map((item, index) => (
                       <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
                         <td className="px-6 py-4">{index + 1}</td>
                         <td className="px-6 py-4 font-medium">{item.nama_lengkap}</td>
                         {/* <td className="px-6 py-4">{item.cabang_lomba}</td> */}
                         <td className="px-6 py-4">{item.cabang_lomba?.nama_cabang}</td>
-                        <td className="px-6 py-4">{item.password_hash} </td>
+                        <td className="px-6 py-4">{item.password_hash}</td>
                         <td className="px-6 py-4">{item.asal_sekolah}</td>
                         <td className="px-6 py-4">{item.kota_provinsi}</td>
                         <td className="px-6 py-4">
@@ -338,6 +398,14 @@ export default function DataPesertaPage() {
                             {item.status_ujian === 'belum_mulai' ? 'Belum Mulai' :
                              item.status_ujian === 'sedang_ujian' ? 'Sedang Ujian' : 'Selesai'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleOpenDeleteModal(item.id)}
+                            className="text-red-600 hover:text-red-800 font-medium"
+                          >
+                            Hapus
+                          </button>
                         </td>
                       </tr>
                     ))
