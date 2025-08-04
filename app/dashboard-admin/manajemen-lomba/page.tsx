@@ -249,49 +249,6 @@ export default function ManajemenLombaPage() {
             onChange={handleSearch}
             className="flex-1 px-4 py-2 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#B94A48]" 
           />
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="flex items-center bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]"
-              onClick={() => setShowDropdown((prev) => !prev)}
-              type="button"
-            >
-              Filter <span className="ml-1"><FaAngleDown /></span>
-            </button>
-            {showDropdown && (
-              <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg z-10">
-                <button 
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => handleFilterChange('semua')}
-                >
-                  Semua Lomba
-                </button>
-                <button 
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => handleFilterChange('terbaru')}
-                >
-                  Terbaru (30 hari)
-                </button>
-                <button 
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => handleFilterChange('aktif')}
-                >
-                  Lomba Aktif
-                </button>
-                <button 
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => handleFilterChange('akan_datang')}
-                >
-                  Akan Datang
-                </button>
-                <button 
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => handleFilterChange('selesai')}
-                >
-                  Lomba Selesai
-                </button>
-              </div>
-            )}
-          </div>
           {selectedItems.length > 0 && (
             <button 
               className="bg-[#B94A48] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#a53e3c]"

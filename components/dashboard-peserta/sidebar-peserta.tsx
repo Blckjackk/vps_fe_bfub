@@ -19,7 +19,7 @@ const navItems = [
   {
     href: "/dashboard-peserta",
     icon: FaClipboardList,
-    label: "Ujian",
+    label: "Lomba",
   },
   {
     href: "/dashboard-peserta/profile-peserta",
@@ -29,7 +29,7 @@ const navItems = [
   { 
     href: "/dashboard-peserta/hasil-lomba", 
     icon: FaBookOpen, 
-    label: "Hasil" 
+    label: "Hasil Lomba" 
   },
 ];
 

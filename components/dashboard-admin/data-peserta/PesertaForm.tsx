@@ -88,12 +88,19 @@ export default function PesertaForm({ initialData, onSubmit, isEditMode = false 
         </div>
       </div>
 
-      <div className="flex justify-center gap-4 mt-8">
-        <Link href="/dashboard-admin/data-peserta" className="px-10 py-2.5 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors">Back</Link>
-        <button type="submit" className="px-10 py-2.5 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors">
-          {isEditMode ? 'Update' : 'Submit'}
+      <div className="flex flex-col md:flex-row gap-4 mt-6">
+        <Link href="/dashboard-admin/data-peserta" className="flex-1">
+          <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+            Batal
+          </button>
+        </Link>
+        <button 
+          type="submit" 
+          className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60]"
+        >
+          {isEditMode ? 'Update' : 'Simpan Peserta'}
         </button>
-      </div>
+      </div>  
     </form>
   );
 }

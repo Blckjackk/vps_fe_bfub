@@ -250,7 +250,7 @@ function HalamanUjian() {
         Selamat Datang {namaPeserta}
       </h1>
       <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Ujian - {namaLomba}
+        Lomba - {namaLomba}
       </h2>
       <p className="text-gray-600 mb-8">
         Silakan baca instruksi di bawah ini sebelum memulai ujian.

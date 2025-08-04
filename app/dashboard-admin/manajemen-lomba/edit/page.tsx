@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 
 // Modal CRUD Tambah Soal
 interface ModalTambahSoalProps {
@@ -282,24 +283,17 @@ export default function EditLombaPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Edit Lomba: {lombaData.lomba.nama_cabang}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Kelola soal PG, Essay, dan Isian Singkat
-          </p>
-        </div>
-        <Link 
-          href="/dashboard-admin/manajemen-lomba"
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-        >
-          <ArrowLeft size={16} />
-          Kembali
-        </Link>
-      </div>
+             {/* Header */}
+       <div className="flex items-center gap-4 mb-8">
+         <Link href="/dashboard-admin/manajemen-lomba" className="text-gray-500 hover:text-gray-800">
+           <FaArrowLeft size={24} />
+         </Link>
+         <div>
+           <h1 className="text-2xl font-semibold text-gray-800">
+             Edit Lomba: {lombaData.lomba.nama_cabang}
+           </h1>
+         </div>
+       </div>
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-lg shadow-sm">

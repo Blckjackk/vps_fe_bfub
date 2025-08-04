@@ -86,20 +86,16 @@ export default function TambahLomba() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFBFF] flex">
+    <div className="min-h-screen">
       <div className="hidden md:block">
       </div>
-      <main className="flex-1 flex flex-col items-start justify-start py-12 px-2 md:px-20">
-        <div className="w-full max-w-xl">
-          <Link
-            href="/dashboard-admin/manajemen-lomba"
-            className="inline-block mb-6"
-          >
-            <span className="text-2xl font-bold text-[#223A5F]">
-              <FaArrowLeft />
-            </span>
-          </Link>
-          <h1 className="text-2xl font-bold mb-8">Tambah Lomba</h1>
+             <div className="flex items-center gap-4 mb-8">
+         <Link href="/dashboard-admin/manajemen-lomba" className="text-gray-500 hover:text-gray-800">
+           <FaArrowLeft size={24} />
+         </Link>
+         <h1 className="text-2xl font-semibold text-gray-800">Tambah Lomba</h1>
+       </div>
+       <div className="w-full max-w-xl">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-xl shadow p-8 flex flex-col gap-4"
@@ -152,24 +148,24 @@ export default function TambahLomba() {
                 required
               />
             </label>
-
-            <div className="flex flex-col md:flex-row gap-4 mt-6">
-              <Link href="/dashboard-admin/manajemen-lomba" className="flex-1">
-                <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
-                  Batal
-                </button>
-              </Link>
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Menyimpan...' : 'Simpan Lomba'}
-              </button>
-            </div>
           </form>
+          
+          <div className="flex flex-col md:flex-row gap-4 mt-6">
+            <Link href="/dashboard-admin/manajemen-lomba" className="flex-1">
+              <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+                Back
+              </button>
+            </Link>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleSubmit}
+            >
+              {loading ? 'Menyimpan...' : 'Submit'}
+            </button>
+          </div>
         </div>
-      </main>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LuLockKeyhole } from "react-icons/lu";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
@@ -75,7 +75,7 @@ export default function LoginPage() {
           href="/"
           className="absolute top-8 left-8 text-2xl font-bold hover:opacity-80"
         >
-          <span>&larr;</span>
+        <FaArrowLeft />
         </Link>
         <div className="flex-1 flex flex-col justify-center gap-6">
           <h1 className="text-4xl font-bold mb-2">Login</h1>

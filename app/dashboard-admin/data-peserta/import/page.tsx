@@ -26,6 +26,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { FaArrowLeft } from 'react-icons/fa';
 import { ArrowLeft, UploadCloud } from 'lucide-react';
 
 export default function ImportPesertaPage() {
@@ -55,12 +56,14 @@ export default function ImportPesertaPage() {
     <div>
       <div className="flex items-center gap-4 mb-6">
         <Link href="/dashboard-admin/data-peserta" className="text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={24} />
+          <FaArrowLeft size={24} />
         </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Import File Peserta</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+      <div className="flex justify-start mt-10 ml-10">
+        <div className="w-full max-w-2xl">
+          <form onSubmit={handleSubmit} className="space-y-6">
         {/* Card Informasi Format */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <h3 className="font-semibold text-lg mb-3">Format File Peserta</h3>
@@ -109,15 +112,22 @@ export default function ImportPesertaPage() {
         </div>
         
         {/* Tombol Aksi */}
-        <div className="flex justify-center gap-4 pt-4">
-          <Link href="/dashboard-admin/data-peserta" className="px-10 py-2.5 bg-[#D14D42] text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors">
-            Back
+        <div className="flex flex-col md:flex-row gap-4 mt-6">
+          <Link href="/dashboard-admin/data-peserta" className="flex-1">
+            <button type="button" className="w-full bg-[#B94A48] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#a53e3c]">
+              Batal
+            </button>
           </Link>
-          <button type="submit" className="px-10 py-2.5 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors">
-            Submit
+          <button 
+            type="submit" 
+            className="flex-1 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60]"
+          >
+            Import Peserta
           </button>
         </div>
       </form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -24,7 +24,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import PesertaForm from '@/components/dashboard-admin/data-peserta/PesertaForm';
 
 export default function TambahPesertaPage() {
@@ -41,12 +41,16 @@ export default function TambahPesertaPage() {
     <div>
       <div className="flex items-center gap-4 mb-6">
         <Link href="/dashboard-admin/data-peserta" className="text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={24} />
+          <FaArrowLeft size={24} />
         </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Tambah Peserta</h1>
       </div>
 
-      <PesertaForm onSubmit={handleCreatePeserta} isEditMode={false} />
+      <div className="flex justify-start mt-10 ml-10">
+        <div className="w-full max-w-2xl">
+          <PesertaForm onSubmit={handleCreatePeserta} isEditMode={false} />
+        </div>
+      </div>
     </div>
   );
 }

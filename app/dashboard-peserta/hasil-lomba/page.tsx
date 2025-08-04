@@ -40,7 +40,7 @@ export default function HasilLombaPage() {
     <div className="flex min-h-screen bg-[#F7F8FA]">
       
       <main className="flex-1 p-10">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Hasil Ujian</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">Hasil Lomba</h1>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-lg shadow-md border border-gray-200">
             <thead>

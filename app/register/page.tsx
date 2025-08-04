@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FaArrowLeft } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -173,11 +174,42 @@ export default function RegisterPeserta() {
       if (data.success) {
         showCustomPopup('Registrasi berhasil! Silakan login dengan akun Anda.', 'success');
       } else {
-        // Handle specific errors
+        // Untuk error spesifik
         if (data.errors) {
           setErrors(data.errors);
+          
+          // Cek spesifik error
+          if (data.errors.nomor_pendaftaran) {
+            showCustomPopup('Nomor pendaftaran sudah terdaftar. Silakan gunakan nomor pendaftaran yang berbeda.', 'error');
+          } else if (data.errors.username) {
+            showCustomPopup('Username sudah digunakan. Silakan pilih username yang berbeda.', 'error');
+          }
         } else {
-          showCustomPopup(data.message || 'Registrasi gagal. Silakan coba lagi.', 'error');
+          // Untuk error umum
+          const errorMessage = data.message || '';
+          const lowerErrorMessage = errorMessage.toLowerCase();
+          
+          // Hapus "(and 1 more error)" dari pesan
+          const cleanErrorMessage = errorMessage.replace(/\s*\(and \d+ more error[s]?\)/i, '');
+          
+          if (lowerErrorMessage.includes('nomor_pendaftaran') || lowerErrorMessage.includes('nomor pendaftaran') || lowerErrorMessage.includes('registration number')) {
+            showCustomPopup('Nomor pendaftaran sudah terdaftar. Silakan gunakan nomor pendaftaran yang berbeda.', 'error');
+          } else if (lowerErrorMessage.includes('username') || lowerErrorMessage.includes('user name')) {
+            showCustomPopup('Username sudah digunakan. Silakan pilih username yang berbeda.', 'error');
+          } else if (lowerErrorMessage.includes('has already been taken')) {
+            // Cek apakah itu spesifik tentang nomor_pendaftaran
+            if (lowerErrorMessage.includes('nomor_pendaftaran') || lowerErrorMessage.includes('nomor pendaftaran')) {
+              showCustomPopup('Nomor pendaftaran sudah terdaftar. Silakan gunakan nomor pendaftaran yang berbeda.', 'error');
+            } else if (lowerErrorMessage.includes('username')) {
+              showCustomPopup('Username sudah digunakan. Silakan pilih username yang berbeda.', 'error');
+            } else {
+              showCustomPopup('Data yang Anda masukkan sudah terdaftar. Silakan periksa kembali nomor pendaftaran atau username Anda.', 'error');
+            }
+          } else if (lowerErrorMessage.includes('duplicate') || lowerErrorMessage.includes('sudah ada') || lowerErrorMessage.includes('already exists')) {
+            showCustomPopup('Data yang Anda masukkan sudah terdaftar. Silakan periksa kembali nomor pendaftaran atau username Anda.', 'error');
+          } else {
+            showCustomPopup(cleanErrorMessage || 'Registrasi gagal. Silakan coba lagi.', 'error');
+          }
         }
       }
     } catch (err) {
@@ -201,7 +233,7 @@ export default function RegisterPeserta() {
           href="/"
           className="absolute top-8 left-8 text-2xl font-bold hover:opacity-80"
         >
-          &larr;
+          <FaArrowLeft />
         </Link>
         <div className="flex-1 flex flex-col justify-center gap-6">
           <h1 className="text-4xl font-bold mb-2">Registrasi Peserta</h1>
