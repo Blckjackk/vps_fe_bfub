@@ -1,13 +1,7 @@
 /**
- * File                       import { useState, useEffect } from 'react';
-// 👇 PERBAIKAN UTAMA ADA DI 3 BARIS IMPORT DI BAWAH INI 👇
-// import StatCard from '@/components/dashboard-admin/StatCard'; // Sementara dinonaktifkan
-// import PesertaTable from '@/components/dashboard-admin/data-peserta/PesertaTable'; // Sementara dinonaktifkan
-// import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog'; // Sementara dinonaktifkan
-import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
-import Link from 'next/link'; // Pastikan Link di-importe.tsx (page for data peserta in admin dashboard)
+ * File                         : page.tsx (page for data peserta in admin dashboard)
  * Created                      : 2025-07-19
- * Last Updated                 : 2025-07-19
+ * Last Updated                 : 2025-08-04
  * Url                          : /dashboard-admin/data-peserta
  * Description                  : Halaman dashboard admin untuk manajemen data peserta BFUB.
  *                                Menampilkan daftar peserta, detail, serta fitur pencarian, filter, dan ekspor.
@@ -36,15 +30,12 @@ import Link from 'next/link'; // Pastikan Link di-importe.tsx (page for data pes
  *      - import_file_peserta.tsx
  */
 
-
-'use client'; // Wajib ada untuk menggunakan state (useState)
+'use client';
 
 import { useState, useEffect } from 'react';
-// 👇 PERBAIKAN UTAMA ADA DI 3 BARIS IMPORT DI BAWAH INI 👇
-// import StatCard from '@/components/dashboard-admin/StatCard'; // Temporary disabled
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
-import Link from 'next/link'; // Pastikan Link di-import
+import Link from 'next/link';
 
 // Types untuk data dari API
 interface Peserta {
@@ -262,12 +253,19 @@ export default function DataPesertaPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          
+          <Link
+            href="/dashboard-admin/data-peserta/tambah"
+            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
+            <Plus size={18} /> Tambah Peserta
+          </Link>
           <Link
             href="/dashboard-admin/data-peserta/import"
             className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition-colors border">
             <Upload size={18} /> Import
           </Link>
+          <button className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-600 transition-colors">
+            <Download size={18} /> Export
+          </button>
         </div>
 
         {/* Error Message */}
@@ -331,28 +329,11 @@ export default function DataPesertaPage() {
               <table className="w-full text-sm text-left text-gray-600 table-fixed">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-<<<<<<< HEAD
-                    <th className="px-6 py-3">
-=======
                     <th className="w-12 px-3 py-3">
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
                       <input
                         type="checkbox"
                         checked={selectedIds.length === peserta.length && peserta.length > 0}
                         onChange={handleSelectAll}
-<<<<<<< HEAD
-                        className="rounded border-gray-300"
-                      />
-                    </th>
-                    <th className="px-6 py-3">No.</th>
-                    <th className="px-6 py-3">Nama</th>
-                    <th className="px-6 py-3">Cabang Lomba</th>
-                    <th className="px-6 py-3">Password</th>
-                    <th className="px-6 py-3">Asal Sekolah</th>
-                    <th className="px-6 py-3">kota_provinsi</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Aksi</th>
-=======
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                       />
                     </th>
@@ -363,56 +344,30 @@ export default function DataPesertaPage() {
                     <th className="w-48 px-3 py-3">Asal Sekolah</th>
                     <th className="w-40 px-3 py-3">Kota/Provinsi</th>
                     <th className="w-32 px-3 py-3">Status</th>
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
+                    <th className="w-24 px-3 py-3">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-<<<<<<< HEAD
                       <td colSpan={9} className="px-6 py-4 text-center">
-=======
-                      <td colSpan={8} className="px-6 py-4 text-center">
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
                         Memuat data...
                       </td>
                     </tr>
                   ) : peserta.length === 0 ? (
                     <tr>
-<<<<<<< HEAD
                       <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
-=======
-                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
                         Tidak ada data peserta
                       </td>
                     </tr>
                   ) : (
                     peserta.map((item, index) => (
                       <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
-<<<<<<< HEAD
-                        <td className="px-6 py-4">
-=======
                         <td className="px-3 py-4">
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
                           <input
                             type="checkbox"
                             checked={selectedIds.includes(item.id)}
                             onChange={() => handleSelectItem(item.id)}
-<<<<<<< HEAD
-                            className="rounded border-gray-300"
-                          />
-                        </td>
-                        <td className="px-6 py-4">{index + 1}</td>
-                        <td className="px-6 py-4 font-medium">{item.nama_lengkap}</td>
-                        {/* <td className="px-6 py-4">{item.cabang_lomba}</td> */}
-                        <td className="px-6 py-4">{item.cabang_lomba?.nama_cabang}</td>
-                        <td className="px-6 py-4">{item.password_hash}</td>
-                        <td className="px-6 py-4">{item.asal_sekolah}</td>
-                        <td className="px-6 py-4">{item.kota_provinsi}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-=======
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                           />
                         </td>
@@ -438,7 +393,6 @@ export default function DataPesertaPage() {
                         </td>
                         <td className="px-3 py-4">
                           <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
->>>>>>> e6340e0ba138dad1b29b3675851ca01e7dec1cad
                             item.status_ujian === 'selesai' ? 'bg-green-100 text-green-800' :
                             item.status_ujian === 'sedang_ujian' ? 'bg-yellow-100 text-yellow-800' : 
                             'bg-gray-100 text-gray-800'
@@ -447,10 +401,10 @@ export default function DataPesertaPage() {
                              item.status_ujian === 'sedang_ujian' ? 'Sedang Ujian' : 'Selesai'}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4">
                           <button
                             onClick={() => handleOpenDeleteModal(item.id)}
-                            className="text-red-600 hover:text-red-800 font-medium"
+                            className="text-red-600 hover:text-red-800 font-medium text-sm"
                           >
                             Hapus
                           </button>
