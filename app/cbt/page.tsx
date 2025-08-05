@@ -119,12 +119,16 @@ export default function CBTPage() {
 
       setPGAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newPGAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newPGAnswer];
         }
-        return [...prev, newPGAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_pg_answers", JSON.stringify(updated));
+        return updated;
       });
     } else if (questionType === 'singkat') {
       const newIsianAnswer: IsianSingkatAnswer = {
@@ -136,12 +140,16 @@ export default function CBTPage() {
 
       setIsianSingkatAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_isian_singkat_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newIsianAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newIsianAnswer];
         }
-        return [...prev, newIsianAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_singkat_answers", JSON.stringify(updated));
+        return updated;
       });
     } else if (questionType === 'esai') {
       const newEssayAnswer: EssayAnswer = {
@@ -152,12 +160,16 @@ export default function CBTPage() {
 
       setEssayAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_essay_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newEssayAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newEssayAnswer];
         }
-        return [...prev, newEssayAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_essay_answers", JSON.stringify(updated));
+        return updated;
       });
     }
 
@@ -170,13 +182,25 @@ export default function CBTPage() {
 
     setAnswers(prev => {
       const existing = prev.findIndex(a => a.soal_id === activeQuestion.id && a.jenis === questionType);
+      let updated;
       if (existing !== -1) {
-        const updated = [...prev];
+        updated = [...prev];
         updated[existing] = newAnswer;
-        return updated;
+      } else {
+        updated = [...prev, newAnswer];
       }
-      return [...prev, newAnswer];
+      // Save to localStorage
+      localStorage.setItem("cbt_answers", JSON.stringify(updated));
+      return updated;
     });
+
+    // Save current progress (question type and number)
+    const progress = {
+      questionType,
+      currentQuestion,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem("cbt_progress", JSON.stringify(progress));
 
     // Remove mark when answer is saved
     setMarkedQuestions(prev => {
@@ -184,10 +208,13 @@ export default function CBTPage() {
       const isMarked = currentMarked.includes(currentQuestion);
       
       if (isMarked) {
-        return {
+        const updated = {
           ...prev,
           [questionType]: currentMarked.filter(q => q !== currentQuestion)
         };
+        // Save marked questions to localStorage
+        localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
+        return updated;
       }
       return prev;
     });
@@ -202,12 +229,16 @@ export default function CBTPage() {
       const currentMarked = prev[questionType];
       const isMarked = currentMarked.includes(currentQuestion);
       
-      return {
+      const updated = {
         ...prev,
         [questionType]: isMarked
           ? currentMarked.filter(q => q !== currentQuestion)
           : [...currentMarked, currentQuestion]
       };
+      
+      // Save marked questions to localStorage
+      localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
+      return updated;
     });
   };
 
@@ -290,6 +321,14 @@ export default function CBTPage() {
       // Clear timer data
       localStorage.removeItem("exam_start_time");
       localStorage.removeItem("durasi_ujian");
+      
+      // Clear saved CBT data from localStorage since exam is finished
+      localStorage.removeItem("cbt_pg_answers");
+      localStorage.removeItem("cbt_singkat_answers");
+      localStorage.removeItem("cbt_essay_answers");
+      localStorage.removeItem("cbt_answers");
+      localStorage.removeItem("cbt_marked_questions");
+      localStorage.removeItem("cbt_progress");
       
       // Set flag bahwa ini adalah finish karena waktu habis
       setIsTimeUpFinish(true);
@@ -443,15 +482,21 @@ export default function CBTPage() {
         if (!document.fullscreenElement) {
           const element = document.documentElement;
           if (element.requestFullscreen) {
-            await element.requestFullscreen();
+            await element.requestFullscreen().catch((err: any) => {
+              console.warn('Fullscreen request failed:', err.message);
+            });
           } else if ((element as any).webkitRequestFullscreen) {
-            await (element as any).webkitRequestFullscreen();
+            await (element as any).webkitRequestFullscreen().catch((err: any) => {
+              console.warn('Webkit fullscreen request failed:', err.message);
+            });
           } else if ((element as any).msRequestFullscreen) {
-            await (element as any).msRequestFullscreen();
+            await (element as any).msRequestFullscreen().catch((err: any) => {
+              console.warn('MS fullscreen request failed:', err.message);
+            });
           }
         }
       } catch (err) {
-        console.error('Error attempting to enable fullscreen:', err);
+        console.warn('Error attempting to enable fullscreen:', err);
       }
     };
 
@@ -561,6 +606,36 @@ export default function CBTPage() {
     }
   }, [questionType, questions]);
 
+  // Load progress after questions are loaded (only once)
+  useEffect(() => {
+    if (questions.pg.length > 0 || questions.singkat.length > 0 || questions.esai.length > 0) {
+      const savedProgress = localStorage.getItem("cbt_progress");
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          // Only restore progress if it's recent (within last 24 hours)
+          const isRecentProgress = (Date.now() - progress.lastUpdated) < 24 * 60 * 60 * 1000;
+          
+          if (isRecentProgress && availableTypes.includes(progress.questionType as QuestionType)) {
+            const progressType = progress.questionType as QuestionType;
+            const maxQuestion = questions[progressType]?.length || 1;
+            const validCurrentQuestion = Math.min(progress.currentQuestion, maxQuestion);
+            
+            setQuestionType(progressType);
+            setCurrentQuestion(validCurrentQuestion);
+            
+            console.log('Restored progress:', {
+              questionType: progressType,
+              currentQuestion: validCurrentQuestion
+            });
+          }
+        } catch (error) {
+          console.error("Error loading progress:", error);
+        }
+      }
+    }
+  }, [questions, availableTypes]);
+
   // Load saved answer when switching questions within the same type
   useEffect(() => {
     const activeQuestion = questions[questionType][currentQuestion - 1];
@@ -603,6 +678,56 @@ export default function CBTPage() {
       const user = JSON.parse(storedUserData);
       setUserData(user);
       console.log('Setting userData:', user);
+    }
+  }, []);
+
+  // Load saved answers and progress from localStorage
+  useEffect(() => {
+    // Load saved answers
+    const savedPGAnswers = localStorage.getItem("cbt_pg_answers");
+    const savedSingkatAnswers = localStorage.getItem("cbt_singkat_answers");
+    const savedEssayAnswers = localStorage.getItem("cbt_essay_answers");
+    const savedAnswers = localStorage.getItem("cbt_answers");
+    const savedMarkedQuestions = localStorage.getItem("cbt_marked_questions");
+    
+    if (savedPGAnswers) {
+      try {
+        setPGAnswers(JSON.parse(savedPGAnswers));
+      } catch (error) {
+        console.error("Error loading PG answers:", error);
+      }
+    }
+    
+    if (savedSingkatAnswers) {
+      try {
+        setIsianSingkatAnswers(JSON.parse(savedSingkatAnswers));
+      } catch (error) {
+        console.error("Error loading Singkat answers:", error);
+      }
+    }
+    
+    if (savedEssayAnswers) {
+      try {
+        setEssayAnswers(JSON.parse(savedEssayAnswers));
+      } catch (error) {
+        console.error("Error loading Essay answers:", error);
+      }
+    }
+    
+    if (savedAnswers) {
+      try {
+        setAnswers(JSON.parse(savedAnswers));
+      } catch (error) {
+        console.error("Error loading answers:", error);
+      }
+    }
+    
+    if (savedMarkedQuestions) {
+      try {
+        setMarkedQuestions(JSON.parse(savedMarkedQuestions));
+      } catch (error) {
+        console.error("Error loading marked questions:", error);
+      }
     }
   }, []);
 
@@ -685,29 +810,54 @@ export default function CBTPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
-  const handleTokenSubmit = async () => {
+  const handleTokenSubmit = async (token: string) => {
     setErrorToken("");
-    // Validasi token ke backend
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      credentials: 'include',
-      body: JSON.stringify({ kode_token: inputToken }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setShowTokenPopup(false);
-      setInputToken("");
-      setErrorToken("");
-      setTokenAktif(inputToken);
-      tokenRef.current = inputToken;
-      localStorage.setItem("token_aktif", inputToken);
-    } else {
-      setErrorToken("Kode token tidak valid atau sudah hangus. Minta token baru ke admin.");
+    
+    if (!token.trim()) {
+      setErrorToken("Silakan masukkan token yang valid.");
+      return;
+    }
+    
+    // Ambil user data untuk peserta_id dan cabang_lomba_id
+    const storedUserData = localStorage.getItem("user_data");
+    if (!storedUserData) {
+      setErrorToken("Data peserta tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+    
+    const user = JSON.parse(storedUserData);
+    
+    try {
+      // Validasi token ke backend dengan data peserta
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          kode_token: token,
+          peserta_id: user.id,
+          cabang_lomba_id: user.cabang_lomba_id
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setShowTokenPopup(false);
+        setInputToken("");
+        setErrorToken("");
+        setTokenAktif(token);
+        tokenRef.current = token;
+        localStorage.setItem("token_aktif", token);
+      } else {
+        setErrorToken(data.message || "Kode token tidak valid atau sudah hangus. Minta token baru ke admin.");
+      }
+    } catch (error) {
+      console.error("Error validating token:", error);
+      setErrorToken("Terjadi kesalahan. Silakan coba lagi.");
     }
   };
 
@@ -726,11 +876,29 @@ export default function CBTPage() {
       const currentTypeIndex = availableTypes.indexOf(questionType);
       if (currentTypeIndex > 0) {
         const prevType = availableTypes[currentTypeIndex - 1];
+        const lastQuestion = questions[prevType].length;
         setQuestionType(prevType);
-        setCurrentQuestion(questions[prevType].length); // Go to last question of previous type
+        setCurrentQuestion(lastQuestion); // Go to last question of previous type
+        
+        // Save progress for previous question type
+        const progress = {
+          questionType: prevType,
+          currentQuestion: lastQuestion,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem("cbt_progress", JSON.stringify(progress));
       }
     } else {
-      setCurrentQuestion(prev => Math.max(prev - 1, 1));
+      const prevQuestion = Math.max(currentQuestion - 1, 1);
+      setCurrentQuestion(prevQuestion);
+      
+      // Save progress
+      const progress = {
+        questionType,
+        currentQuestion: prevQuestion,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem("cbt_progress", JSON.stringify(progress));
     }
   };
 
@@ -845,6 +1013,14 @@ export default function CBTPage() {
             setShowConfirmationPopup(false);
             setIsTimeUpFinish(false); // Ini bukan karena waktu habis
             setShowSuccessPopup(true);
+            
+            // Clear saved CBT data from localStorage since exam is finished
+            localStorage.removeItem("cbt_pg_answers");
+            localStorage.removeItem("cbt_singkat_answers");
+            localStorage.removeItem("cbt_essay_answers");
+            localStorage.removeItem("cbt_answers");
+            localStorage.removeItem("cbt_marked_questions");
+            localStorage.removeItem("cbt_progress");
           } else {
             console.error('Failed to finish exam:', finishResult);
             const errorMessage = finishResult.message || 'Gagal menyelesaikan ujian';
@@ -978,6 +1154,14 @@ export default function CBTPage() {
     }
 
     setCurrentQuestion(questionNumber);
+    
+    // Save progress
+    const progress = {
+      questionType,
+      currentQuestion: questionNumber,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem("cbt_progress", JSON.stringify(progress));
   };
 
   const handleNext = () => {
@@ -1001,12 +1185,29 @@ export default function CBTPage() {
         setCurrentQuestion(1);
         setSelectedOption(null);
         setAnswer("");
+        
+        // Save progress for new question type
+        const progress = {
+          questionType: nextType,
+          currentQuestion: 1,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem("cbt_progress", JSON.stringify(progress));
       } else {
         // If this is the last type, show confirmation popup
         setShowConfirmationPopup(true);
       }
     } else {
-      setCurrentQuestion(prev => Math.min(prev + 1, currentTypeQuestions.length));
+      const nextQuestion = currentQuestion + 1;
+      setCurrentQuestion(nextQuestion);
+      
+      // Save progress
+      const progress = {
+        questionType,
+        currentQuestion: nextQuestion,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem("cbt_progress", JSON.stringify(progress));
     }
   };
 
@@ -1071,7 +1272,7 @@ export default function CBTPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
-      <div className={`${(showTokenPopup || showConfirmationPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
+      <div className={`${(showTokenPopup || showConfirmationPopup || showSuccessPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
         <HeaderExam 
           examTitle={examTitle || "CBT Exam"} 
           timeLeft={formatTime(timeLeft)}
@@ -1103,6 +1304,14 @@ export default function CBTPage() {
                   setCurrentQuestion(1);
                   setSelectedOption(null);
                   setAnswer("");
+                  
+                  // Save progress for new question type
+                  const progress = {
+                    questionType: type,
+                    currentQuestion: 1,
+                    lastUpdated: Date.now()
+                  };
+                  localStorage.setItem("cbt_progress", JSON.stringify(progress));
                 }}
               >
                 {type === 'pg' ? 'Pilihan Ganda' : type === 'singkat' ? 'Jawaban Singkat' : 'Esai'}
@@ -1264,33 +1473,18 @@ export default function CBTPage() {
         </div>
       </div>
 
-      {/* Popup Token Ulang */}
-      {showTokenPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-center mb-4">Masukkan Token Ujian</h2>
-            <input
-              type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2 text-center"
-              placeholder="Token Ujian"
-              value={inputToken}
-              onChange={(e) => setInputToken(e.target.value)}
-            />
-            {errorToken && (
-              <div className="w-full text-center text-red-600 text-sm mb-2">{errorToken}</div>
-            )}
-            <Button
-              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
-              onClick={handleTokenSubmit}
-            >
-              Submit
-            </Button>
-          </div>
-        </div>
+      {/* Background blur saat popup muncul */}
+      {(showTokenPopup || showConfirmationPopup || showSuccessPopup) && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
       )}
 
-      {/* Background blur saat popup muncul */}
-      <div className={`fixed inset-0 transition-all ${(showConfirmationPopup || showSuccessPopup) ? 'bg-black/40 backdrop-blur-sm' : 'pointer-events-none'}`} />
+      {/* Popup Token Ulang */}
+      <TokenPopup
+        open={showTokenPopup}
+        onClose={() => setShowTokenPopup(false)}
+        onSubmit={handleTokenSubmit}
+        errorMessage={errorToken}
+      />
 
       {/* Popup Konfirmasi Submit */}
       <ConfirmationSubmitPopup
