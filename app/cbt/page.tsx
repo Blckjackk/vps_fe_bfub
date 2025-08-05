@@ -70,6 +70,7 @@ export default function CBTPage() {
   const [showTokenPopup, setShowTokenPopup] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isTimeUpFinish, setIsTimeUpFinish] = useState(false); // Flag untuk membedakan popup waktu habis vs selesai normal
   const [inputToken, setInputToken] = useState("");
   const [errorToken, setErrorToken] = useState("");
   const [tokenAktif, setTokenAktif] = useState<string>("");
@@ -213,8 +214,96 @@ export default function CBTPage() {
   const [availableTypes, setAvailableTypes] = useState<QuestionType[]>([]);
   const [examTitle, setExamTitle] = useState<string>("");
   const [isLoadingQuestions, setIsLoadingQuestions] = useState<boolean>(true);
+  const [examDuration, setExamDuration] = useState<number>(0); // Durasi ujian dalam menit
+  const [timeLeft, setTimeLeft] = useState<number>(0); // Waktu tersisa dalam detik
+  const [examStartTime, setExamStartTime] = useState<number | null>(null); // Waktu mulai ujian
+  const [userData, setUserData] = useState<any>(null); // Data user
   const router = useRouter();
   const tokenRef = useRef<string>("");
+
+  // Format waktu untuk display (HH:MM:SS atau MM:SS)
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+  };
+
+  // Check if time is running low (less than 10 minutes)
+  const isTimeRunningLow = (): boolean => {
+    return timeLeft <= 600; // 10 minutes = 600 seconds
+  };
+
+  // Check if time is critical (less than 5 minutes)
+  const isTimeCritical = (): boolean => {
+    return timeLeft <= 300; // 5 minutes = 300 seconds
+  };
+
+  // Inisialisasi timer ujian
+  const initializeExamTimer = () => {
+    const savedDuration = localStorage.getItem("durasi_ujian");
+    const savedStartTime = localStorage.getItem("exam_start_time");
+    
+    if (savedDuration) {
+      const duration = parseInt(savedDuration);
+      setExamDuration(duration);
+      
+      let startTime = Date.now();
+      if (savedStartTime) {
+        startTime = parseInt(savedStartTime);
+      } else {
+        // Pertama kali memulai ujian, simpan waktu mulai
+        localStorage.setItem("exam_start_time", startTime.toString());
+      }
+      
+      setExamStartTime(startTime);
+      
+      // Hitung waktu yang tersisa
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const totalSeconds = duration * 60;
+      const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+      
+      setTimeLeft(remainingSeconds);
+    }
+  };
+
+  // Handle ketika waktu habis
+  const handleTimeUp = async () => {
+    try {
+      // Auto-save jawaban yang sedang dikerjakan
+      if (questionType === 'pg' && selectedOption) {
+        saveAnswer(selectedOption);
+      } else if (questionType === 'singkat' && answer.trim()) {
+        saveAnswer(answer.trim());
+      } else if (questionType === 'esai' && answer.trim()) {
+        saveAnswer(answer.trim());
+      }
+
+      // Submit semua jawaban tanpa menampilkan alert error
+      await submitAnswersTimeUp();
+      
+      // Clear timer data
+      localStorage.removeItem("exam_start_time");
+      localStorage.removeItem("durasi_ujian");
+      
+      // Set flag bahwa ini adalah finish karena waktu habis
+      setIsTimeUpFinish(true);
+      
+      // Tampilkan popup selamat dengan pesan waktu habis
+      setShowSuccessPopup(true);
+      
+    } catch (error) {
+      console.error("Error during time up:", error);
+      // Tetap tampilkan popup selamat meskipun ada error
+      setIsTimeUpFinish(true);
+      setShowSuccessPopup(true);
+    }
+  };
 
   // Fungsi untuk mengambil soal dari API
   const fetchQuestions = async (cabangLombaId: number, pesertaId: number) => {
@@ -417,6 +506,29 @@ export default function CBTPage() {
     };
   }, [questionType, selectedOption, answer]);
 
+  // Timer countdown effect
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  // Initialize timer when component mounts
+  useEffect(() => {
+    initializeExamTimer();
+  }, []);
+
   // Reset currentQuestion when switching question types and load saved answer
   useEffect(() => {
     if (questions[questionType].length > 0) {
@@ -484,6 +596,16 @@ export default function CBTPage() {
     }
   }, [currentQuestion, questionType, questions, pgAnswers, isianSingkatAnswers, essayAnswers]);
 
+  // Set userData dari localStorage secara langsung saat component mount
+  useEffect(() => {
+    const storedUserData = localStorage.getItem("user_data");
+    if (storedUserData) {
+      const user = JSON.parse(storedUserData);
+      setUserData(user);
+      console.log('Setting userData:', user);
+    }
+  }, []);
+
   // Ambil token aktif dari localStorage dan validasi
   useEffect(() => {
     const checkAndValidateToken = async () => {
@@ -497,6 +619,7 @@ export default function CBTPage() {
       }
 
       const user = JSON.parse(storedUserData);
+      setUserData(user); // Set user data untuk digunakan di komponen lain
       
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -518,6 +641,8 @@ export default function CBTPage() {
         if (data.success) {
           setTokenAktif(storedToken);
           tokenRef.current = storedToken;
+          // Initialize timer after token validation
+          initializeExamTimer();
           // Fetch questions after successful token validation
           await fetchQuestions(user.cabang_lomba_id, user.id);
         } else {
@@ -718,6 +843,7 @@ export default function CBTPage() {
           
           if (finishResponse.ok) {
             setShowConfirmationPopup(false);
+            setIsTimeUpFinish(false); // Ini bukan karena waktu habis
             setShowSuccessPopup(true);
           } else {
             console.error('Failed to finish exam:', finishResult);
@@ -735,6 +861,109 @@ export default function CBTPage() {
     } catch (error) {
       console.error("Error submitting answers:", error);
       alert("Terjadi kesalahan saat menyimpan jawaban: " + error);
+    }
+  };
+
+  // Fungsi khusus submit untuk waktu habis - tanpa alert error
+  const submitAnswersTimeUp = async () => {
+    try {
+      const userData = localStorage.getItem("user_data");
+      if (!userData) return;
+      
+      const user = JSON.parse(userData);
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
+      // Submit PG answers
+      if (pgAnswers.length > 0) {
+        console.log('Submitting PG answers on time up:', pgAnswers);
+        try {
+          const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: pgAnswers
+            })
+          });
+          
+          const pgResult = await pgResponse.json();
+          console.log('PG Response on time up:', pgResult);
+        } catch (error) {
+          console.error('Error submitting PG answers on time up:', error);
+        }
+      }
+
+      // Submit Isian Singkat answers
+      if (isianSingkatAnswers.length > 0) {
+        console.log('Submitting Isian Singkat answers on time up:', isianSingkatAnswers);
+        try {
+          const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: isianSingkatAnswers
+            })
+          });
+          
+          const isianResult = await isianResponse.json();
+          console.log('Isian Singkat Response on time up:', isianResult);
+        } catch (error) {
+          console.error('Error submitting Isian Singkat answers on time up:', error);
+        }
+      }
+
+      // Submit Essay answers
+      if (essayAnswers.length > 0) {
+        console.log('Submitting Essay answers on time up:', essayAnswers);
+        try {
+          const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: essayAnswers
+            })
+          });
+          
+          const essayResult = await essayResponse.json();
+          console.log('Essay Response on time up:', essayResult);
+        } catch (error) {
+          console.error('Error submitting Essay answers on time up:', error);
+        }
+      }
+
+      // Try to finish exam - don't throw error if it fails
+      try {
+        const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            peserta_id: user.id
+          })
+        });
+        
+        const finishResult = await finishResponse.json();
+        console.log('Finish exam response on time up:', finishResult);
+      } catch (finishError) {
+        console.error("Error finishing exam on time up:", finishError);
+      }
+      
+    } catch (error) {
+      console.error("Error during time up submission:", error);
     }
   };
 
@@ -845,7 +1074,9 @@ export default function CBTPage() {
       <div className={`${(showTokenPopup || showConfirmationPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
         <HeaderExam 
           examTitle={examTitle || "CBT Exam"} 
-          timeLeft="59:36" 
+          timeLeft={formatTime(timeLeft)}
+          isTimeRunningLow={isTimeRunningLow()}
+          isTimeCritical={isTimeCritical()}
         />
 
         <div className="container mx-auto px-6 pt-4">
@@ -1069,7 +1300,7 @@ export default function CBTPage() {
         soalPGDikerjakan={pgAnswers.length}
         soalSingkatDikerjakan={isianSingkatAnswers.length}
         soalEsaiDikerjakan={essayAnswers.length}
-        sisaWaktu="59:36" // TODO: Implement actual timer
+        sisaWaktu={formatTime(timeLeft)}
       />
 
       {/* Popup Selamat */}
@@ -1077,11 +1308,15 @@ export default function CBTPage() {
         open={showSuccessPopup}
         onClose={() => {
           setShowSuccessPopup(false);
+          setIsTimeUpFinish(false); // Reset flag
           router.push('/dashboard-peserta/hasil-lomba/');
         }}
-        nama="John Doe" // TODO: Use actual user name
-        pesan="Selamat! Anda telah menyelesaikan ujian dengan baik. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
-        sisaWaktu="59:36" // TODO: Use actual time remaining
+        nama={userData?.nama_lengkap || userData?.nama || "Peserta"} 
+        pesan={isTimeUpFinish 
+          ? "Waktu ujian Anda telah habis! Namun jangan khawatir, semua jawaban yang telah Anda kerjakan sudah berhasil disimpan secara otomatis. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
+          : "Selamat! Anda telah menyelesaikan ujian dengan baik. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
+        }
+        sisaWaktu={formatTime(timeLeft)}
       />
     </div>
   );

@@ -3,9 +3,16 @@
 interface HeaderExamProps {
   examTitle: string;
   timeLeft: string;
+  isTimeRunningLow?: boolean;
+  isTimeCritical?: boolean;
 }
 
-export default function HeaderExam({ examTitle, timeLeft }: HeaderExamProps) {
+export default function HeaderExam({ 
+  examTitle, 
+  timeLeft, 
+  isTimeRunningLow = false, 
+  isTimeCritical = false 
+}: HeaderExamProps) {
   return (
     <div className="bg-white shadow-sm px-6 py-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center relative">
@@ -28,7 +35,13 @@ export default function HeaderExam({ examTitle, timeLeft }: HeaderExamProps) {
         </h1>
 
         {/* Timer */}
-        <div className="bg-[#B94A48] text-white px-6 py-2 rounded-lg font-semibold">
+        <div className={`px-6 py-2 rounded-lg font-semibold ${
+          isTimeCritical 
+            ? 'bg-red-600 text-white animate-pulse' 
+            : isTimeRunningLow 
+            ? 'bg-orange-500 text-white' 
+            : 'bg-[#B94A48] text-white'
+        }`}>
           {timeLeft}
         </div>
       </div>
