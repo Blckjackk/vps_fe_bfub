@@ -1300,6 +1300,9 @@ export default function CBTPage() {
         soalPGDikerjakan={pgAnswers.length}
         soalSingkatDikerjakan={isianSingkatAnswers.length}
         soalEsaiDikerjakan={essayAnswers.length}
+        totalSoalPG={questions.pg.length}
+        totalSoalSingkat={questions.singkat.length}
+        totalSoalEsai={questions.esai.length}
         sisaWaktu={formatTime(timeLeft)}
       />
 
