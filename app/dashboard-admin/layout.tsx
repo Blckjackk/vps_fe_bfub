@@ -17,9 +17,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode; }
     localStorage.removeItem("session_token");
     localStorage.removeItem("user_data");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("adminToken");
     
     setShowLogoutModal(false);
-    router.push('/login');
+    router.push('/');
   };
 
   return (
@@ -42,6 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode; }
           onConfirm={handleLogout}
           title="Konfirmasi Logout"
           message="Apakah kamu yakin mau logout?"
+          confirmButtonText="Logout"
         />
       </div>
     </AuthWrapper>

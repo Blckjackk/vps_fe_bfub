@@ -35,6 +35,8 @@ import { withAuth } from '@/lib/auth';
 
 function HalamanUjian() {
   const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [inputToken, setInputToken] = useState("");
   const [userData, setUserData] = useState<any>(null);
   const [cabangLomba, setCabangLomba] = useState<string>("Memuat...");
@@ -427,15 +429,45 @@ function HalamanUjian() {
                     localStorage.setItem("durasi_ujian", String(durasiUjian));
                     window.location.href = "/cbt";
                   } else {
-                    alert(data.message || "Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
+                    setErrorMessage(data.message || "Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
+                    setShowErrorPopup(true);
                   }
                 } catch (err) {
                   console.error("Error validasi token:", err);
-                  alert("Gagal menghubungi server. Coba lagi.");
+                  setErrorMessage("Gagal menghubungi server. Coba lagi.");
+                  setShowErrorPopup(true);
                 }
               }}
             >
               Mulai
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Popup */}
+      {showErrorPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowErrorPopup(false)}
+              aria-label="Tutup"
+            >
+              <FaTimes size={22} />
+            </button>
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <FaTimes className="text-[#D84C3B] text-3xl" />
+              </div>
+              <h2 className="text-xl font-bold text-center mb-2">Token Tidak Valid</h2>
+            </div>
+            <p className="text-center text-gray-600 mb-6">{errorMessage}</p>
+            <button
+              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
+              onClick={() => setShowErrorPopup(false)}
+            >
+              Tutup
             </button>
           </div>
         </div>

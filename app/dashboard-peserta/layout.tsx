@@ -28,9 +28,12 @@ export default function LayoutPeserta({ children }: { children: React.ReactNode 
     localStorage.removeItem("session_token");
     localStorage.removeItem("user_data");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("token_aktif");
+    localStorage.removeItem("waktu_mulai");
+    localStorage.removeItem("durasi_ujian");
     
     setShowLogoutModal(false);
-    router.push('/login'); // Arahkan ke halaman login
+    router.push('/'); // Arahkan ke halaman utama
   };
 
   return (

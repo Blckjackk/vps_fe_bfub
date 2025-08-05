@@ -1,26 +1,20 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
-interface ConfirmationDialogProps {
+interface SuccessDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
   title: string;
   message: string;
-  confirmButtonText?: string;
-  cancelButtonText?: string;
 }
 
-export default function ConfirmationDialog({
+export default function SuccessDialog({
   isOpen,
   onClose,
-  onConfirm,
   title,
   message,
-  confirmButtonText = "Hapus",
-  cancelButtonText = "Batal",
-}: ConfirmationDialogProps) {
+}: SuccessDialogProps) {
   if (!isOpen) {
     return null;
   }
@@ -38,21 +32,20 @@ export default function ConfirmationDialog({
             <X size={22} />
           </button>
         </div>
+
+        <div className="flex flex-col items-center justify-center mb-6">
+          <div className="w-16 h-16 mb-4 rounded-full bg-green-100 flex items-center justify-center">
+            <Check className="h-8 w-8 text-green-500" />
+          </div>
+          <p className="text-center text-gray-600">{message}</p>
+        </div>
         
-        <p className="text-center text-gray-600 mb-8">{message}</p>
-        
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-center">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-2 bg-[#B94A48] text-white rounded-lg hover:bg-red-600 transition-colors"
           >
-            {cancelButtonText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-[#B94A48] text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            {confirmButtonText}
+            Tutup
           </button>
         </div>
       </div>
