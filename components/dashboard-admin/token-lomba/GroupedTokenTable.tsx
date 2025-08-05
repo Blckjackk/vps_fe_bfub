@@ -73,13 +73,13 @@ export default function GroupedTokenTable({
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'aktif':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 font-medium';
       case 'digunakan':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 font-medium';
       case 'hangus':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 font-medium';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 font-medium';
     }
   };
 
@@ -170,9 +170,9 @@ export default function GroupedTokenTable({
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-green-600">Aktif: {pesertaToken.aktif_tokens}</span>
-                      <span className="text-blue-600">Terpakai: {pesertaToken.digunakan_tokens}</span>
-                      <span className="text-red-600">Hangus: {pesertaToken.hangus_tokens}</span>
+                      <span className="text-gray-600">Aktif: {pesertaToken.aktif_tokens}</span>
+                      <span className="text-gray-600">Terpakai: {pesertaToken.digunakan_tokens}</span>
+                      <span className="text-gray-600">Hangus: {pesertaToken.hangus_tokens}</span>
                     </div>
                   </td>
                   <td className="p-4">

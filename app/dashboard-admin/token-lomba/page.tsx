@@ -465,7 +465,7 @@ export default function TokenPage() {
               <button 
                 onClick={deleteSelectedTokens}
                 disabled={!tokens.some(peserta => (peserta as any).isChecked)}
-                className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
+                className="w-full md:w-auto px-4 py-2 bg-[#B94A48] text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
               >
                 Hapus Dipilih
               </button>
