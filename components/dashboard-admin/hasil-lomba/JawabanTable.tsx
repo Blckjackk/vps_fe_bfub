@@ -221,7 +221,6 @@ export default function JawabanTable({ title, data, tipeSoal, onUpdateNilai }: J
           <table className="w-full text-sm text-left text-gray-600">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th scope="col" className="p-4"><input type="checkbox" /></th>
                 <th scope="col" className="px-6 py-3">No.</th>
                 <th scope="col" className="px-6 py-3">Soal</th>
                 <th scope="col" className="px-6 py-3">Jawaban Peserta</th>
@@ -233,7 +232,6 @@ export default function JawabanTable({ title, data, tipeSoal, onUpdateNilai }: J
             <tbody>
               {tableData.map((item, index) => (
                 <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="p-4"><input type="checkbox" checked={item.isChecked} readOnly /></td>
                   <td className="px-6 py-4">{index + 1}</td>
                   <td className="px-6 py-4 max-w-xs truncate" title={item.soal}>{item.soal}</td>
                   <td className="px-6 py-4">
