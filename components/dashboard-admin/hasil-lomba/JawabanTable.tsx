@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Pencil, X } from 'lucide-react';
+import { StatusAlertDialog } from '@/components/dashboard-admin/token-lomba/StatusAlertDialog';
 
 type Jawaban = {
   id: number;
@@ -37,17 +38,38 @@ interface ModalPenilaianProps {
 function ModalPenilaian({ isOpen, onClose, jawaban, tipeSoal, onSaveNilai }: ModalPenilaianProps) {
   const [nilai, setNilai] = useState(jawaban.score);
   const [loading, setLoading] = useState(false);
+  const [statusAlert, setStatusAlert] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'success'
+  });
 
   if (!isOpen) return null;
 
   const handleSaveNilai = async () => {
     if (nilai < 0 || nilai > jawaban.bobot) {
-      alert(`Nilai harus antara 0 - ${jawaban.bobot}`);
+      setStatusAlert({
+        isOpen: true,
+        title: 'Peringatan',
+        message: `Nilai harus antara 0 - ${jawaban.bobot}`,
+        variant: 'error'
+      });
       return;
     }
 
     if (!jawaban.jawabanId) {
-      alert('Tidak ada jawaban untuk dinilai');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Peringatan',
+        message: 'Tidak ada jawaban untuk dinilai',
+        variant: 'error'
+      });
       return;
     }
 
@@ -78,21 +100,38 @@ function ModalPenilaian({ isOpen, onClose, jawaban, tipeSoal, onSaveNilai }: Mod
           onSaveNilai(jawaban.id, nilai);
         }
         
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Nilai berhasil disimpan',
+          variant: 'success'
+        });
+        
         onClose();
       } else {
-        alert(data.message || 'Gagal menyimpan nilai');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal menyimpan nilai',
+          variant: 'error'
+        });
       }
       
     } catch (error) {
       console.error('Error saving nilai:', error);
-      alert('Gagal menyimpan nilai');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Gagal menyimpan nilai',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Penilaian Soal No. {jawaban.id}</h3>
@@ -175,6 +214,15 @@ function ModalPenilaian({ isOpen, onClose, jawaban, tipeSoal, onSaveNilai }: Mod
           </div>
         </div>
       </div>
+
+      {/* Status Alert Dialog */}
+      <StatusAlertDialog
+        isOpen={statusAlert.isOpen}
+        onClose={() => setStatusAlert(prev => ({ ...prev, isOpen: false }))}
+        title={statusAlert.title}
+        message={statusAlert.message}
+        variant={statusAlert.variant}
+      />
     </div>
   );
 }

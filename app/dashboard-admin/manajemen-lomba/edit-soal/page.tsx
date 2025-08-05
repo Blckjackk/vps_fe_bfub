@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EditSoalProps {
   jenisSoal: 'pg' | 'essay' | 'isian';
@@ -37,6 +46,7 @@ export default function EditSoalPage() {
   const [opsiEMedia, setOpsiEMedia] = useState<File | null>(null);
   const [jawabanBenar, setJawabanBenar] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   
   // Preview URLs untuk gambar yang sudah ada
   const [mediaSoalPreview, setMediaSoalPreview] = useState<string>('');
@@ -231,7 +241,7 @@ export default function EditSoalPage() {
       const data = await response.json();
 
       if (data.success) {
-        router.push(`/dashboard-admin/manajemen-lomba/edit?id=${lombaId}`);
+        setShowSuccessDialog(true);
       } else {
         throw new Error(data.message || 'Gagal mengupdate soal');
       }
@@ -488,6 +498,29 @@ export default function EditSoalPage() {
           </form>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-[#B94A48]">
+              <Check className="h-5 w-5" />
+              Konfirmasi Berhasil
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              Soal berhasil diperbarui dalam sistem.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => router.push(`/dashboard-admin/manajemen-lomba/edit?id=${lombaId}`)}
+              className="bg-[#B94A48] hover:bg-[#a53e3c] text-white"
+            >
+              Kembali ke Daftar Soal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

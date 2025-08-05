@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Copy, Trash2, Edit, Eye, Settings } from "lucide-react";
+import { StatusAlertDialog } from "./StatusAlertDialog";
 
 // Tipe data untuk token individual
 export type TokenDetail = {
@@ -49,6 +50,13 @@ export default function GroupedTokenTable({
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedTokenForStatus, setSelectedTokenForStatus] = useState<TokenDetail | null>(null);
+  const [copyAlert, setCopyAlert] = useState<{
+    isOpen: boolean;
+    token: string;
+  }>({
+    isOpen: false,
+    token: ''
+  });
 
   // Toggle expand/collapse row
   const toggleRow = (pesertaId: number) => {
@@ -78,7 +86,10 @@ export default function GroupedTokenTable({
   // Copy token ke clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Token berhasil disalin!');
+    setCopyAlert({
+      isOpen: true,
+      token: text
+    });
   };
 
   // Handle status update
@@ -361,6 +372,15 @@ export default function GroupedTokenTable({
           </div>
         </div>
       )}
+
+      {/* Copy Alert Dialog */}
+      <StatusAlertDialog
+        isOpen={copyAlert.isOpen}
+        onClose={() => setCopyAlert(prev => ({ ...prev, isOpen: false }))}
+        title="Token Disalin"
+        message={`Token ${copyAlert.token} berhasil disalin ke clipboard!`}
+        variant="success"
+      />
     </>
   );
 }

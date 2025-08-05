@@ -30,6 +30,7 @@ import { useState, useEffect } from 'react';
 import GroupedTokenTable from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import type { GroupedToken } from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
+import { StatusAlertDialog } from '@/components/dashboard-admin/token-lomba/StatusAlertDialog';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 
 // Types
@@ -52,6 +53,17 @@ export default function TokenPage() {
   // Modal states
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [statusAlert, setStatusAlert] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'success'
+  });
 
   // Fetch data tokens
   const fetchTokens = async () => {
@@ -102,12 +114,27 @@ export default function TokenPage() {
 
       if (data.success) {
         fetchTokens();
-        alert('Token berhasil dihapus');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Token berhasil dihapus',
+          variant: 'success'
+        });
       } else {
-        alert(data.message || 'Gagal menghapus token');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal menghapus token',
+          variant: 'error'
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat menghapus token');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Terjadi kesalahan saat menghapus token',
+        variant: 'error'
+      });
       console.error('Error deleting token:', err);
     }
   };
@@ -121,7 +148,12 @@ export default function TokenPage() {
     );
     
     if (selectedPeserta.length === 0) {
-      alert('Pilih peserta yang tokennya akan ditandai hangus');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Peringatan',
+        message: 'Pilih peserta yang tokennya akan ditandai hangus',
+        variant: 'error'
+      });
       return;
     }
 
@@ -150,12 +182,27 @@ export default function TokenPage() {
 
       if (data.success) {
         fetchTokens();
-        alert('Token berhasil ditandai sebagai hangus');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Token berhasil ditandai sebagai hangus',
+          variant: 'success'
+        });
       } else {
-        alert(data.message || 'Gagal menandai token sebagai hangus');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal menandai token sebagai hangus',
+          variant: 'error'
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat menandai token');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Terjadi kesalahan saat menandai token',
+        variant: 'error'
+      });
       console.error('Error marking tokens as expired:', err);
     }
   };
@@ -167,7 +214,12 @@ export default function TokenPage() {
     );
     
     if (selectedPeserta.length === 0) {
-      alert('Pilih peserta yang tokennya akan dihapus');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Peringatan',
+        message: 'Pilih peserta yang tokennya akan dihapus',
+        variant: 'error'
+      });
       return;
     }
 
@@ -196,12 +248,27 @@ export default function TokenPage() {
 
       if (data.success) {
         fetchTokens();
-        alert('Token berhasil dihapus');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Token berhasil dihapus',
+          variant: 'success'
+        });
       } else {
-        alert(data.message || 'Gagal menghapus token');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal menghapus token',
+          variant: 'error'
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat menghapus token');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Terjadi kesalahan saat menghapus token',
+        variant: 'error'
+      });
       console.error('Error deleting tokens:', err);
     }
   };
@@ -259,12 +326,27 @@ export default function TokenPage() {
 
       if (data.success) {
         fetchTokens();
-        alert('Status token berhasil diubah');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Status token berhasil diubah',
+          variant: 'success'
+        });
       } else {
-        alert(data.message || 'Gagal mengubah status token');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal mengubah status token',
+          variant: 'error'
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat mengubah status token');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Terjadi kesalahan saat mengubah status token',
+        variant: 'error'
+      });
       console.error('Error updating token status:', err);
     }
   };
@@ -279,12 +361,27 @@ export default function TokenPage() {
 
       if (data.success) {
         fetchTokens();
-        alert('Token berhasil dijadikan sebagai token utama');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Berhasil',
+          message: 'Token berhasil dijadikan sebagai token utama',
+          variant: 'success'
+        });
       } else {
-        alert(data.message || 'Gagal mengatur token utama');
+        setStatusAlert({
+          isOpen: true,
+          title: 'Gagal',
+          message: data.message || 'Gagal mengatur token utama',
+          variant: 'error'
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan saat mengatur token utama');
+      setStatusAlert({
+        isOpen: true,
+        title: 'Error',
+        message: 'Terjadi kesalahan saat mengatur token utama',
+        variant: 'error'
+      });
       console.error('Error setting primary token:', err);
     }
   };
@@ -397,6 +494,15 @@ export default function TokenPage() {
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Hapus"
         message="Apakah Anda yakin ingin menghapus token ini?"
+      />
+
+      {/* Status Alert Dialog */}
+      <StatusAlertDialog
+        isOpen={statusAlert.isOpen}
+        onClose={() => setStatusAlert(prev => ({ ...prev, isOpen: false }))}
+        title={statusAlert.title}
+        message={statusAlert.message}
+        variant={statusAlert.variant}
       />
     </>
   );

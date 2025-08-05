@@ -68,17 +68,17 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection,
                 <td className="px-6 py-4">{item.mulai}</td>
                 <td className="px-6 py-4">{item.akhir}</td>
                 <td className="px-6 py-4 text-center">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalPG > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className="text-sm font-medium">
                     {item.jumlahSoalPG}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalIsian > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className="text-sm font-medium">
                     {item.jumlahSoalIsian}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jumlahSoalEsai > 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className="text-sm font-medium">
                     {item.jumlahSoalEsai}
                   </span>
                 </td>
