@@ -50,8 +50,9 @@ function HalamanUjian() {
   const [tokenAktif, setTokenAktif] = useState<string | null>("Memuat...");
   const [namaLomba, setNamaLomba] = useState<string>("-");
   const [lombaId, setLombaId] = useState<string | null>(null);
-  const jumlahToken = 5;
-  const jumlahSoal = 100;
+  const [jumlahToken] = useState<number>(5);
+  const [jumlahSoal, setJumlahSoal] = useState<number>(0);
+
 
   // Fungsi untuk validasi dan menggunakan token
   const validateAndUseToken = async (token: string) => {
@@ -175,12 +176,16 @@ function HalamanUjian() {
         const data = await response.json();
         
         if (data.success && data.data.cabang_lomba) {
+          console.log("Masuk ke fetchCabangLomba");
           const lomba = data.data.cabang_lomba;
           const peserta = data.data;
+          console.log("Data cabang_lomba dari API:", lomba);
+          const totalSoal = (lomba.soal_pg || 0) +(lomba.soal_isian || 0) +(lomba.soal_esai || 0);
           
+          setJumlahSoal(totalSoal);
           setCabangLomba(lomba.nama_cabang);
           setStatusUjian(peserta.status_ujian || "belum_mulai"); // Update status ujian dari API
-          
+
           // Hitung durasi dan format waktu jika data tersedia
           if (lomba.waktu_mulai_pengerjaan && lomba.waktu_akhir_pengerjaan) {
             const durasi = hitungDurasi(lomba.waktu_mulai_pengerjaan, lomba.waktu_akhir_pengerjaan);
@@ -262,8 +267,7 @@ function HalamanUjian() {
           <h3 className="font-semibold text-lg mb-4">Instruksi Pengerjaan</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
             <li>
-              Durasi ujian selama {durasiUjian > 0 ? durasiUjian : "..."} menit termasuk pengerjaan tipe soal
-              PG dan Esai.
+              Durasi pengerjaan sesuai dengan ketentuan yang telah di tetapkan panitia yang mencakup seluruh jenis soal.
             </li>
             <li>
               Waktu akan berjalan otomatis sesuai jadwal yang telah di
@@ -304,8 +308,7 @@ function HalamanUjian() {
                 tersebut akan hangus dan tidak bisa digunakan kembali.
               </li>
               <li>
-                Jika seluruh token telah digunakan, kamu wajib menghubungi
-                panitia untuk mendapatkan token baru.
+                Kamu dapat menghubungi panitia untuk mendapatkan token baru.
               </li>
               <li>
                 Harap gunakan token dengan bijak dan pastikan kamu benar-benar
