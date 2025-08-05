@@ -34,6 +34,7 @@
 
 import { useState, useEffect } from 'react';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
+import SuccessDialog from '@/components/dashboard-admin/SuccessDialog';
 import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
 
@@ -78,6 +79,8 @@ export default function DataPesertaPage() {
   
   // Modal states
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [itemToDelete, setItemToDelete] = useState<number | string | null>(null);
 
   // Fetch data dari API
@@ -171,7 +174,8 @@ export default function DataPesertaPage() {
         
         if (result.success) {
           setSelectedIds([]);
-          alert(result.message);
+          setSuccessMessage(result.message);
+          setSuccessModalOpen(true);
         } else {
           alert(result.message || 'Gagal menghapus peserta');
         }
@@ -188,7 +192,8 @@ export default function DataPesertaPage() {
         const result = await response.json();
         
         if (result.success) {
-          alert(result.message);
+          setSuccessMessage(result.message);
+          setSuccessModalOpen(true);
         } else {
           alert(result.message || 'Gagal menghapus peserta');
         }
@@ -419,34 +424,28 @@ export default function DataPesertaPage() {
         </div>
       </div>
 
-      {/* ConfirmationDialog sementara dinonaktifkan untuk debug */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Konfirmasi Hapus</h3>
-            <p className="text-gray-600 mb-6">
-              {itemToDelete === 'selected' 
-                ? `Apakah kamu yakin menghapus ${selectedIds.length} peserta yang dipilih?`
-                : "Apakah kamu yakin menghapus data peserta tersebut?"
-              }
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Konfirmasi Hapus"
+        message={
+          itemToDelete === 'selected'
+            ? `Apakah kamu yakin menghapus ${selectedIds.length} peserta yang dipilih?`
+            : "Apakah kamu yakin menghapus data peserta tersebut?"
+        }
+      />
+
+      <SuccessDialog
+        isOpen={isSuccessModalOpen}
+        onClose={() => {
+          setSuccessModalOpen(false);
+          // Refresh data after closing success dialog
+          fetchPeserta();
+        }}
+        title="Berhasil"
+        message={successMessage}
+      />
     </div>
   );
 }
