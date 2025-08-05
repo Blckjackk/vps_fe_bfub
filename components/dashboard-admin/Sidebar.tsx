@@ -11,7 +11,7 @@ const navItems = [
   { href: '/dashboard-admin', icon: FaHome, label: 'Dashboard' },
   { href: '/dashboard-admin/data-peserta', icon: FaUsers, label: 'Data Peserta' },
   { href: '/dashboard-admin/manajemen-lomba', icon: FaBorderAll, label: 'Manajemen Lomba' },
-  { href: '/dashboard-admin/hasil-lomba', icon: FaClipboardList, label: 'Hasil Ujian' },
+  { href: '/dashboard-admin/hasil-lomba', icon: FaClipboardList, label: 'Hasil Lomba' },
   { href: '/dashboard-admin/token-lomba', icon: FaKey, label: 'Token' },
   { href: '/dashboard-admin/export', icon: FaDownload, label: 'Ekspor File' },
 ];

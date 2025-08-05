@@ -31,7 +31,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Download, ChevronDown, Trash2, FileText } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import HasilLombaTable from '@/components/dashboard-admin/hasil-lomba/HasilLombaTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
@@ -60,21 +60,22 @@ type Lomba = {
 };
 
 export default function HasilUjianPage() {
+  // State utama
   const [hasilUjian, setHasilUjian] = useState<HasilUjian[]>([]);
   const [lombaList, setLombaList] = useState<Lomba[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Filter states
+
+  // Filter
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLomba, setSelectedLomba] = useState<string>('');
   const [sortBy, setSortBy] = useState('nilai');
-  
-  // Modal states
+
+  // Modal
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | string | null>(null);
 
-  // Fetch data hasil lomba
+  // Ambil hasil lomba dari API
   const fetchHasilLomba = async () => {
     try {
       setLoading(true);
@@ -87,8 +88,8 @@ export default function HasilUjianPage() {
 
       if (data.success) {
         let hasil = data.data;
-        
-        // Sort data
+
+        // Sorting
         hasil.sort((a: HasilUjian, b: HasilUjian) => {
           switch (sortBy) {
             case 'nilai':
@@ -108,111 +109,59 @@ export default function HasilUjianPage() {
       }
     } catch (err) {
       setError('Terjadi kesalahan saat mengambil data');
-      console.error('Error fetching hasil lomba:', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch daftar lomba untuk filter
+  // Ambil daftar cabang lomba
   const fetchLombaList = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/lomba');
       const data = await response.json();
-      
-      if (data.success) {
-        setLombaList(data.data);
-      }
+      if (data.success) setLombaList(data.data);
     } catch (err) {
-      console.error('Error fetching lomba list:', err);
+      console.error(err);
     }
   };
 
-  // Delete hasil peserta
+  // Pertama kali load data dan tampilkan toast sukses
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      await fetchHasilLomba();
+      await fetchLombaList();
+      toast.success('Halaman berhasil dimuat!');
+    };
+    fetchInitialData();
+  }, []);
+
+  // Re-fetch data jika filter/sort berubah
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchHasilLomba();
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [searchTerm, selectedLomba, sortBy]);
+
+  // Hapus data peserta (satu atau banyak)
   const deleteHasilPeserta = async (id: number) => {
     try {
-      console.log('Deleting item with ID:', id); // Debug log
-      
       const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
-
-      console.log('Delete response:', data); // Debug log
-
       if (data.success) {
-        // Refresh data setelah delete
+        toast.success('Berhasil menghapus data.');
         fetchHasilLomba();
-        
-        // Show success toast
-        toast.success('Berhasil!', {
-          description: 'Data berhasil dihapus dari sistem.',
-        });
-        
-        console.log('Success toast should be shown'); // Debug log
       } else {
-        toast.error('Gagal!', {
-          description: data.message || 'Terjadi kesalahan saat menghapus data.',
-        });
+        toast.error('Gagal menghapus data.');
       }
     } catch (err) {
-      toast.error('Error!', {
-        description: 'Terjadi kesalahan saat menghapus data.',
-      });
-      console.error('Error deleting hasil:', err);
+      toast.error('Terjadi kesalahan saat menghapus data.');
+      console.error(err);
     }
   };
-
-  // Export hasil ke Excel
-  const exportHasil = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/admin/export/excel');
-      const data = await response.json();
-      
-      if (data.success && data.data.download_url) {
-        // Download file
-        const link = document.createElement('a');
-        link.href = data.data.download_url;
-        link.download = data.data.file_name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('File berhasil didownload!', {
-          description: 'File hasil lomba telah berhasil diunduh.',
-          duration: 3000,
-        });
-      } else {
-        toast.error('Gagal melakukan export', {
-          description: 'Terjadi kesalahan saat mengekspor data.',
-          duration: 4000,
-        });
-      }
-    } catch (err) {
-      toast.error('Terjadi kesalahan saat export', {
-        description: 'Silakan coba lagi atau hubungi administrator.',
-        duration: 4000,
-      });
-      console.error('Error exporting:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchHasilLomba();
-    fetchLombaList();
-    
-    // Test toast saat komponen dimount
-    setTimeout(() => {
-      toast.success('Halaman berhasil dimuat!');
-    }, 1000);
-  }, []);
-
-  useEffect(() => {
-    const delayedSearch = setTimeout(() => {
-      fetchHasilLomba();
-    }, 500);
-
-    return () => clearTimeout(delayedSearch);
-  }, [searchTerm, selectedLomba, sortBy]);
 
   const handleOpenDeleteModal = (id: number | string) => {
     setItemToDelete(id);
@@ -220,57 +169,41 @@ export default function HasilUjianPage() {
   };
 
   const handleConfirmDelete = () => {
-    console.log('Confirm delete called with:', itemToDelete); // Debug log
-    
     if (typeof itemToDelete === 'number') {
       deleteHasilPeserta(itemToDelete);
     } else if (itemToDelete === 'selected') {
-      // Handle bulk delete
       const selectedIds = hasilUjian.filter(item => item.isChecked).map(item => item.id);
-      console.log('Selected IDs for bulk delete:', selectedIds); // Debug log
-      
-      if (selectedIds.length > 0) {
-        // Simple bulk delete with success notification
-        Promise.all(selectedIds.map(id => 
-          fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
-            method: 'DELETE',
-          }).then(response => response.json())
-        )).then(results => {
-          const successCount = results.filter(result => result.success).length;
-          
-          if (successCount > 0) {
-            toast.success(`${successCount} data berhasil dihapus!`);
-          } else {
-            toast.error('Gagal menghapus data');
-          }
-          
-          // Refresh data
+      Promise.all(
+        selectedIds.map(id =>
+          fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, { method: 'DELETE' }).then(res => res.json())
+        )
+      ).then(results => {
+        const successCount = results.filter(r => r.success).length;
+        if (successCount > 0) {
+          toast.success(`${successCount} data berhasil dihapus!`);
           fetchHasilLomba();
-        }).catch(err => {
-          toast.error('Terjadi kesalahan saat menghapus data');
-          console.error('Error bulk deleting:', err);
-        });
-      }
+        } else {
+          toast.error('Gagal menghapus data.');
+        }
+      });
     }
     setDeleteModalOpen(false);
     setItemToDelete(null);
   };
 
-  // Toggle all checkboxes
+  // Checkbox (semua / satuan)
   const handleSelectAll = () => {
     const allChecked = hasilUjian.every(item => item.isChecked);
     setHasilUjian(prev => prev.map(item => ({ ...item, isChecked: !allChecked })));
   };
 
-  // Toggle individual checkbox
   const handleSelectItem = (id: number) => {
-    setHasilUjian(prev => 
-      prev.map(item => 
-        item.id === id ? { ...item, isChecked: !item.isChecked } : item
-      )
+    setHasilUjian(prev =>
+      prev.map(item => (item.id === id ? { ...item, isChecked: !item.isChecked } : item))
     );
   };
 
+  // Loading atau error
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -283,7 +216,7 @@ export default function HasilUjianPage() {
     return (
       <div className="text-center text-red-600 p-8">
         <p>Error: {error}</p>
-        <button 
+        <button
           onClick={fetchHasilLomba}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
@@ -298,16 +231,8 @@ export default function HasilUjianPage() {
       <div className={`space-y-6 transition-all duration-300 ${isDeleteModalOpen ? 'blur-sm pointer-events-none' : ''}`}>
         <h1 className="text-2xl font-semibold text-gray-800">Hasil Lomba</h1>
 
-        {/* Test button untuk memastikan toast berfungsi */}
-        <button 
-          onClick={() => toast.success('Test toast berhasil!')}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-        >
-          Test Toast
-        </button>
-
         <div className="bg-white p-4 rounded-lg shadow-sm">
-          {/* Baris Filter dan Aksi */}
+          {/* Filter dan aksi */}
           <div className="flex flex-col md:flex-row md:items-center gap-3">
             <div className="relative flex-grow md:flex-grow-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -319,7 +244,7 @@ export default function HasilUjianPage() {
                 className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-64"
               />
             </div>
-            
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -343,10 +268,10 @@ export default function HasilUjianPage() {
               ))}
             </select>
 
-            <div className="flex-grow hidden md:block"></div> {/* Spacer */}
-            
+            <div className="flex-grow hidden md:block"></div>
+
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <button 
+              <button
                 onClick={() => handleOpenDeleteModal('selected')}
                 disabled={!hasilUjian.some(item => item.isChecked)}
                 className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400"
@@ -356,8 +281,8 @@ export default function HasilUjianPage() {
             </div>
           </div>
 
-          <HasilLombaTable 
-            hasil={hasilUjian} 
+          <HasilLombaTable
+            hasil={hasilUjian}
             onDeleteItem={handleOpenDeleteModal}
             onSelectItem={handleSelectItem}
             onSelectAll={handleSelectAll}
@@ -372,12 +297,12 @@ export default function HasilUjianPage() {
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Hapus"
         message={
-          typeof itemToDelete === 'number' 
-            ? "Apakah kamu yakin ingin menghapus hasil ujian peserta tersebut?" 
+          typeof itemToDelete === 'number'
+            ? "Apakah kamu yakin ingin menghapus hasil ujian peserta tersebut?"
             : "Apakah kamu yakin ingin menghapus semua hasil ujian yang dipilih?"
         }
       />
-      
+
       <Toaster position="top-right" richColors />
     </>
   );

@@ -70,6 +70,7 @@ export default function CBTPage() {
   const [showTokenPopup, setShowTokenPopup] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isTimeUpFinish, setIsTimeUpFinish] = useState(false); // Flag untuk membedakan popup waktu habis vs selesai normal
   const [inputToken, setInputToken] = useState("");
   const [errorToken, setErrorToken] = useState("");
   const [tokenAktif, setTokenAktif] = useState<string>("");
@@ -118,12 +119,16 @@ export default function CBTPage() {
 
       setPGAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newPGAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newPGAnswer];
         }
-        return [...prev, newPGAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_pg_answers", JSON.stringify(updated));
+        return updated;
       });
     } else if (questionType === 'singkat') {
       const newIsianAnswer: IsianSingkatAnswer = {
@@ -135,12 +140,16 @@ export default function CBTPage() {
 
       setIsianSingkatAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_isian_singkat_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newIsianAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newIsianAnswer];
         }
-        return [...prev, newIsianAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_singkat_answers", JSON.stringify(updated));
+        return updated;
       });
     } else if (questionType === 'esai') {
       const newEssayAnswer: EssayAnswer = {
@@ -151,12 +160,16 @@ export default function CBTPage() {
 
       setEssayAnswers(prev => {
         const existing = prev.findIndex(a => a.soal_essay_id === activeQuestion.id);
+        let updated;
         if (existing !== -1) {
-          const updated = [...prev];
+          updated = [...prev];
           updated[existing] = newEssayAnswer;
-          return updated;
+        } else {
+          updated = [...prev, newEssayAnswer];
         }
-        return [...prev, newEssayAnswer];
+        // Save to localStorage
+        localStorage.setItem("cbt_essay_answers", JSON.stringify(updated));
+        return updated;
       });
     }
 
@@ -169,13 +182,25 @@ export default function CBTPage() {
 
     setAnswers(prev => {
       const existing = prev.findIndex(a => a.soal_id === activeQuestion.id && a.jenis === questionType);
+      let updated;
       if (existing !== -1) {
-        const updated = [...prev];
+        updated = [...prev];
         updated[existing] = newAnswer;
-        return updated;
+      } else {
+        updated = [...prev, newAnswer];
       }
-      return [...prev, newAnswer];
+      // Save to localStorage
+      localStorage.setItem("cbt_answers", JSON.stringify(updated));
+      return updated;
     });
+
+    // Save current progress (question type and number)
+    const progress = {
+      questionType,
+      currentQuestion,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem("cbt_progress", JSON.stringify(progress));
 
     // Remove mark when answer is saved
     setMarkedQuestions(prev => {
@@ -183,10 +208,13 @@ export default function CBTPage() {
       const isMarked = currentMarked.includes(currentQuestion);
       
       if (isMarked) {
-        return {
+        const updated = {
           ...prev,
           [questionType]: currentMarked.filter(q => q !== currentQuestion)
         };
+        // Save marked questions to localStorage
+        localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
+        return updated;
       }
       return prev;
     });
@@ -201,20 +229,120 @@ export default function CBTPage() {
       const currentMarked = prev[questionType];
       const isMarked = currentMarked.includes(currentQuestion);
       
-      return {
+      const updated = {
         ...prev,
         [questionType]: isMarked
           ? currentMarked.filter(q => q !== currentQuestion)
           : [...currentMarked, currentQuestion]
       };
+      
+      // Save marked questions to localStorage
+      localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
+      return updated;
     });
   };
 
   const [availableTypes, setAvailableTypes] = useState<QuestionType[]>([]);
   const [examTitle, setExamTitle] = useState<string>("");
   const [isLoadingQuestions, setIsLoadingQuestions] = useState<boolean>(true);
+  const [examDuration, setExamDuration] = useState<number>(0); // Durasi ujian dalam menit
+  const [timeLeft, setTimeLeft] = useState<number>(0); // Waktu tersisa dalam detik
+  const [examStartTime, setExamStartTime] = useState<number | null>(null); // Waktu mulai ujian
+  const [userData, setUserData] = useState<any>(null); // Data user
   const router = useRouter();
   const tokenRef = useRef<string>("");
+
+  // Format waktu untuk display (HH:MM:SS atau MM:SS)
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+  };
+
+  // Check if time is running low (less than 10 minutes)
+  const isTimeRunningLow = (): boolean => {
+    return timeLeft <= 600; // 10 minutes = 600 seconds
+  };
+
+  // Check if time is critical (less than 5 minutes)
+  const isTimeCritical = (): boolean => {
+    return timeLeft <= 300; // 5 minutes = 300 seconds
+  };
+
+  // Inisialisasi timer ujian
+  const initializeExamTimer = () => {
+    const savedDuration = localStorage.getItem("durasi_ujian");
+    const savedStartTime = localStorage.getItem("exam_start_time");
+    
+    if (savedDuration) {
+      const duration = parseInt(savedDuration);
+      setExamDuration(duration);
+      
+      let startTime = Date.now();
+      if (savedStartTime) {
+        startTime = parseInt(savedStartTime);
+      } else {
+        // Pertama kali memulai ujian, simpan waktu mulai
+        localStorage.setItem("exam_start_time", startTime.toString());
+      }
+      
+      setExamStartTime(startTime);
+      
+      // Hitung waktu yang tersisa
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const totalSeconds = duration * 60;
+      const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+      
+      setTimeLeft(remainingSeconds);
+    }
+  };
+
+  // Handle ketika waktu habis
+  const handleTimeUp = async () => {
+    try {
+      // Auto-save jawaban yang sedang dikerjakan
+      if (questionType === 'pg' && selectedOption) {
+        saveAnswer(selectedOption);
+      } else if (questionType === 'singkat' && answer.trim()) {
+        saveAnswer(answer.trim());
+      } else if (questionType === 'esai' && answer.trim()) {
+        saveAnswer(answer.trim());
+      }
+
+      // Submit semua jawaban tanpa menampilkan alert error
+      await submitAnswersTimeUp();
+      
+      // Clear timer data
+      localStorage.removeItem("exam_start_time");
+      localStorage.removeItem("durasi_ujian");
+      
+      // Clear saved CBT data from localStorage since exam is finished
+      localStorage.removeItem("cbt_pg_answers");
+      localStorage.removeItem("cbt_singkat_answers");
+      localStorage.removeItem("cbt_essay_answers");
+      localStorage.removeItem("cbt_answers");
+      localStorage.removeItem("cbt_marked_questions");
+      localStorage.removeItem("cbt_progress");
+      
+      // Set flag bahwa ini adalah finish karena waktu habis
+      setIsTimeUpFinish(true);
+      
+      // Tampilkan popup selamat dengan pesan waktu habis
+      setShowSuccessPopup(true);
+      
+    } catch (error) {
+      console.error("Error during time up:", error);
+      // Tetap tampilkan popup selamat meskipun ada error
+      setIsTimeUpFinish(true);
+      setShowSuccessPopup(true);
+    }
+  };
 
   // Fungsi untuk mengambil soal dari API
   const fetchQuestions = async (cabangLombaId: number, pesertaId: number) => {
@@ -354,15 +482,21 @@ export default function CBTPage() {
         if (!document.fullscreenElement) {
           const element = document.documentElement;
           if (element.requestFullscreen) {
-            await element.requestFullscreen();
+            await element.requestFullscreen().catch((err: any) => {
+              console.warn('Fullscreen request failed:', err.message);
+            });
           } else if ((element as any).webkitRequestFullscreen) {
-            await (element as any).webkitRequestFullscreen();
+            await (element as any).webkitRequestFullscreen().catch((err: any) => {
+              console.warn('Webkit fullscreen request failed:', err.message);
+            });
           } else if ((element as any).msRequestFullscreen) {
-            await (element as any).msRequestFullscreen();
+            await (element as any).msRequestFullscreen().catch((err: any) => {
+              console.warn('MS fullscreen request failed:', err.message);
+            });
           }
         }
       } catch (err) {
-        console.error('Error attempting to enable fullscreen:', err);
+        console.warn('Error attempting to enable fullscreen:', err);
       }
     };
 
@@ -417,6 +551,29 @@ export default function CBTPage() {
     };
   }, [questionType, selectedOption, answer]);
 
+  // Timer countdown effect
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  // Initialize timer when component mounts
+  useEffect(() => {
+    initializeExamTimer();
+  }, []);
+
   // Reset currentQuestion when switching question types and load saved answer
   useEffect(() => {
     if (questions[questionType].length > 0) {
@@ -448,6 +605,36 @@ export default function CBTPage() {
       }
     }
   }, [questionType, questions]);
+
+  // Load progress after questions are loaded (only once)
+  useEffect(() => {
+    if (questions.pg.length > 0 || questions.singkat.length > 0 || questions.esai.length > 0) {
+      const savedProgress = localStorage.getItem("cbt_progress");
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          // Only restore progress if it's recent (within last 24 hours)
+          const isRecentProgress = (Date.now() - progress.lastUpdated) < 24 * 60 * 60 * 1000;
+          
+          if (isRecentProgress && availableTypes.includes(progress.questionType as QuestionType)) {
+            const progressType = progress.questionType as QuestionType;
+            const maxQuestion = questions[progressType]?.length || 1;
+            const validCurrentQuestion = Math.min(progress.currentQuestion, maxQuestion);
+            
+            setQuestionType(progressType);
+            setCurrentQuestion(validCurrentQuestion);
+            
+            console.log('Restored progress:', {
+              questionType: progressType,
+              currentQuestion: validCurrentQuestion
+            });
+          }
+        } catch (error) {
+          console.error("Error loading progress:", error);
+        }
+      }
+    }
+  }, [questions, availableTypes]);
 
   // Load saved answer when switching questions within the same type
   useEffect(() => {
@@ -484,6 +671,66 @@ export default function CBTPage() {
     }
   }, [currentQuestion, questionType, questions, pgAnswers, isianSingkatAnswers, essayAnswers]);
 
+  // Set userData dari localStorage secara langsung saat component mount
+  useEffect(() => {
+    const storedUserData = localStorage.getItem("user_data");
+    if (storedUserData) {
+      const user = JSON.parse(storedUserData);
+      setUserData(user);
+      console.log('Setting userData:', user);
+    }
+  }, []);
+
+  // Load saved answers and progress from localStorage
+  useEffect(() => {
+    // Load saved answers
+    const savedPGAnswers = localStorage.getItem("cbt_pg_answers");
+    const savedSingkatAnswers = localStorage.getItem("cbt_singkat_answers");
+    const savedEssayAnswers = localStorage.getItem("cbt_essay_answers");
+    const savedAnswers = localStorage.getItem("cbt_answers");
+    const savedMarkedQuestions = localStorage.getItem("cbt_marked_questions");
+    
+    if (savedPGAnswers) {
+      try {
+        setPGAnswers(JSON.parse(savedPGAnswers));
+      } catch (error) {
+        console.error("Error loading PG answers:", error);
+      }
+    }
+    
+    if (savedSingkatAnswers) {
+      try {
+        setIsianSingkatAnswers(JSON.parse(savedSingkatAnswers));
+      } catch (error) {
+        console.error("Error loading Singkat answers:", error);
+      }
+    }
+    
+    if (savedEssayAnswers) {
+      try {
+        setEssayAnswers(JSON.parse(savedEssayAnswers));
+      } catch (error) {
+        console.error("Error loading Essay answers:", error);
+      }
+    }
+    
+    if (savedAnswers) {
+      try {
+        setAnswers(JSON.parse(savedAnswers));
+      } catch (error) {
+        console.error("Error loading answers:", error);
+      }
+    }
+    
+    if (savedMarkedQuestions) {
+      try {
+        setMarkedQuestions(JSON.parse(savedMarkedQuestions));
+      } catch (error) {
+        console.error("Error loading marked questions:", error);
+      }
+    }
+  }, []);
+
   // Ambil token aktif dari localStorage dan validasi
   useEffect(() => {
     const checkAndValidateToken = async () => {
@@ -497,6 +744,7 @@ export default function CBTPage() {
       }
 
       const user = JSON.parse(storedUserData);
+      setUserData(user); // Set user data untuk digunakan di komponen lain
       
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -518,6 +766,8 @@ export default function CBTPage() {
         if (data.success) {
           setTokenAktif(storedToken);
           tokenRef.current = storedToken;
+          // Initialize timer after token validation
+          initializeExamTimer();
           // Fetch questions after successful token validation
           await fetchQuestions(user.cabang_lomba_id, user.id);
         } else {
@@ -560,29 +810,54 @@ export default function CBTPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
-  const handleTokenSubmit = async () => {
+  const handleTokenSubmit = async (token: string) => {
     setErrorToken("");
-    // Validasi token ke backend
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      credentials: 'include',
-      body: JSON.stringify({ kode_token: inputToken }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setShowTokenPopup(false);
-      setInputToken("");
-      setErrorToken("");
-      setTokenAktif(inputToken);
-      tokenRef.current = inputToken;
-      localStorage.setItem("token_aktif", inputToken);
-    } else {
-      setErrorToken("Kode token tidak valid atau sudah hangus. Minta token baru ke admin.");
+    
+    if (!token.trim()) {
+      setErrorToken("Silakan masukkan token yang valid.");
+      return;
+    }
+    
+    // Ambil user data untuk peserta_id dan cabang_lomba_id
+    const storedUserData = localStorage.getItem("user_data");
+    if (!storedUserData) {
+      setErrorToken("Data peserta tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+    
+    const user = JSON.parse(storedUserData);
+    
+    try {
+      // Validasi token ke backend dengan data peserta
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          kode_token: token,
+          peserta_id: user.id,
+          cabang_lomba_id: user.cabang_lomba_id
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setShowTokenPopup(false);
+        setInputToken("");
+        setErrorToken("");
+        setTokenAktif(token);
+        tokenRef.current = token;
+        localStorage.setItem("token_aktif", token);
+      } else {
+        setErrorToken(data.message || "Kode token tidak valid atau sudah hangus. Minta token baru ke admin.");
+      }
+    } catch (error) {
+      console.error("Error validating token:", error);
+      setErrorToken("Terjadi kesalahan. Silakan coba lagi.");
     }
   };
 
@@ -601,11 +876,29 @@ export default function CBTPage() {
       const currentTypeIndex = availableTypes.indexOf(questionType);
       if (currentTypeIndex > 0) {
         const prevType = availableTypes[currentTypeIndex - 1];
+        const lastQuestion = questions[prevType].length;
         setQuestionType(prevType);
-        setCurrentQuestion(questions[prevType].length); // Go to last question of previous type
+        setCurrentQuestion(lastQuestion); // Go to last question of previous type
+        
+        // Save progress for previous question type
+        const progress = {
+          questionType: prevType,
+          currentQuestion: lastQuestion,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem("cbt_progress", JSON.stringify(progress));
       }
     } else {
-      setCurrentQuestion(prev => Math.max(prev - 1, 1));
+      const prevQuestion = Math.max(currentQuestion - 1, 1);
+      setCurrentQuestion(prevQuestion);
+      
+      // Save progress
+      const progress = {
+        questionType,
+        currentQuestion: prevQuestion,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem("cbt_progress", JSON.stringify(progress));
     }
   };
 
@@ -718,7 +1011,16 @@ export default function CBTPage() {
           
           if (finishResponse.ok) {
             setShowConfirmationPopup(false);
+            setIsTimeUpFinish(false); // Ini bukan karena waktu habis
             setShowSuccessPopup(true);
+            
+            // Clear saved CBT data from localStorage since exam is finished
+            localStorage.removeItem("cbt_pg_answers");
+            localStorage.removeItem("cbt_singkat_answers");
+            localStorage.removeItem("cbt_essay_answers");
+            localStorage.removeItem("cbt_answers");
+            localStorage.removeItem("cbt_marked_questions");
+            localStorage.removeItem("cbt_progress");
           } else {
             console.error('Failed to finish exam:', finishResult);
             const errorMessage = finishResult.message || 'Gagal menyelesaikan ujian';
@@ -738,6 +1040,109 @@ export default function CBTPage() {
     }
   };
 
+  // Fungsi khusus submit untuk waktu habis - tanpa alert error
+  const submitAnswersTimeUp = async () => {
+    try {
+      const userData = localStorage.getItem("user_data");
+      if (!userData) return;
+      
+      const user = JSON.parse(userData);
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
+      // Submit PG answers
+      if (pgAnswers.length > 0) {
+        console.log('Submitting PG answers on time up:', pgAnswers);
+        try {
+          const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: pgAnswers
+            })
+          });
+          
+          const pgResult = await pgResponse.json();
+          console.log('PG Response on time up:', pgResult);
+        } catch (error) {
+          console.error('Error submitting PG answers on time up:', error);
+        }
+      }
+
+      // Submit Isian Singkat answers
+      if (isianSingkatAnswers.length > 0) {
+        console.log('Submitting Isian Singkat answers on time up:', isianSingkatAnswers);
+        try {
+          const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: isianSingkatAnswers
+            })
+          });
+          
+          const isianResult = await isianResponse.json();
+          console.log('Isian Singkat Response on time up:', isianResult);
+        } catch (error) {
+          console.error('Error submitting Isian Singkat answers on time up:', error);
+        }
+      }
+
+      // Submit Essay answers
+      if (essayAnswers.length > 0) {
+        console.log('Submitting Essay answers on time up:', essayAnswers);
+        try {
+          const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              answers: essayAnswers
+            })
+          });
+          
+          const essayResult = await essayResponse.json();
+          console.log('Essay Response on time up:', essayResult);
+        } catch (error) {
+          console.error('Error submitting Essay answers on time up:', error);
+        }
+      }
+
+      // Try to finish exam - don't throw error if it fails
+      try {
+        const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            peserta_id: user.id
+          })
+        });
+        
+        const finishResult = await finishResponse.json();
+        console.log('Finish exam response on time up:', finishResult);
+      } catch (finishError) {
+        console.error("Error finishing exam on time up:", finishError);
+      }
+      
+    } catch (error) {
+      console.error("Error during time up submission:", error);
+    }
+  };
+
   const handleQuestionClick = (questionNumber: number) => {
     // Auto-save current answer before navigation
     if (questionType === 'pg' && selectedOption) {
@@ -749,6 +1154,14 @@ export default function CBTPage() {
     }
 
     setCurrentQuestion(questionNumber);
+    
+    // Save progress
+    const progress = {
+      questionType,
+      currentQuestion: questionNumber,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem("cbt_progress", JSON.stringify(progress));
   };
 
   const handleNext = () => {
@@ -772,12 +1185,29 @@ export default function CBTPage() {
         setCurrentQuestion(1);
         setSelectedOption(null);
         setAnswer("");
+        
+        // Save progress for new question type
+        const progress = {
+          questionType: nextType,
+          currentQuestion: 1,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem("cbt_progress", JSON.stringify(progress));
       } else {
         // If this is the last type, show confirmation popup
         setShowConfirmationPopup(true);
       }
     } else {
-      setCurrentQuestion(prev => Math.min(prev + 1, currentTypeQuestions.length));
+      const nextQuestion = currentQuestion + 1;
+      setCurrentQuestion(nextQuestion);
+      
+      // Save progress
+      const progress = {
+        questionType,
+        currentQuestion: nextQuestion,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem("cbt_progress", JSON.stringify(progress));
     }
   };
 
@@ -842,10 +1272,12 @@ export default function CBTPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
-      <div className={`${(showTokenPopup || showConfirmationPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
+      <div className={`${(showTokenPopup || showConfirmationPopup || showSuccessPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
         <HeaderExam 
           examTitle={examTitle || "CBT Exam"} 
-          timeLeft="59:36" 
+          timeLeft={formatTime(timeLeft)}
+          isTimeRunningLow={isTimeRunningLow()}
+          isTimeCritical={isTimeCritical()}
         />
 
         <div className="container mx-auto px-6 pt-4">
@@ -872,6 +1304,14 @@ export default function CBTPage() {
                   setCurrentQuestion(1);
                   setSelectedOption(null);
                   setAnswer("");
+                  
+                  // Save progress for new question type
+                  const progress = {
+                    questionType: type,
+                    currentQuestion: 1,
+                    lastUpdated: Date.now()
+                  };
+                  localStorage.setItem("cbt_progress", JSON.stringify(progress));
                 }}
               >
                 {type === 'pg' ? 'Pilihan Ganda' : type === 'singkat' ? 'Jawaban Singkat' : 'Esai'}
@@ -1033,33 +1473,18 @@ export default function CBTPage() {
         </div>
       </div>
 
-      {/* Popup Token Ulang */}
-      {showTokenPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-center mb-4">Masukkan Token Ujian</h2>
-            <input
-              type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2 text-center"
-              placeholder="Token Ujian"
-              value={inputToken}
-              onChange={(e) => setInputToken(e.target.value)}
-            />
-            {errorToken && (
-              <div className="w-full text-center text-red-600 text-sm mb-2">{errorToken}</div>
-            )}
-            <Button
-              className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
-              onClick={handleTokenSubmit}
-            >
-              Submit
-            </Button>
-          </div>
-        </div>
+      {/* Background blur saat popup muncul */}
+      {(showTokenPopup || showConfirmationPopup || showSuccessPopup) && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
       )}
 
-      {/* Background blur saat popup muncul */}
-      <div className={`fixed inset-0 transition-all ${(showConfirmationPopup || showSuccessPopup) ? 'bg-black/40 backdrop-blur-sm' : 'pointer-events-none'}`} />
+      {/* Popup Token Ulang */}
+      <TokenPopup
+        open={showTokenPopup}
+        onClose={() => setShowTokenPopup(false)}
+        onSubmit={handleTokenSubmit}
+        errorMessage={errorToken}
+      />
 
       {/* Popup Konfirmasi Submit */}
       <ConfirmationSubmitPopup
@@ -1069,7 +1494,10 @@ export default function CBTPage() {
         soalPGDikerjakan={pgAnswers.length}
         soalSingkatDikerjakan={isianSingkatAnswers.length}
         soalEsaiDikerjakan={essayAnswers.length}
-        sisaWaktu="59:36" // TODO: Implement actual timer
+        totalSoalPG={questions.pg.length}
+        totalSoalSingkat={questions.singkat.length}
+        totalSoalEsai={questions.esai.length}
+        sisaWaktu={formatTime(timeLeft)}
       />
 
       {/* Popup Selamat */}
@@ -1077,11 +1505,15 @@ export default function CBTPage() {
         open={showSuccessPopup}
         onClose={() => {
           setShowSuccessPopup(false);
+          setIsTimeUpFinish(false); // Reset flag
           router.push('/dashboard-peserta/hasil-lomba/');
         }}
-        nama="John Doe" // TODO: Use actual user name
-        pesan="Selamat! Anda telah menyelesaikan ujian dengan baik. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
-        sisaWaktu="59:36" // TODO: Use actual time remaining
+        nama={userData?.nama_lengkap || userData?.nama || "Peserta"} 
+        pesan={isTimeUpFinish 
+          ? "Waktu ujian Anda telah habis! Namun jangan khawatir, semua jawaban yang telah Anda kerjakan sudah berhasil disimpan secara otomatis. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
+          : "Selamat! Anda telah menyelesaikan ujian dengan baik. Hasil ujian Anda akan segera diproses dan dapat dilihat di halaman hasil ujian."
+        }
+        sisaWaktu={formatTime(timeLeft)}
       />
     </div>
   );
