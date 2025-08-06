@@ -30,7 +30,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import HasilLombaTable from '@/components/dashboard-admin/hasil-lomba/HasilLombaTable';
@@ -65,6 +65,7 @@ export default function HasilUjianPage() {
   const [lombaList, setLombaList] = useState<Lomba[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toastShownRef = useRef(false); 
 
   // Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,13 +129,18 @@ export default function HasilUjianPage() {
 
   // Pertama kali load data dan tampilkan toast sukses
   useEffect(() => {
-    const fetchInitialData = async () => {
-      await fetchHasilLomba();
-      await fetchLombaList();
+  const fetchInitialData = async () => {
+    await fetchHasilLomba();
+    await fetchLombaList();
+
+    if (!toastShownRef.current) {
       toast.success('Halaman berhasil dimuat!');
-    };
-    fetchInitialData();
-  }, []);
+      toastShownRef.current = true;
+    }
+  };
+  fetchInitialData();
+}, []);
+
 
   // Re-fetch data jika filter/sort berubah
   useEffect(() => {

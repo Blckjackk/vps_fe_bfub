@@ -5,6 +5,7 @@ import Link from 'next/link';
 import LombaTable from '@/components/dashboard-admin/manajemen-lomba/LombaTable';
 import { Plus, Search, Filter } from 'lucide-react';
 import { FaAngleDown } from 'react-icons/fa';
+import { toast, Toaster } from 'sonner';
 
 // Interface untuk data lomba dari API
 interface LombaData {
@@ -28,6 +29,7 @@ export default function ManajemenLombaPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [filterType, setFilterType] = useState('semua');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const toastShownRef = useRef(false);
 
   // Fetch data lomba dari API
   const fetchLomba = async () => {
@@ -58,8 +60,18 @@ export default function ManajemenLombaPage() {
   };
 
   useEffect(() => {
-    fetchLomba();
-  }, []);
+  const loadLombaWithToast = async () => {
+    await fetchLomba();
+
+    if (!toastShownRef.current) {
+      toast.success("Halaman berhasil dimuat!");
+      toastShownRef.current = true;
+    }
+  };
+
+  loadLombaWithToast();
+}, []);
+
 
   // Convert data untuk kompatibilitas dengan LombaTable yang sudah ada
   const convertedLomba = lombaData.map(item => ({
@@ -277,6 +289,7 @@ export default function ManajemenLombaPage() {
           />
         )}
       </div>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }   

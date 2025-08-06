@@ -5,6 +5,8 @@ import { ArrowLeft, Download } from "lucide-react";
 import { useState } from "react";
 import { FaUser, FaClipboardList} from "react-icons/fa";
 import { HiNewspaper } from "react-icons/hi2";
+import { toast, Toaster } from 'sonner';
+import { useRef, useEffect } from 'react';
 
 export default function ExportPage() {
   const [fileFormat, setFileFormat] = useState("csv");
@@ -15,6 +17,7 @@ export default function ExportPage() {
   });
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const toastShownRef = useRef(false);
 
   const handleSelectAll = () => {
     setSelected({
@@ -23,6 +26,14 @@ export default function ExportPage() {
       hasil_lomba: true,
     });
   };
+
+  useEffect(() => {
+  if (!toastShownRef.current) {
+    toast.success('Halaman berhasil dimuat!');
+    toastShownRef.current = true;
+  }
+}, []);
+
 
   return (
       <div className="space-y-6">
@@ -178,6 +189,7 @@ export default function ExportPage() {
             </Button>
           </div>
         </div>
+        <Toaster position="top-right" richColors />
       </div>
   );
 }
