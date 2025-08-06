@@ -230,7 +230,7 @@ export default function GroupedTokenTable({
                                   >
                                     <Copy size={14} />
                                   </button>
-                                  <button
+                                  {/*<button
                                     onClick={() => {
                                       setSelectedTokenForStatus(pesertaToken.token_utama!);
                                       setShowStatusModal(true);
@@ -238,7 +238,7 @@ export default function GroupedTokenTable({
                                     className="text-orange-500 hover:text-orange-700"
                                   >
                                     <Edit size={14} />
-                                  </button>
+                                  </button> */}
                                 </div>
                               </div>
                             </div>
@@ -265,12 +265,12 @@ export default function GroupedTokenTable({
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <button
+                                      {/*<button
                                         onClick={() => copyToClipboard(token.kode_token)}
                                         className="text-gray-400 hover:text-gray-600"
                                       >
                                         <Copy size={14} />
-                                      </button>
+                                      </button> */}
                                       <button
                                         onClick={() => onSetPrimaryToken?.(token.id)}
                                         className="text-blue-500 hover:text-blue-700 text-xs"
@@ -278,7 +278,7 @@ export default function GroupedTokenTable({
                                       >
                                         Set Utama
                                       </button>
-                                      <button
+                                      {/*<button
                                         onClick={() => {
                                           setSelectedTokenForStatus(token);
                                           setShowStatusModal(true);
@@ -286,10 +286,10 @@ export default function GroupedTokenTable({
                                         className="text-orange-500 hover:text-orange-700"
                                       >
                                         <Edit size={14} />
-                                      </button>
+                                      </button> */}
                                       <button
                                         onClick={() => onDeleteItem?.(token.id)}
-                                        className="text-red-500 hover:text-red-700"
+                                        className="text-[#B94A48] hover:text-red-700"
                                       >
                                         <Trash2 size={14} />
                                       </button>
