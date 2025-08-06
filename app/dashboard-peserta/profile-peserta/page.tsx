@@ -91,14 +91,16 @@ export default function ProfilePesertaPage() {
         console.log('API response:', result);
         
         if (result.success && result.data) {
-          // Gabungkan data dari API dengan data localStorage (prioritaskan password_hash dari API)
+          // Gabungkan data dari API dengan data localStorage
           const combinedData = {
-            ...result.data,
-            password: user.password, // Paksa gunakan password dari localStorage
-            kota_provinsi: user.kota_provinsi,
-            password_hash: result.data.password_hash || result.data.password // Gunakan password_hash dari API
+            ...result.data, // Langsung gunakan semua data dari API
+            kota_provinsi: user.kota_provinsi, // Hanya tambahkan field yang tidak ada di API
+            password_hash: user.password || user.password_hash // Gunakan password dari localStorage
           };
           console.log('Combined user data:', combinedData);
+          console.log('Password_hash from API:', result.data.password_hash);
+          console.log('Password from localStorage:', user.password);
+          console.log('All API data keys:', Object.keys(result.data));
           setUserData(combinedData);
         } else {
           // Fallback ke data localStorage jika API gagal
@@ -197,7 +199,7 @@ export default function ProfilePesertaPage() {
           />
           <PasswordItem 
             label="Password" 
-            value={userData.password_hash || userData.password || "mozzie123"} // Gunakan password_hash dari API, fallback ke localStorage, atau default
+            value={userData.password_hash || "Tidak tersedia"} // Langsung gunakan password_hash seperti field lain
             showPassword={showPassword}
             onTogglePassword={() => setShowPassword(!showPassword)}
           />
