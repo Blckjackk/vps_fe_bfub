@@ -43,6 +43,9 @@ function HalamanUjian() {
   const [durasiUjian, setDurasiUjian] = useState<number>(0);
   const [waktuMulaiUjian, setWaktuMulaiUjian] = useState<string>("--:--");
   const [waktuAkhirUjian, setWaktuAkhirUjian] = useState<string>("--:--");
+  const [waktuMulaiPengerjaan, setWaktuMulaiPengerjaan] = useState<Date | null>(null); // Waktu mulai actual
+  const [waktuAkhirPengerjaan, setWaktuAkhirPengerjaan] = useState<Date | null>(null); // Waktu akhir actual
+  const [countdown, setCountdown] = useState<string>(''); // Countdown timer
   const [statusUjian, setStatusUjian] = useState<string>("belum_mulai"); // Tambah state untuk status ujian
   
   // Data statis untuk demo - akan diganti dengan data dari API
@@ -95,6 +98,67 @@ function HalamanUjian() {
     const data = await res.json();
     console.log("Response validasi token:", data);
     return data;
+  };
+
+  // Fungsi untuk mengecek apakah ujian sudah boleh dimulai
+  // Fungsi untuk format countdown
+  const formatCountdown = (targetDate: Date): string => {
+    const sekarang = new Date();
+    const selisih = targetDate.getTime() - sekarang.getTime();
+    
+    if (selisih <= 0) {
+      return '';
+    }
+    
+    const hari = Math.floor(selisih / (1000 * 60 * 60 * 24));
+    const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+    const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+    
+    if (hari > 0) {
+      return `${hari} hari ${jam} jam ${menit} menit`;
+    } else if (jam > 0) {
+      return `${jam} jam ${menit} menit ${detik} detik`;
+    } else {
+      return `${menit} menit ${detik} detik`;
+    }
+  };
+
+  const isUjianBolehDimulai = (): boolean => {
+    if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan) return false;
+    
+    const sekarang = new Date();
+    return sekarang >= waktuMulaiPengerjaan && sekarang <= waktuAkhirPengerjaan;
+  };
+
+  // Fungsi untuk mengecek apakah waktu ujian sudah lewat
+  const isWaktuUjianLewat = (): boolean => {
+    if (!waktuAkhirPengerjaan) return false;
+    
+    const sekarang = new Date();
+    return sekarang > waktuAkhirPengerjaan;
+  };
+
+  // Fungsi untuk mendapatkan pesan status ujian
+  const getStatusUjianMessage = (): string => {
+    if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan) return "Memuat informasi ujian...";
+    
+    const sekarang = new Date();
+    
+    if (sekarang < waktuMulaiPengerjaan) {
+      const selisihMenit = Math.ceil((waktuMulaiPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60));
+      if (selisihMenit < 60) {
+        return `Ujian akan dimulai dalam ${selisihMenit} menit`;
+      } else {
+        const selisihJam = Math.ceil(selisihMenit / 60);
+        return `Ujian akan dimulai dalam ${selisihJam} jam`;
+      }
+    } else if (sekarang > waktuAkhirPengerjaan) {
+      return "Waktu ujian sudah berakhir";
+    } else {
+      const sisaMenit = Math.floor((waktuAkhirPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60));
+      return `Ujian sedang berlangsung (sisa ${sisaMenit} menit)`;
+    }
   };
 
   // Fungsi untuk menghitung durasi dalam menit
@@ -194,6 +258,17 @@ function HalamanUjian() {
             setDurasiUjian(durasi);
             setWaktuMulaiUjian(formatWaktu(lomba.waktu_mulai_pengerjaan));
             setWaktuAkhirUjian(formatWaktu(lomba.waktu_akhir_pengerjaan));
+            
+            // Simpan waktu sebagai Date objects untuk validasi
+            setWaktuMulaiPengerjaan(new Date(lomba.waktu_mulai_pengerjaan));
+            setWaktuAkhirPengerjaan(new Date(lomba.waktu_akhir_pengerjaan));
+            
+            // Set initial countdown jika ujian belum dimulai
+            const sekarang = new Date();
+            const waktuMulai = new Date(lomba.waktu_mulai_pengerjaan);
+            if (sekarang < waktuMulai) {
+              setCountdown(formatCountdown(waktuMulai));
+            }
           }
         } else {
           setCabangLomba("Cabang lomba tidak ditemukan");
@@ -250,6 +325,31 @@ function HalamanUjian() {
     fetchCabangLomba();
     fetchTokenPeserta();
   }, []);
+
+  // Update status ujian secara real-time setiap menit
+  useEffect(() => {
+    if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan) return;
+
+    const interval = setInterval(() => {
+      const sekarang = new Date();
+      
+      // Update countdown
+      if (sekarang < waktuMulaiPengerjaan) {
+        setCountdown(formatCountdown(waktuMulaiPengerjaan));
+      } else if (sekarang >= waktuMulaiPengerjaan && sekarang <= waktuAkhirPengerjaan) {
+        setCountdown('');
+      } else {
+        setCountdown('');
+      }
+      
+      // Update status ujian berdasarkan waktu
+      if (sekarang > waktuAkhirPengerjaan && statusUjian !== 'selesai') {
+        setStatusUjian('selesai');
+      }
+    }, 1000); // Update setiap detik untuk countdown yang akurat
+
+    return () => clearInterval(interval);
+  }, [waktuMulaiPengerjaan, waktuAkhirPengerjaan, statusUjian]);
 
   return (
     <>
@@ -338,20 +438,55 @@ function HalamanUjian() {
               </ul>
             </div>
 
+            {/* Status Waktu Real-time */}
+            <div className="mt-4 p-3 rounded-lg border-l-4 text-sm">
+              {isWaktuUjianLewat() ? (
+                <div className="border-l-red-500 bg-red-50 text-red-700">
+                  <strong>Status:</strong> Waktu ujian sudah berakhir
+                </div>
+              ) : !isUjianBolehDimulai() ? (
+                <div className="border-l-yellow-500 bg-yellow-50 text-yellow-700">
+                  <strong>Status:</strong> {getStatusUjianMessage()}
+                  {countdown && (
+                    <div className="mt-2 text-lg font-mono font-bold text-yellow-800">
+                      Ujian dimulai dalam: {countdown}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="border-l-green-500 bg-green-50 text-green-700">
+                  <strong>Status:</strong> Ujian sedang berlangsung - Anda dapat memulai
+                </div>
+              )}
+            </div>
+
             <button 
               className={`mt-6 text-sm font-medium py-2 rounded-md transition ${
-                statusUjian === 'selesai' 
+                statusUjian === 'selesai' || isWaktuUjianLewat() || !isUjianBolehDimulai()
                   ? 'bg-gray-400 text-white cursor-not-allowed' 
                   : 'bg-[#D84C3B] hover:bg-red-600 text-white'
               }`}
               onClick={() => {
-                if (statusUjian !== 'selesai') {
+                if (statusUjian !== 'selesai' && isUjianBolehDimulai() && !isWaktuUjianLewat()) {
                   setShowPopup(true);
+                } else if (!isUjianBolehDimulai() && !isWaktuUjianLewat()) {
+                  setErrorMessage("Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan.");
+                  setShowErrorPopup(true);
+                } else if (isWaktuUjianLewat()) {
+                  setErrorMessage("Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian.");
+                  setShowErrorPopup(true);
                 }
               }}
-              disabled={statusUjian === 'selesai'}
+              disabled={statusUjian === 'selesai' || isWaktuUjianLewat() || !isUjianBolehDimulai()}
             >
-              {statusUjian === 'selesai' ? 'Waktu Ujian Sudah Selesai' : 'Mulai'}
+              {statusUjian === 'selesai' 
+                ? 'Ujian Sudah Selesai' 
+                : isWaktuUjianLewat() 
+                ? 'Waktu Ujian Sudah Berakhir'
+                : !isUjianBolehDimulai() 
+                ? getStatusUjianMessage()
+                : 'Mulai'
+              }
             </button>
           </div>
         </div>
@@ -390,6 +525,21 @@ function HalamanUjian() {
             <button
               className="w-full bg-[#D84C3B] hover:bg-red-600 text-white font-semibold py-2 rounded-md shadow transition"
               onClick={async () => {
+                // Validasi waktu ujian dulu sebelum validasi token
+                if (!isUjianBolehDimulai()) {
+                  setShowPopup(false);
+                  setErrorMessage("Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan.");
+                  setShowErrorPopup(true);
+                  return;
+                }
+
+                if (isWaktuUjianLewat()) {
+                  setShowPopup(false);
+                  setErrorMessage("Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian.");
+                  setShowErrorPopup(true);
+                  return;
+                }
+
                 // Validasi dan pakai token ke backend
                 if (!inputToken) {
                   alert("Mohon masukkan token");
