@@ -249,6 +249,11 @@ export default function CBTPage() {
   const [timeLeft, setTimeLeft] = useState<number>(0); // Waktu tersisa dalam detik
   const [examStartTime, setExamStartTime] = useState<number | null>(null); // Waktu mulai ujian
   const [userData, setUserData] = useState<any>(null); // Data user
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [allowExitFullscreen, setAllowExitFullscreen] = useState<boolean>(false);
+  const [showWarningMessage, setShowWarningMessage] = useState<boolean>(false);
+  const [showInitialFullscreenPrompt, setShowInitialFullscreenPrompt] = useState<boolean>(true); // Hanya tampil di awal
+  const [hasEnteredFullscreenOnce, setHasEnteredFullscreenOnce] = useState<boolean>(false); // Track jika pernah fullscreen
   const router = useRouter();
   const tokenRef = useRef<string>("");
 
@@ -306,6 +311,9 @@ export default function CBTPage() {
   // Handle ketika waktu habis
   const handleTimeUp = async () => {
     try {
+      // Izinkan keluar dari fullscreen karena ujian sudah selesai
+      setAllowExitFullscreen(true);
+      
       // Auto-save jawaban yang sedang dikerjakan
       if (questionType === 'pg' && selectedOption) {
         saveAnswer(selectedOption);
@@ -339,6 +347,7 @@ export default function CBTPage() {
     } catch (error) {
       console.error("Error during time up:", error);
       // Tetap tampilkan popup selamat meskipun ada error
+      setAllowExitFullscreen(true);
       setIsTimeUpFinish(true);
       setShowSuccessPopup(true);
     }
@@ -475,47 +484,253 @@ export default function CBTPage() {
     }
   };
 
-  // Masuk fullscreen jika belum
+  // Masuk fullscreen ketika component mount dan proteksi fullscreen
   useEffect(() => {
+    let isExamActive = true;
+
+    // Inject CSS to hide browser fullscreen notifications
+    const hideFullscreenNotificationStyle = document.createElement('style');
+    hideFullscreenNotificationStyle.textContent = `
+      /* Hide Chrome fullscreen notification */
+      body:fullscreen .fullscreen-api-shown {
+        display: none !important;
+      }
+      
+      /* Hide fullscreen exit hint */
+      body:fullscreen::before {
+        display: none !important;
+      }
+      
+      /* Hide webkit fullscreen notification */
+      body:-webkit-full-screen .webkit-full-screen-ancestor {
+        display: none !important;
+      }
+      
+      /* Hide any overlay or notification during fullscreen */
+      *:fullscreen > .fullscreen-notification,
+      *:-webkit-full-screen > .fullscreen-notification,
+      *:-moz-full-screen > .fullscreen-notification {
+        display: none !important;
+      }
+      
+      /* Hide browser UI elements during fullscreen */
+      :fullscreen {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+    `;
+    document.head.appendChild(hideFullscreenNotificationStyle);
+
     const enterFullScreen = async () => {
       try {
+        console.log('Attempting to enter fullscreen...');
         if (!document.fullscreenElement) {
           const element = document.documentElement;
+          
+          // Check if fullscreen is available before attempting
+          if (!document.fullscreenEnabled && !(document as any).webkitFullscreenEnabled && !(document as any).mozFullScreenEnabled) {
+            console.warn('Fullscreen not available');
+            return;
+          }
+          
           if (element.requestFullscreen) {
-            await element.requestFullscreen().catch((err: any) => {
-              console.warn('Fullscreen request failed:', err.message);
-            });
+            await element.requestFullscreen();
+            console.log('Fullscreen activated via requestFullscreen');
+            setIsFullscreen(true);
+            setShowInitialFullscreenPrompt(false);
+            setHasEnteredFullscreenOnce(true);
           } else if ((element as any).webkitRequestFullscreen) {
-            await (element as any).webkitRequestFullscreen().catch((err: any) => {
-              console.warn('Webkit fullscreen request failed:', err.message);
-            });
+            await (element as any).webkitRequestFullscreen();
+            console.log('Fullscreen activated via webkitRequestFullscreen');
+            setIsFullscreen(true);
+            setShowInitialFullscreenPrompt(false);
+            setHasEnteredFullscreenOnce(true);
           } else if ((element as any).msRequestFullscreen) {
-            await (element as any).msRequestFullscreen().catch((err: any) => {
-              console.warn('MS fullscreen request failed:', err.message);
-            });
+            await (element as any).msRequestFullscreen();
+            console.log('Fullscreen activated via msRequestFullscreen');
+            setIsFullscreen(true);
+            setShowInitialFullscreenPrompt(false);
+            setHasEnteredFullscreenOnce(true);
+          } else {
+            console.warn('Fullscreen API not supported');
+          }
+        } else {
+          console.log('Already in fullscreen mode');
+          setIsFullscreen(true);
+          setShowInitialFullscreenPrompt(false);
+          setHasEnteredFullscreenOnce(true);
+        }
+      } catch (err) {
+        console.error('Error entering fullscreen:', err);
+        // Jika error permissions, tunggu sebentar sebelum retry
+        if (isExamActive && !allowExitFullscreen) {
+          // Tampilkan warning untuk semua jenis error
+          setShowWarningMessage(true);
+          setTimeout(() => setShowWarningMessage(false), 3000);
+          
+          // Retry dengan delay lebih lama untuk permission errors
+          if (err instanceof Error && (err.message.includes('Permission') || err.message.includes('denied'))) {
+            setTimeout(() => {
+              if (isExamActive && !document.fullscreenElement && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+                enterFullScreen();
+              }
+            }, 3000); // Delay lebih lama untuk permission error
+          } else {
+            // Retry lebih cepat untuk error lain
+            setTimeout(() => {
+              if (isExamActive && !document.fullscreenElement && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+                enterFullScreen();
+              }
+            }, 1500);
+          }
+        }
+      }
+    };
+
+    const exitFullScreen = async () => {
+      try {
+        if (document.fullscreenElement) {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if ((document as any).webkitExitFullscreen) {
+            await (document as any).webkitExitFullscreen();
+          } else if ((document as any).mozCancelFullScreen) {
+            await (document as any).mozCancelFullScreen();
+          } else if ((document as any).msExitFullscreen) {
+            await (document as any).msExitFullscreen();
           }
         }
       } catch (err) {
-        console.warn('Error attempting to enable fullscreen:', err);
+        console.error('Error exiting fullscreen:', err);
       }
     };
 
-    // Try to enter fullscreen on component mount
-    enterFullScreen();
+    // Check if already in fullscreen
+    if (document.fullscreenElement) {
+      setIsFullscreen(true);
+      setShowInitialFullscreenPrompt(false);
+      setHasEnteredFullscreenOnce(true);
+      isExamActive = true;
+    }
 
-    // Also try to enter fullscreen when visibility changes to visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        enterFullScreen();
+    // Monitor fullscreen changes dengan proteksi
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      console.log('Fullscreen change detected, current state:', isCurrentlyFullscreen);
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      if (isCurrentlyFullscreen) {
+        isExamActive = true;
+        setShowInitialFullscreenPrompt(false);
+        setHasEnteredFullscreenOnce(true);
+      }
+      
+      // Jika keluar dari fullscreen dan ujian masih aktif, coba masuk kembali otomatis (hanya jika sudah pernah fullscreen)
+      if (!isCurrentlyFullscreen && isExamActive && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+        console.log('Attempting to re-enter fullscreen - exam still active and user has entered fullscreen before');
+        setShowWarningMessage(true);
+        setTimeout(() => setShowWarningMessage(false), 3000);
+        // Langsung coba masuk fullscreen lagi dengan delay untuk menghindari rate limiting
+        setTimeout(() => {
+          if (isExamActive && !document.fullscreenElement && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+            enterFullScreen();
+          }
+        }, 1000);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Blokir tombol ESC dan F11 (hanya setelah user pernah masuk fullscreen)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isExamActive && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+        if (e.key === 'Escape' || e.key === 'F11') {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowWarningMessage(true);
+          setTimeout(() => setShowWarningMessage(false), 3000);
+          return false;
+        }
+        
+        // Blokir Alt+Tab, Alt+F4, Ctrl+W, dll
+        if (e.altKey || (e.ctrlKey && (e.key === 'w' || e.key === 'r' || e.key === 't'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowWarningMessage(true);
+          setTimeout(() => setShowWarningMessage(false), 3000);
+          return false;
+        }
+      }
+    };
+
+    // Blokir right click (hanya setelah user pernah masuk fullscreen)
+    const handleContextMenu = (e: MouseEvent) => {
+      if (isExamActive && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Blokir reload page (hanya setelah user pernah masuk fullscreen)
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isExamActive && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+        e.preventDefault();
+        e.returnValue = 'Ujian masih berlangsung!';
+        return 'Ujian masih berlangsung!';
+      }
+    };
+
+    // Blokir focus loss (hanya setelah user pernah masuk fullscreen)
+    const handleBlur = () => {
+      if (isExamActive && !allowExitFullscreen && hasEnteredFullscreenOnce) {
+        setTimeout(() => window.focus(), 10);
+        setShowWarningMessage(true);
+        setTimeout(() => setShowWarningMessage(false), 3000);
+      }
+    };
+
+    // Tambahkan event listeners untuk proteksi
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('blur', handleBlur);
+
+    // Store the enterFullScreen function globally so it can be called from button
+    (window as any).enterFullScreen = enterFullScreen;
+    (window as any).exitFullScreen = exitFullScreen;
+    (window as any).setExamInactive = () => {
+      isExamActive = false;
+    };
+
+    // Jangan auto-enter fullscreen di awal, biarkan user klik tombol dulu
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      isExamActive = false;
+      
+      // Remove injected style
+      if (hideFullscreenNotificationStyle && hideFullscreenNotificationStyle.parentNode) {
+        hideFullscreenNotificationStyle.parentNode.removeChild(hideFullscreenNotificationStyle);
+      }
+      
+      // Cleanup event listeners
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('blur', handleBlur);
+      
+      delete (window as any).enterFullScreen;
+      delete (window as any).exitFullScreen;
+      delete (window as any).setExamInactive;
     };
-  }, []);
+  }, [allowExitFullscreen, hasEnteredFullscreenOnce]);
 
   useEffect(() => {
     if (showTokenPopup || showConfirmationPopup) {
@@ -783,10 +998,10 @@ export default function CBTPage() {
     checkAndValidateToken();
   }, []);
 
-  // Deteksi keluar tab dan hanguskan token
+  // Deteksi keluar tab dan hanguskan token (hanya jika ujian masih aktif)
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === "hidden") {
+      if (document.visibilityState === "hidden" && !allowExitFullscreen) {
         const kodeToken = tokenRef.current;
         if (kodeToken) {
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -802,13 +1017,13 @@ export default function CBTPage() {
           localStorage.removeItem("token_aktif");
         }
       }
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && !allowExitFullscreen) {
         setShowTokenPopup(true);
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+  }, [allowExitFullscreen]);
 
   const handleTokenSubmit = async (token: string) => {
     setErrorToken("");
@@ -1010,6 +1225,14 @@ export default function CBTPage() {
           console.log('Finish exam response:', finishResult);
           
           if (finishResponse.ok) {
+            // Izinkan keluar dari fullscreen karena ujian sudah selesai
+            setAllowExitFullscreen(true);
+            
+            // Nonaktifkan proteksi ujian
+            if ((window as any).setExamInactive) {
+              (window as any).setExamInactive();
+            }
+            
             setShowConfirmationPopup(false);
             setIsTimeUpFinish(false); // Ini bukan karena waktu habis
             setShowSuccessPopup(true);
@@ -1272,7 +1495,7 @@ export default function CBTPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
-      <div className={`${(showTokenPopup || showConfirmationPopup || showSuccessPopup) ? "blur-sm pointer-events-none select-none" : ""}`}>
+      <div className={`${(showTokenPopup || showConfirmationPopup || showSuccessPopup || showInitialFullscreenPrompt) ? "blur-sm pointer-events-none select-none" : ""}`}>
         <HeaderExam 
           examTitle={examTitle || "CBT Exam"} 
           timeLeft={formatTime(timeLeft)}
@@ -1474,8 +1697,56 @@ export default function CBTPage() {
       </div>
 
       {/* Background blur saat popup muncul */}
-      {(showTokenPopup || showConfirmationPopup || showSuccessPopup) && (
+      {(showTokenPopup || showConfirmationPopup || showSuccessPopup || showWarningMessage || showInitialFullscreenPrompt) && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
+      )}
+
+      {/* Popup Peringatan Fullscreen */}
+      {showWarningMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">Tidak diizinkan keluar dari fullscreen selama ujian berlangsung!</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Fullscreen Initial (hanya di awal) */}
+      {showInitialFullscreenPrompt && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="mb-4">
+                <svg className="mx-auto h-12 w-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Mode Fullscreen Diperlukan
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Untuk menjaga integritas ujian, silakan aktifkan mode fullscreen dengan menekan tombol di bawah ini sebelum memulai ujian.
+              </p>
+              <button
+                onClick={() => {
+                  if ((window as any).enterFullScreen) {
+                    (window as any).enterFullScreen();
+                  }
+                }}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              >
+                Mulai Ujian Fullscreen
+              </button>
+              <p className="text-xs text-gray-500 mt-3">
+                Setelah ini, Anda tidak akan bisa keluar dari fullscreen selama ujian berlangsung
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Popup Token Ulang */}
@@ -1504,6 +1775,17 @@ export default function CBTPage() {
       <SuccessNextSectionPopup 
         open={showSuccessPopup}
         onClose={() => {
+          // Izinkan keluar dari fullscreen dan nonaktifkan proteksi sebelum redirect
+          setAllowExitFullscreen(true);
+          if ((window as any).setExamInactive) {
+            (window as any).setExamInactive();
+          }
+          
+          // Keluar dari fullscreen sebelum redirect
+          if ((window as any).exitFullScreen) {
+            (window as any).exitFullScreen();
+          }
+          
           setShowSuccessPopup(false);
           setIsTimeUpFinish(false); // Reset flag
           router.push('/dashboard-peserta/hasil-lomba/');

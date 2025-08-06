@@ -120,3 +120,56 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide browser fullscreen notification */
+::-webkit-full-screen-ancestor {
+  display: none !important;
+}
+
+::-webkit-full-screen {
+  background: transparent;
+}
+
+::-moz-full-screen-ancestor {
+  display: none !important;
+}
+
+::-ms-fullscreen-ancestor {
+  display: none !important;
+}
+
+/* Hide the fullscreen overlay notification */
+html:fullscreen::backdrop {
+  background: transparent !important;
+}
+
+html:-webkit-full-screen::backdrop {
+  background: transparent !important;
+}
+
+html:-moz-full-screen::backdrop {
+  background: transparent !important;
+}
+
+html:-ms-fullscreen::backdrop {
+  background: transparent !important;
+}
+
+/* Hide browser's fullscreen UI overlay */
+:fullscreen > * {
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+:-webkit-full-screen > * {
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+:-moz-full-screen > * {
+  transform: none !important;
+}
+
+:-ms-fullscreen > * {
+  transform: none !important;
+}
