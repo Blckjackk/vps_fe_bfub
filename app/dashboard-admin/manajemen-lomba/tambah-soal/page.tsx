@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -189,21 +190,24 @@ export default function TambahSoalPage() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-800">
-              Tambah Soal {jenisSoal.toUpperCase()}
-            </h1>
-            <p className="text-sm text-gray-600">
-              Tambahkan soal baru untuk ujian
-            </p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/dashboard-admin/manajemen-lomba/edit?id=${lombaId}`}
+                className="text-gray-500 hover:text-gray-800"
+              >
+                <FaArrowLeft size={24} />
+              </Link>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-800">
+                  Tambah Soal {jenisSoal.toUpperCase()}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Tambahkan soal baru untuk ujian
+                </p>
+              </div>
+            </div>
           </div>
-          <Link 
-            href={`/dashboard-admin/manajemen-lomba/edit?id=${lombaId}`}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-          >
-            <ArrowLeft size={16} />
-            Kembali
-          </Link>
         </div>
 
         {/* Form */}

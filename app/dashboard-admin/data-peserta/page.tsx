@@ -213,7 +213,7 @@ export default function DataPesertaPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <div className={`space-y-6 transition-all duration-300 ${isDeleteModalOpen ? 'blur-sm pointer-events-none' : ''}`}>
         <h1 className="text-2xl font-semibold text-gray-800">Data Peserta</h1>
 

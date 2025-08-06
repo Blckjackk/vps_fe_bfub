@@ -1,132 +1,183 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FaUpload } from "react-icons/fa";
+import { ArrowLeft, Download } from "lucide-react";
 import { useState } from "react";
-
-const lombaOptions = [
-  { value: "osa", label: "OSA" },
-  { value: "obn", label: "OBN" },
-  { value: "obi", label: "OBI" },
-  { value: "semua", label: "Semua" },
-];
-
-const soalTypeOptions = [
-  { value: "pg", label: "PG" },
-  { value: "esai", label: "Esai" },
-  { value: "isian", label: "Isian Singkat" },
-  { value: "semua", label: "Semua" },
-];
+import { FaUser, FaClipboardList} from "react-icons/fa";
+import { HiNewspaper } from "react-icons/hi2";
 
 export default function ExportPage() {
+  const [fileFormat, setFileFormat] = useState("csv");
   const [selected, setSelected] = useState({
-    peserta: true,
-    soal: true,
-    hasil: true,
+    peserta: false,
+    soal: false,
+    hasil_lomba: false,
   });
-  const [soalType, setSoalType] = useState("semua");
-  const [soalLomba, setSoalLomba] = useState("semua");
-  const [pesertaLomba, setPesertaLomba] = useState("semua");
-  const [hasilLomba, setHasilLomba] = useState("semua");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const handleSelectAll = () => {
-    setSelected({ peserta: true, soal: true, hasil: true });
+    setSelected({
+      peserta: true,
+      soal: true,
+      hasil_lomba: true,
+    });
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAFBFF]">
-      <main className="flex-1 flex flex-col items-start py-10 px-2 md:px-8">
-        <div className="w-full max-w-3xl mb-8 ml-0">
-          <h1 className="text-2xl font-semibold mb-8 ml-0 text-gray-800">Ekspor File</h1>
-          <div className="bg-white rounded-xl shadow p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-semibold">Pilih Data untuk Diekspor</span>
-              <Button
-                type="button"
-                className="bg-[#2176FF] text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#185bb5]"
-                onClick={handleSelectAll}
-              >
-                Pilih Semua
-              </Button>
-            </div>
-            {/* Data Peserta */}
-            <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border border-[#E0E7EF]">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" checked={selected.peserta} onChange={e => setSelected(s => ({ ...s, peserta: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
-                <span className="font-bold text-lg">Data Peserta</span>
-                <select
-                  className="ml-auto border rounded px-2 py-1 text-sm"
-                  value={pesertaLomba}
-                  onChange={e => setPesertaLomba(e.target.value)}
-                >
-                  {lombaOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="text-xs text-gray-600">
-                Tabel data peserta menampilkan informasi lengkap mengenai peserta yang terdaftar dalam sebuah lomba.
-              </div>
-            </div>
-            {/* Soal */}
-            <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border-2 border-[#2176FF]">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" checked={selected.soal} onChange={e => setSelected(s => ({ ...s, soal: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
-                <span className="font-bold text-lg">Soal</span>
-                <select
-                  className="ml-auto border rounded px-2 py-1 text-sm"
-                  value={soalType}
-                  onChange={e => setSoalType(e.target.value)}
-                >
-                  {soalTypeOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <select
-                  className="ml-2 border rounded px-2 py-1 text-sm"
-                  value={soalLomba}
-                  onChange={e => setSoalLomba(e.target.value)}
-                >
-                  {lombaOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="text-xs text-gray-600">
-                Tabel data soal menampilkan informasi lengkap mengenai soal yang terdaftar dalam sebuah lomba. Baik itu Pilihan Ganda, Esai, atau Isian Singkat.
-              </div>
-            </div>
-            {/* Hasil Peserta */}
-            <div className="flex flex-col gap-2 mb-4 bg-[#F8F9FB] rounded-xl p-4 border border-[#E0E7EF]">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" checked={selected.hasil} onChange={e => setSelected(s => ({ ...s, hasil: e.target.checked }))} className="accent-[#6C63FF] w-5 h-5" />
-                <span className="font-bold text-lg">Hasil Peserta</span>
-                <select
-                  className="ml-auto border rounded px-2 py-1 text-sm"
-                  value={hasilLomba}
-                  onChange={e => setHasilLomba(e.target.value)}
-                >
-                  {lombaOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="text-xs text-gray-600">
-                Tabel Hasil Peserta menampilkan informasi lengkap mengenai hasil ujian peserta yang terdaftar dalam sebuah lomba.
-              </div>
-            </div>
-            <div className="flex justify-end mt-8">
-              <Button
-                type="submit"
-                variant="default"
-                className="px-8 bg-[#2ECC8B] text-white py-2 rounded-lg font-semibold text-sm shadow hover:bg-[#27ae60] flex items-center gap-2"
-              >
-                Export <FaUpload />
-              </Button>
-            </div>
+      <div className="space-y-6">
+        {/* Header with back button and title */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-gray-800">Ekspor File</h1>
           </div>
         </div>
-      </main>
-    </div>
+
+        <div className="flex gap-6">
+          {/* Left Column - Table Selection */}
+          <div className="flex-1 bg-white rounded-xl shadow-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Pilih Tabel untuk Diekspor</h2>
+              <button
+                onClick={handleSelectAll}
+                className="text-[#2176FF] font-medium text-sm hover:underline"
+              >
+                Pilih Semua
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Data Peserta */}
+              <div className="p-4 bg-[#F8F9FB] rounded-xl border border-[#E0E7EF]">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.peserta}
+                    onChange={(e) =>
+                      setSelected((s) => ({ ...s, peserta: e.target.checked }))
+                    }
+                    className="w-5 h-5 rounded border-gray-300 text-[#6C63FF] focus:ring-[#6C63FF]"
+                  />
+                  <div className="flex gap-2 items-center">
+                    <FaUser />
+                    <span className="font-medium">Data Peserta</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Tabel data peserta menampilkan informasi lengkap mengenai peserta yang terdaftar dalam sebuah lomba. Setiap baris pada tabel mewakili satu peserta, dengan kolom-kolom yang mencakup nomor urut, nama lengkap, nomor pendaftaran, asal sekolah atau institusi.
+                </p>
+              </div>
+
+              {/* Soal */}
+              <div className="p-4 bg-[#F8F9FB] rounded-xl border border-[#E0E7EF]">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.soal}
+                    onChange={(e) =>
+                      setSelected((s) => ({ ...s, soal: e.target.checked }))
+                    }
+                    className="w-5 h-5 rounded border-gray-300 text-[#6C63FF] focus:ring-[#6C63FF]"
+                  />
+                  <div className="flex gap-2 items-center">
+                    <HiNewspaper />
+                    <span className="font-medium">Soal</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Tabel data soal yang diekspor mencakup tiga jenis utama, yaitu soal pilihan ganda (PG), soal esai, dan soal isian singkat. Soal PG terdiri dari pertanyaan dengan beberapa opsi jawaban, disertai kunci jawaban untuk memudahkan penilaian otomatis. Soal esai dan soal isian singkat.
+                </p>
+              </div>
+
+              {/* Hasil Lomba */}
+              <div className="p-4 bg-[#F8F9FB] rounded-xl border border-[#E0E7EF]">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.hasil_lomba}
+                    onChange={(e) =>
+                      setSelected((s) => ({ ...s, hasil_lomba: e.target.checked }))
+                    }
+                    className="w-5 h-5 rounded border-gray-300 text-[#6C63FF] focus:ring-[#6C63FF]"
+                  />
+                  <div className="flex gap-2 items-center">
+                    <FaClipboardList/>
+                    <span className="font-medium">Hasil Lomba</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Tabel hasil lomba menampilkan rekapitulasi lengkap dari seluruh peserta yang telah mengikuti kompetisi. Setiap entri dalam tabel memuat informasi penting seperti nama peserta, nomor pendaftaran, asal sekolah atau institusi, serta skor akhir yang diperoleh.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Export Options */}
+          <div className="w-80 bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-6">Opsi Ekspor</h2>
+
+            {/* Format File */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Format File
+              </label>
+              <select
+                value={fileFormat}
+                onChange={(e) => setFileFormat(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF]"
+              >
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+              </select>
+            </div>
+
+            {/* Date Range */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rentang Waktu
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF]"
+                />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF]"
+                />
+              </div>
+            </div>
+
+            {/* Information Format */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Informasi Format
+              </h3>
+              <ul className="text-sm text-gray-600 space-y-2 list-disc pl-4">
+                <li>Excel (.xlsx): Data dalam bentuk tabel, mudah dibaca dan dianalisis secara visual</li>
+                <li>CSV (.csv): Format ringan dan sederhana, cocok untuk ekspor cepat dan kompatibel dengan banyak sistem</li>
+                <li>JSON (.json): Format data terstruktur, umum digunakan untuk pertukaran data antarsistem dan API</li>
+                <li>ZIP (.zip): Menggabungkan beberapa file dalam satu arsip, memudahkan distribusi dan penyimpanan</li>
+                <li>PDF (.pdf): Dokumen siap cetak dan dibagikan, isi tidak mudah diubah</li>
+                <li>DOCX (.docx): Dokumen yang dapat diedit, cocok untuk laporan atau draf dokumen</li>
+
+              </ul>
+            </div>
+
+            {/* Export Button */}
+            <Button
+              className="w-full bg-[#2ECC8B] hover:bg-[#27ae60] text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+              type="submit"
+            >
+              Export
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
   );
 }

@@ -24,6 +24,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { FaArrowLeft } from 'react-icons/fa';
 import { ArrowLeft } from 'lucide-react';
 import JawabanTable from '@/components/dashboard-admin/hasil-lomba/JawabanTable';
 import NavigasiSoalGrid from '@/components/dashboard-admin/hasil-lomba/NavigasiSoalGrid';
@@ -347,7 +348,7 @@ export default function DetailHasilPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard-admin/hasil-lomba" className="text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={24} />
+          <FaArrowLeft size={24} />
         </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Detail Hasil Lomba</h1>
       </div>
