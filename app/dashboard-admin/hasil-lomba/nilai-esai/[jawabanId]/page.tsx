@@ -56,7 +56,7 @@ export default function PenilaianEsaiPage({ params }: { params: Promise<{ jawaba
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(`Menyimpan score ${score} untuk jawaban esai ID ${params.jawabanId}`);
+    console.log(`Menyimpan score ${score} untuk jawaban esai ID ${jawabanId}`);
     alert('Score berhasil disimpan!');
     router.back();
   };
