@@ -28,7 +28,7 @@ import { FaTimes } from "react-icons/fa";
  */
 
 import { useEffect, useState } from "react";
-import { withAuth } from '@/lib/auth';
+import { withAuth } from "@/lib/auth";
 
 // State untuk popup dan input token
 // Dideklarasikan di dalam komponen utama
@@ -43,11 +43,15 @@ function HalamanUjian() {
   const [durasiUjian, setDurasiUjian] = useState<number>(0);
   const [waktuMulaiUjian, setWaktuMulaiUjian] = useState<string>("--:--");
   const [waktuAkhirUjian, setWaktuAkhirUjian] = useState<string>("--:--");
-  const [waktuMulaiPengerjaan, setWaktuMulaiPengerjaan] = useState<Date | null>(null); // Waktu mulai actual
-  const [waktuAkhirPengerjaan, setWaktuAkhirPengerjaan] = useState<Date | null>(null); // Waktu akhir actual
-  const [countdown, setCountdown] = useState<string>(''); // Countdown timer
+  const [waktuMulaiPengerjaan, setWaktuMulaiPengerjaan] = useState<Date | null>(
+    null
+  ); // Waktu mulai actual
+  const [waktuAkhirPengerjaan, setWaktuAkhirPengerjaan] = useState<Date | null>(
+    null
+  ); // Waktu akhir actual
+  const [countdown, setCountdown] = useState<string>(""); // Countdown timer
   const [statusUjian, setStatusUjian] = useState<string>("belum_mulai"); // Tambah state untuk status ujian
-  
+
   // Data statis untuk demo - akan diganti dengan data dari API
   const [namaPeserta, setNamaPeserta] = useState("Ahmad Izzudin Azzam");
   const [asalSekolah, setAsalSekolah] = useState("SMAN 2 Bandung");
@@ -58,7 +62,6 @@ function HalamanUjian() {
   const [jumlahToken] = useState<number>(5);
   const [jumlahSoal, setJumlahSoal] = useState<number>(0);
 
-
   // Fungsi untuk validasi dan menggunakan token
   const validateAndUseToken = async (token: string) => {
     const storedUserData = localStorage.getItem("user_data");
@@ -67,27 +70,29 @@ function HalamanUjian() {
     }
 
     const user = JSON.parse(storedUserData);
-    
+
     if (!user.id || !lombaId) {
-      throw new Error("Data peserta atau lomba tidak lengkap. Silakan refresh halaman.");
+      throw new Error(
+        "Data peserta atau lomba tidak lengkap. Silakan refresh halaman."
+      );
     }
 
     console.log("Mengirim data token:", {
       kode_token: token,
       peserta_id: user.id,
-      cabang_lomba_id: lombaId
+      cabang_lomba_id: lombaId,
     });
 
     const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        Accept: "application/json",
       },
       body: JSON.stringify({
         kode_token: token,
         peserta_id: user.id,
-        cabang_lomba_id: lombaId
+        cabang_lomba_id: lombaId,
       }),
     });
 
@@ -105,16 +110,18 @@ function HalamanUjian() {
   const formatCountdown = (targetDate: Date): string => {
     const sekarang = new Date();
     const selisih = targetDate.getTime() - sekarang.getTime();
-    
+
     if (selisih <= 0) {
-      return '';
+      return "";
     }
-    
+
     const hari = Math.floor(selisih / (1000 * 60 * 60 * 24));
-    const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const jam = Math.floor(
+      (selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
     const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
     const detik = Math.floor((selisih % (1000 * 60)) / 1000);
-    
+
     if (hari > 0) {
       return `${hari} hari ${jam} jam ${menit} menit`;
     } else if (jam > 0) {
@@ -126,7 +133,7 @@ function HalamanUjian() {
 
   const isUjianBolehDimulai = (): boolean => {
     if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan) return false;
-    
+
     const sekarang = new Date();
     return sekarang >= waktuMulaiPengerjaan && sekarang <= waktuAkhirPengerjaan;
   };
@@ -134,19 +141,22 @@ function HalamanUjian() {
   // Fungsi untuk mengecek apakah waktu ujian sudah lewat
   const isWaktuUjianLewat = (): boolean => {
     if (!waktuAkhirPengerjaan) return false;
-    
+
     const sekarang = new Date();
     return sekarang > waktuAkhirPengerjaan;
   };
 
   // Fungsi untuk mendapatkan pesan status ujian
   const getStatusUjianMessage = (): string => {
-    if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan) return "Memuat informasi ujian...";
-    
+    if (!waktuMulaiPengerjaan || !waktuAkhirPengerjaan)
+      return "Memuat informasi ujian...";
+
     const sekarang = new Date();
-    
+
     if (sekarang < waktuMulaiPengerjaan) {
-      const selisihMenit = Math.ceil((waktuMulaiPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60));
+      const selisihMenit = Math.ceil(
+        (waktuMulaiPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60)
+      );
       if (selisihMenit < 60) {
         return `Ujian akan dimulai dalam ${selisihMenit} menit`;
       } else {
@@ -156,7 +166,9 @@ function HalamanUjian() {
     } else if (sekarang > waktuAkhirPengerjaan) {
       return "Waktu ujian sudah berakhir";
     } else {
-      const sisaMenit = Math.floor((waktuAkhirPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60));
+      const sisaMenit = Math.floor(
+        (waktuAkhirPengerjaan.getTime() - sekarang.getTime()) / (1000 * 60)
+      );
       return `Ujian sedang berlangsung (sisa ${sisaMenit} menit)`;
     }
   };
@@ -172,10 +184,10 @@ function HalamanUjian() {
   // Fungsi untuk memformat waktu ke HH:MM
   const formatWaktu = (datetime: string): string => {
     const date = new Date(datetime);
-    return date.toLocaleTimeString('id-ID', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
+    return date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
   };
 
@@ -192,18 +204,21 @@ function HalamanUjian() {
       // Cek apakah peserta memiliki token yang sedang digunakan
       const checkActiveToken = async () => {
         try {
-          const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({ 
-              kode_token: "", // kosong karena hanya mengecek
-              peserta_id: user.id,
-              cabang_lomba_id: user.cabang_lomba_id
-            }),
-          });
+          const res = await fetch(
+            "http://localhost:8000/api/peserta/pakai-token",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                kode_token: "", // kosong karena hanya mengecek
+                peserta_id: user.id,
+                cabang_lomba_id: user.cabang_lomba_id,
+              }),
+            }
+          );
 
           const data = await res.json();
           if (data.success && data.data?.token) {
@@ -227,48 +242,56 @@ function HalamanUjian() {
         setCabangLomba("Belum login");
         return;
       }
-      
+
       try {
         const user = JSON.parse(storedUserData);
         const pesertaId = user.id;
-        
         if (!pesertaId) {
           setCabangLomba("ID peserta tidak ditemukan");
           return;
         }
-
         // Ambil data peserta lengkap dengan cabang lomba
-        const response = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
-        const data = await response.json();
-        
-        if (data.success && data.data.cabang_lomba) {
-          console.log("Masuk ke fetchCabangLomba");
-          const lomba = data.data.cabang_lomba;
-          const peserta = data.data;
-          console.log("Data cabang_lomba dari API:", lomba);
-          const totalSoal = (lomba.soal_pg || 0) +(lomba.soal_isian || 0) +(lomba.soal_esai || 0);
-          
-          setJumlahSoal(totalSoal);
-          setCabangLomba(lomba.nama_cabang);
-          setStatusUjian(peserta.status_ujian || "belum_mulai"); // Update status ujian dari API
-
-          // Hitung durasi dan format waktu jika data tersedia
-          if (lomba.waktu_mulai_pengerjaan && lomba.waktu_akhir_pengerjaan) {
-            const durasi = hitungDurasi(lomba.waktu_mulai_pengerjaan, lomba.waktu_akhir_pengerjaan);
-            setDurasiUjian(durasi);
-            setWaktuMulaiUjian(formatWaktu(lomba.waktu_mulai_pengerjaan));
-            setWaktuAkhirUjian(formatWaktu(lomba.waktu_akhir_pengerjaan));
-            
-            // Simpan waktu sebagai Date objects untuk validasi
-            setWaktuMulaiPengerjaan(new Date(lomba.waktu_mulai_pengerjaan));
-            setWaktuAkhirPengerjaan(new Date(lomba.waktu_akhir_pengerjaan));
-            
-            // Set initial countdown jika ujian belum dimulai
-            const sekarang = new Date();
-            const waktuMulai = new Date(lomba.waktu_mulai_pengerjaan);
-            if (sekarang < waktuMulai) {
-              setCountdown(formatCountdown(waktuMulai));
+        // Ambil id lomba dari peserta, lalu fetch detail lomba seperti di halaman edit lomba
+        const pesertaProfileRes = await fetch(
+          `http://localhost:8000/api/peserta/profile/${pesertaId}`
+        );
+        const pesertaProfile = await pesertaProfileRes.json();
+        if (pesertaProfile.success && pesertaProfile.data.cabang_lomba) {
+          const lombaId = pesertaProfile.data.cabang_lomba.id;
+          setCabangLomba(pesertaProfile.data.cabang_lomba.nama_cabang);
+          setStatusUjian(pesertaProfile.data.status_ujian || "belum_mulai");
+          // Fetch detail lomba dari endpoint yang sama dengan halaman edit lomba
+          const lombaDetailRes = await fetch(
+            `http://localhost:8000/api/lomba/${lombaId}`
+          );
+          const lombaDetail = await lombaDetailRes.json();
+          if (
+            lombaDetail.success &&
+            lombaDetail.data &&
+            lombaDetail.data.stats
+          ) {
+            setJumlahSoal(lombaDetail.data.stats.total_semua_soal || 0);
+            // Set waktu dan durasi jika ada
+            const lomba = lombaDetail.data.lomba;
+            if (lomba.waktu_mulai_pengerjaan && lomba.waktu_akhir_pengerjaan) {
+              const durasi = hitungDurasi(
+                lomba.waktu_mulai_pengerjaan,
+                lomba.waktu_akhir_pengerjaan
+              );
+              setDurasiUjian(durasi);
+              setWaktuMulaiUjian(formatWaktu(lomba.waktu_mulai_pengerjaan));
+              setWaktuAkhirUjian(formatWaktu(lomba.waktu_akhir_pengerjaan));
+              setWaktuMulaiPengerjaan(new Date(lomba.waktu_mulai_pengerjaan));
+              setWaktuAkhirPengerjaan(new Date(lomba.waktu_akhir_pengerjaan));
+              // Set initial countdown jika ujian belum dimulai
+              const sekarang = new Date();
+              const waktuMulai = new Date(lomba.waktu_mulai_pengerjaan);
+              if (sekarang < waktuMulai) {
+                setCountdown(formatCountdown(waktuMulai));
+              }
             }
+          } else {
+            setJumlahSoal(0);
           }
         } else {
           setCabangLomba("Cabang lomba tidak ditemukan");
@@ -294,18 +317,22 @@ function HalamanUjian() {
       }
       try {
         // Pertama ambil data profil peserta untuk mendapatkan cabang lomba
-        const profileResponse = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
+        const profileResponse = await fetch(
+          `http://localhost:8000/api/peserta/profile/${pesertaId}`
+        );
         const profileData = await profileResponse.json();
-        
+
         if (profileData.success && profileData.data.cabang_lomba) {
           setNamaLomba(profileData.data.cabang_lomba.nama_cabang);
           setLombaId(profileData.data.cabang_lomba.id);
         }
 
         // Kemudian ambil token aktif
-        const response = await fetch(`http://localhost:8000/api/peserta/ambil-token?peserta_id=${pesertaId}`);
+        const response = await fetch(
+          `http://localhost:8000/api/peserta/ambil-token?peserta_id=${pesertaId}`
+        );
         const data = await response.json();
-        
+
         if (data.success && data.data) {
           setTokenAktif(data.data.kode_token || "Tidak ada token aktif");
           // Update nama lomba jika belum diset dari profile
@@ -332,19 +359,22 @@ function HalamanUjian() {
 
     const interval = setInterval(() => {
       const sekarang = new Date();
-      
+
       // Update countdown
       if (sekarang < waktuMulaiPengerjaan) {
         setCountdown(formatCountdown(waktuMulaiPengerjaan));
-      } else if (sekarang >= waktuMulaiPengerjaan && sekarang <= waktuAkhirPengerjaan) {
-        setCountdown('');
+      } else if (
+        sekarang >= waktuMulaiPengerjaan &&
+        sekarang <= waktuAkhirPengerjaan
+      ) {
+        setCountdown("");
       } else {
-        setCountdown('');
+        setCountdown("");
       }
-      
+
       // Update status ujian berdasarkan waktu
-      if (sekarang > waktuAkhirPengerjaan && statusUjian !== 'selesai') {
-        setStatusUjian('selesai');
+      if (sekarang > waktuAkhirPengerjaan && statusUjian !== "selesai") {
+        setStatusUjian("selesai");
       }
     }, 1000); // Update setiap detik untuk countdown yang akurat
 
@@ -369,15 +399,14 @@ function HalamanUjian() {
           <h3 className="font-semibold text-lg mb-4">Instruksi Pengerjaan</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
             <li>
-              Durasi pengerjaan sesuai dengan ketentuan yang telah di tetapkan panitia yang mencakup seluruh jenis soal.
+              Durasi pengerjaan sesuai dengan ketentuan yang telah di tetapkan
+              panitia yang mencakup seluruh jenis soal.
             </li>
             <li>
-              Waktu akan berjalan otomatis sesuai jadwal yang telah di
-              tentukan.
+              Waktu akan berjalan otomatis sesuai jadwal yang telah di tentukan.
             </li>
             <li>
-              Sistem akan mengunci jawaban secara otomatis setelah waktu
-              habis.
+              Sistem akan mengunci jawaban secara otomatis setelah waktu habis.
             </li>
             <li>
               Tidak diperkenankan membuka tab lain selama ujian berlangsung.
@@ -386,9 +415,7 @@ function HalamanUjian() {
               Jika peserta membuka tab lain ketika ujian berlangsung sistem
               otomatis akan keluar dan meminta token baru.
             </li>
-            <li>
-              Pastikan koneksi internet stabil selama ujian berlangsung.
-            </li>
+            <li>Pastikan koneksi internet stabil selama ujian berlangsung.</li>
             <li>
               Setiap peserta hanya diperbolehkan mengikuti ujian satu kali.
             </li>
@@ -401,9 +428,7 @@ function HalamanUjian() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="font-semibold text-lg mb-4">Informasi Token</h3>
             <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-              <li>
-                Kamu diberikan {jumlahToken} token untuk mengakses ujian.
-              </li>
+              <li>Kamu diberikan {jumlahToken} token untuk mengakses ujian.</li>
               <li>Hanya 1 token aktif yang akan ditampilkan saat ini.</li>
               <li>
                 Setelah token digunakan dan kamu menekan <b>Mulai</b>, token
@@ -455,38 +480,52 @@ function HalamanUjian() {
                 </div>
               ) : (
                 <div className="border-l-green-500 bg-green-50 text-green-700">
-                  <strong>Status:</strong> Ujian sedang berlangsung - Anda dapat memulai
+                  <strong>Status:</strong> Ujian sedang berlangsung - Anda dapat
+                  memulai
                 </div>
               )}
             </div>
 
-            <button 
+            <button
               className={`mt-6 text-sm font-medium py-2 rounded-md transition ${
-                statusUjian === 'selesai' || isWaktuUjianLewat() || !isUjianBolehDimulai()
-                  ? 'bg-gray-400 text-white cursor-not-allowed' 
-                  : 'bg-[#D84C3B] hover:bg-red-600 text-white'
+                statusUjian === "selesai" ||
+                isWaktuUjianLewat() ||
+                !isUjianBolehDimulai()
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-[#D84C3B] hover:bg-red-600 text-white"
               }`}
               onClick={() => {
-                if (statusUjian !== 'selesai' && isUjianBolehDimulai() && !isWaktuUjianLewat()) {
+                if (
+                  statusUjian !== "selesai" &&
+                  isUjianBolehDimulai() &&
+                  !isWaktuUjianLewat()
+                ) {
                   setShowPopup(true);
                 } else if (!isUjianBolehDimulai() && !isWaktuUjianLewat()) {
-                  setErrorMessage("Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan.");
+                  setErrorMessage(
+                    "Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan."
+                  );
                   setShowErrorPopup(true);
                 } else if (isWaktuUjianLewat()) {
-                  setErrorMessage("Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian.");
+                  setErrorMessage(
+                    "Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian."
+                  );
                   setShowErrorPopup(true);
                 }
               }}
-              disabled={statusUjian === 'selesai' || isWaktuUjianLewat() || !isUjianBolehDimulai()}
-            >
-              {statusUjian === 'selesai' 
-                ? 'Ujian Sudah Selesai' 
-                : isWaktuUjianLewat() 
-                ? 'Waktu Ujian Sudah Berakhir'
-                : !isUjianBolehDimulai() 
-                ? getStatusUjianMessage()
-                : 'Mulai'
+              disabled={
+                statusUjian === "selesai" ||
+                isWaktuUjianLewat() ||
+                !isUjianBolehDimulai()
               }
+            >
+              {statusUjian === "selesai"
+                ? "Ujian Sudah Selesai"
+                : isWaktuUjianLewat()
+                ? "Waktu Ujian Sudah Berakhir"
+                : !isUjianBolehDimulai()
+                ? getStatusUjianMessage()
+                : "Mulai"}
             </button>
           </div>
         </div>
@@ -503,9 +542,7 @@ function HalamanUjian() {
             >
               <FaTimes size={22} />
             </button>
-            <h2 className="text-2xl font-bold text-center mb-4">
-              {namaLomba}
-            </h2>
+            <h2 className="text-2xl font-bold text-center mb-4">{namaLomba}</h2>
             <div className="text-center text-sm mb-4">
               <div>Durasi : {durasiUjian > 0 ? durasiUjian : "..."} Menit</div>
               <div>Jumlah Soal : {jumlahSoal}</div>
@@ -528,14 +565,18 @@ function HalamanUjian() {
                 // Validasi waktu ujian dulu sebelum validasi token
                 if (!isUjianBolehDimulai()) {
                   setShowPopup(false);
-                  setErrorMessage("Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan.");
+                  setErrorMessage(
+                    "Ujian belum dimulai. Silakan tunggu hingga waktu yang ditentukan."
+                  );
                   setShowErrorPopup(true);
                   return;
                 }
 
                 if (isWaktuUjianLewat()) {
                   setShowPopup(false);
-                  setErrorMessage("Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian.");
+                  setErrorMessage(
+                    "Waktu ujian sudah berakhir. Anda tidak dapat lagi mengikuti ujian."
+                  );
                   setShowErrorPopup(true);
                   return;
                 }
@@ -553,20 +594,23 @@ function HalamanUjian() {
                 }
 
                 const user = JSON.parse(userData);
-                
+
                 try {
-                  const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
-                    method: "POST",
-                    headers: { 
-                      "Content-Type": "application/json",
-                      "Accept": "application/json"
-                    },
-                    body: JSON.stringify({ 
-                      kode_token: inputToken,
-                      peserta_id: user.id,
-                      cabang_lomba_id: lombaId
-                    }),
-                  });
+                  const res = await fetch(
+                    "http://localhost:8000/api/peserta/pakai-token",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                      },
+                      body: JSON.stringify({
+                        kode_token: inputToken,
+                        peserta_id: user.id,
+                        cabang_lomba_id: lombaId,
+                      }),
+                    }
+                  );
 
                   const data = await res.json();
                   console.log("Response pakai token:", data); // Debug response
@@ -575,11 +619,17 @@ function HalamanUjian() {
                     // Simpan informasi token dan redirect
                     setShowPopup(false);
                     localStorage.setItem("token_aktif", inputToken);
-                    localStorage.setItem("waktu_mulai", new Date().toISOString());
+                    localStorage.setItem(
+                      "waktu_mulai",
+                      new Date().toISOString()
+                    );
                     localStorage.setItem("durasi_ujian", String(durasiUjian));
                     window.location.href = "/cbt";
                   } else {
-                    setErrorMessage(data.message || "Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia.");
+                    setErrorMessage(
+                      data.message ||
+                        "Token tidak valid atau sudah digunakan/hangus. Minta token baru ke panitia."
+                    );
                     setShowErrorPopup(true);
                   }
                 } catch (err) {
@@ -610,7 +660,9 @@ function HalamanUjian() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
                 <FaTimes className="text-[#D84C3B] text-3xl" />
               </div>
-              <h2 className="text-xl font-bold text-center mb-2">Token Tidak Valid</h2>
+              <h2 className="text-xl font-bold text-center mb-2">
+                Token Tidak Valid
+              </h2>
             </div>
             <p className="text-center text-gray-600 mb-6">{errorMessage}</p>
             <button
@@ -627,4 +679,4 @@ function HalamanUjian() {
 }
 
 // Protect this page with peserta-only access
-export default withAuth(HalamanUjian, ['peserta']);
+export default withAuth(HalamanUjian, ["peserta"]);

@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 export default function TambahLomba() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [form, setForm] = useState({
     nama_cabang: "",
     deskripsi_lomba: "",
@@ -61,8 +62,11 @@ export default function TambahLomba() {
       console.log('API Response:', result); // Debug log
 
       if (result.success) {
-        alert('Lomba berhasil dibuat!');
-        router.push('/dashboard-admin/manajemen-lomba');
+       setShowSuccessModal(true); // ✅ Tampilkan popup sukses
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          router.push("/dashboard-admin/manajemen-lomba");
+        }, 1500);
       } else {
         // Show detailed error message
         let errorMessage = result.message || 'Gagal membuat lomba';
@@ -87,6 +91,16 @@ export default function TambahLomba() {
 
   return (
     <div className="min-h-screen">
+      {/* ✅ Popup Sukses */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center border border-gray-100">
+            <div className="text-green-500 text-4xl mb-4">✅</div>
+            <h2 className="text-lg font-semibold text-green-600">Cabang Lomba berhasil ditambahkan!</h2>
+            <p className="text-sm text-gray-500 mt-2">Data lomba baru telah tersimpan di sistem.</p>
+          </div>
+        </div>
+      )}
       <div className="hidden md:block">
       </div>
              <div className="flex items-center gap-4 mb-8">

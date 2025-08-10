@@ -26,12 +26,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GroupedTokenTable from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import type { GroupedToken } from '@/components/dashboard-admin/token-lomba/GroupedTokenTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import { StatusAlertDialog } from '@/components/dashboard-admin/token-lomba/StatusAlertDialog';
 import { Search, Filter, ChevronDown } from 'lucide-react';
+import { toast, Toaster } from 'sonner';
 
 // Types
 type Lomba = {
@@ -44,7 +45,7 @@ export default function TokenPage() {
   const [lombaList, setLombaList] = useState<Lomba[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const toastShownRef = useRef(false);
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLomba, setSelectedLomba] = useState<string>('');
@@ -273,10 +274,19 @@ export default function TokenPage() {
     }
   };
 
-  useEffect(() => {
-    fetchTokens();
-    fetchLombaList();
-  }, []);
+useEffect(() => {
+  const loadData = async () => {
+    await fetchTokens();
+    await fetchLombaList();
+
+    if (!toastShownRef.current) {
+      toast.success("Halaman berhasil dimuat!");
+      toastShownRef.current = true;
+    }
+  };
+
+  loadData();
+}, []);
 
   useEffect(() => {
     const delayedSearch = setTimeout(() => {
@@ -504,6 +514,7 @@ export default function TokenPage() {
         message={statusAlert.message}
         variant={statusAlert.variant}
       />
+      <Toaster position="top-right" richColors />
     </>
   );
 }

@@ -34,8 +34,9 @@
 
 import StatCard from '@/components/dashboard-admin/StatCard';
 import { Users, LayoutGrid, Wifi } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef} from 'react';
 import { withAuth } from '@/lib/auth';
+import { toast, Toaster } from 'sonner';
 
 interface DashboardStats {
   total_peserta: number;
@@ -58,10 +59,18 @@ function AdminDashboardPage() {
     token_terpakai: 0
   });
   const [loading, setLoading] = useState(true);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  useEffect(() => {
+  if (!toastShownRef.current) {
+    toast.success('Halaman berhasil dimuat!');
+    toastShownRef.current = true;
+  }
+}, []);
 
   const fetchDashboardStats = async () => {
     try {
@@ -114,6 +123,7 @@ function AdminDashboardPage() {
       </section>
 
       {/* Anda bisa menambahkan konten atau komponen lain di sini */}
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

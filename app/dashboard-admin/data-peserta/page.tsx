@@ -32,11 +32,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import SuccessDialog from '@/components/dashboard-admin/SuccessDialog';
 import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
+import { toast, Toaster } from 'sonner';
 
 // Types untuk data dari API
 interface Peserta {
@@ -75,6 +76,7 @@ export default function DataPesertaPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const toastShownRef = useRef(false);
 
   
   // Modal states
@@ -117,8 +119,17 @@ export default function DataPesertaPage() {
 
   // Load data saat component mount
   useEffect(() => {
-    fetchPeserta();
-  }, []);
+    const fetchInitialData = async () => {
+    await fetchPeserta();
+
+    if (!toastShownRef.current) {
+      toast.success('Halaman berhasil dimuat!');
+      toastShownRef.current = true;
+    }
+  };
+
+  fetchInitialData();
+}, []);
 
   // Debounce search
   useEffect(() => {
@@ -446,6 +457,7 @@ export default function DataPesertaPage() {
         title="Berhasil"
         message={successMessage}
       />
+      <Toaster position="top-right" richColors />
     </div>
   );
 }
