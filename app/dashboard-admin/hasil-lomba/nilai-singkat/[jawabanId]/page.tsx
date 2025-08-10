@@ -35,22 +35,28 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
-export default function PenilaianSingkatPage({ params }: { params: { jawabanId: string } }) {
+export default function PenilaianSingkatPage({ params }: { params: Promise<{ jawabanId: string }> }) {
   const router = useRouter();
   const [dataSoal, setDataSoal] = useState({ soal: '', jawaban: '' });
   const [score, setScore] = useState('');
+  const [jawabanId, setJawabanId] = useState<string>('');
 
   useEffect(() => {
-    // Simulasi fetch data isian singkat berdasarkan params.jawabanId
-    setDataSoal({
-      soal: 'Organel sel yang berfungsi sebagai tempat respirasi sel dan penghasil energi dalam bentuk ATP adalah',
-      jawaban: 'Mitokondria',
+    // Resolve params Promise
+    params.then((resolvedParams) => {
+      setJawabanId(resolvedParams.jawabanId);
+      
+      // Simulasi fetch data isian singkat berdasarkan jawabanId
+      setDataSoal({
+        soal: 'Organel sel yang berfungsi sebagai tempat respirasi sel dan penghasil energi dalam bentuk ATP adalah',
+        jawaban: 'Mitokondria',
+      });
     });
-  }, [params.jawabanId]);
+  }, [params]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(`Menyimpan score ${score} untuk jawaban singkat ID ${params.jawabanId}`);
+    console.log(`Menyimpan score ${score} untuk jawaban singkat ID ${jawabanId}`);
     alert('Score berhasil disimpan!');
     router.back();
   };

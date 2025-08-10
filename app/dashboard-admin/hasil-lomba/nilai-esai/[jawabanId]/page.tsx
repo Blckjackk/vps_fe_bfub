@@ -35,18 +35,24 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
-export default function PenilaianEsaiPage({ params }: { params: { jawabanId: string } }) {
+export default function PenilaianEsaiPage({ params }: { params: Promise<{ jawabanId: string }> }) {
   const router = useRouter();
   const [dataSoal, setDataSoal] = useState({ soal: '', jawaban: '' });
   const [score, setScore] = useState('');
+  const [jawabanId, setJawabanId] = useState<string>('');
 
   useEffect(() => {
-    // Simulasi fetch data esai berdasarkan params.jawabanId
-    setDataSoal({
-      soal: 'Aktivitas manusia seperti pembakaran bahan bakar fosil... Dua dampak ekologis akibat gangguan tersebut adalah:',
-      jawaban: '1. Pemanasan global, yaitu peningkatan suhu rata-rata bumi...\n2. Asidifikasi laut, yaitu peningkatan kadar CO2 yang larut di laut...',
+    // Resolve params Promise
+    params.then((resolvedParams) => {
+      setJawabanId(resolvedParams.jawabanId);
+      
+      // Simulasi fetch data esai berdasarkan jawabanId
+      setDataSoal({
+        soal: 'Aktivitas manusia seperti pembakaran bahan bakar fosil... Dua dampak ekologis akibat gangguan tersebut adalah:',
+        jawaban: '1. Pemanasan global, yaitu peningkatan suhu rata-rata bumi...\n2. Asidifikasi laut, yaitu peningkatan kadar CO2 yang larut di laut...',
+      });
     });
-  }, [params.jawabanId]);
+  }, [params]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
