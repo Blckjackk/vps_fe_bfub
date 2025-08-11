@@ -28,6 +28,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { ArrowLeft } from 'lucide-react';
 import JawabanTable from '@/components/dashboard-admin/hasil-lomba/JawabanTable';
 import NavigasiSoalGrid from '@/components/dashboard-admin/hasil-lomba/NavigasiSoalGrid';
+import API_URL from '@/lib/api';
 
 // Types
 type PesertaInfo = {
@@ -138,7 +139,7 @@ export default function DetailHasilPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`);
+      const response = await fetch(`${API_URL}/api/admin/hasil/peserta/${id}`);
       const data = await response.json();
 
       if (data.success) {

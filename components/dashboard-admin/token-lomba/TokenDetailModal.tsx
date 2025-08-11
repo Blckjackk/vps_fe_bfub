@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { type Token } from "./TokenTable";
-
+import API_URL from "@/lib/api";
 // Type untuk detail token peserta
 type DetailToken = {
   id: number;
@@ -36,7 +36,7 @@ export default function TokenDetailModal({
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/admin/token/peserta/${token.peserta_id}`);
+      const response = await fetch(`${API_URL}/api/admin/token/peserta/${token.peserta_id}`);
       const data = await response.json();
 
       if (data.success) {
@@ -55,7 +55,7 @@ export default function TokenDetailModal({
   // Set token as primary
   const setTokenAsPrimary = async (tokenId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/token/${tokenId}/primary`, {
+      const response = await fetch(`${API_URL}/api/admin/token/${tokenId}/primary`, {
         method: 'PUT',
       });
       const data = await response.json();

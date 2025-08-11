@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import API_URL from "@/lib/api";
 
 export default function TambahLomba() {
   const router = useRouter();
@@ -48,8 +49,8 @@ export default function TambahLomba() {
 
     try {
       console.log('Sending form data:', form); // Debug log
-      
-      const response = await fetch('http://localhost:8000/api/lomba', {
+
+      const response = await fetch(`${API_URL}/api/lomba`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

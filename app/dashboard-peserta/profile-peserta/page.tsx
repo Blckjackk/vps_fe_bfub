@@ -26,7 +26,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react'; // Import icon mata
-
+import API_URL from '@/lib/api';
 interface UserData {
   id: number;
   nama_lengkap: string;
@@ -72,7 +72,7 @@ export default function ProfilePesertaPage() {
         console.log('User data from localStorage:', user);
         
         // Fetch data profil lengkap dari API
-        const response = await fetch(`http://localhost:8000/api/peserta/profile/${user.id}`, {
+        const response = await fetch(`${API_URL}/api/peserta/profile/${user.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

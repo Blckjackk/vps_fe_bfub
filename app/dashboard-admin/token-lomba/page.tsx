@@ -33,6 +33,7 @@ import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog'
 import { StatusAlertDialog } from '@/components/dashboard-admin/token-lomba/StatusAlertDialog';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import API_URL from '@/lib/api';
 
 // Types
 type Lomba = {
@@ -75,7 +76,7 @@ export default function TokenPage() {
       if (selectedLomba) params.append('lomba_id', selectedLomba);
       if (selectedStatus) params.append('status', selectedStatus);
 
-      const response = await fetch(`http://localhost:8000/api/admin/token/grouped?${params}`);
+      const response = await fetch(`${API_URL}/api/admin/token/grouped?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -94,7 +95,7 @@ export default function TokenPage() {
   // Fetch daftar lomba
   const fetchLombaList = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/lomba');
+      const response = await fetch('${API_URL}/api/lomba');
       const data = await response.json();
       
       if (data.success) {
@@ -108,7 +109,7 @@ export default function TokenPage() {
   // Delete token
   const deleteToken = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/token/${id}`, {
+      const response = await fetch(`${API_URL}/api/admin/token/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
@@ -170,7 +171,7 @@ export default function TokenPage() {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/api/admin/token/expire', {
+      const response = await fetch('${API_URL}/api/admin/token/expire', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -236,7 +237,7 @@ export default function TokenPage() {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/api/admin/token/bulk-delete', {
+      const response = await fetch('${API_URL}/api/admin/token/bulk-delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -325,7 +326,7 @@ useEffect(() => {
   // Update token status
   const updateTokenStatus = async (token_id: number, status: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/token/${token_id}/status`, {
+      const response = await fetch(`${API_URL}/api/admin/token/${token_id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -364,7 +365,7 @@ useEffect(() => {
   // Set token as primary
   const setPrimaryToken = async (token_id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/token/${token_id}/primary`, {
+      const response = await fetch(`${API_URL}/api/admin/token/${token_id}/primary`, {
         method: 'PUT',
       });
       const data = await response.json();

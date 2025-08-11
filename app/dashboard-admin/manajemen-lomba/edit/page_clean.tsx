@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
+import API_URL from '@/lib/api'; 
 
 // Interface untuk data lomba detail
 interface LombaDetail {
@@ -67,7 +68,7 @@ export default function EditLombaPage() {
   const fetchLombaDetail = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/lomba/${id}`, {
+      const response = await fetch(`${API_URL}/api/lomba/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

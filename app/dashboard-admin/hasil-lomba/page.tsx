@@ -35,6 +35,7 @@ import { Search } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import HasilLombaTable from '@/components/dashboard-admin/hasil-lomba/HasilLombaTable';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
+import API_URL from '@/lib/api';
 
 // Tipe data untuk hasil ujian
 type HasilUjian = {
@@ -84,7 +85,7 @@ export default function HasilUjianPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (selectedLomba) params.append('lomba_id', selectedLomba);
 
-      const response = await fetch(`http://localhost:8000/api/admin/hasil/lomba?${params}`);
+      const response = await fetch(`${API_URL}/api/admin/hasil/lomba?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -119,7 +120,7 @@ export default function HasilUjianPage() {
   // Ambil daftar cabang lomba
   const fetchLombaList = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/lomba');
+      const response = await fetch('${API_URL}/api/lomba');
       const data = await response.json();
       if (data.success) setLombaList(data.data);
     } catch (err) {
@@ -153,7 +154,7 @@ export default function HasilUjianPage() {
   // Hapus data peserta (satu atau banyak)
   const deleteHasilPeserta = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, {
+      const response = await fetch(`${API_URL}/api/admin/hasil/peserta/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
@@ -181,7 +182,7 @@ export default function HasilUjianPage() {
       const selectedIds = hasilUjian.filter(item => item.isChecked).map(item => item.id);
       Promise.all(
         selectedIds.map(id =>
-          fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`, { method: 'DELETE' }).then(res => res.json())
+          fetch(`${API_URL}/api/admin/hasil/peserta/${id}`, { method: 'DELETE' }).then(res => res.json())
         )
       ).then(results => {
         const successCount = results.filter(r => r.success).length;
