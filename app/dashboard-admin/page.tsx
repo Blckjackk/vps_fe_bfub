@@ -37,6 +37,7 @@ import { Users, LayoutGrid, Wifi } from 'lucide-react';
 import { useState, useEffect, useRef} from 'react';
 import { withAuth } from '@/lib/auth';
 import { toast, Toaster } from 'sonner';
+import { API_URL } from '@/lib/api';
 
 interface DashboardStats {
   total_peserta: number;
@@ -74,8 +75,7 @@ function AdminDashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${baseUrl}/api/admin/dashboard/stats`, {
+      const response = await fetch(`${API_URL}/api/admin/dashboard/stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from './auth';
+import { API_URL } from './api';
 
 export function useHeartbeat() {
   const { user, isAuthenticated } = useAuth();
@@ -13,8 +14,7 @@ export function useHeartbeat() {
       const sendHeartbeat = async () => {
         try {
           const token = localStorage.getItem('session_token');
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-          await fetch(`${baseUrl}/api/peserta/heartbeat`, {
+          await fetch(`${API_URL}/api/peserta/heartbeat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
