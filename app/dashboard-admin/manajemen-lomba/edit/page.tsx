@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, FileText, BookOpen, PenTool, ArrowLeft } from 'lucide-react';
 import { FaArrowLeft } from 'react-icons/fa';
+import API_URL from '@/lib/api';
 
 // Modal CRUD Tambah Soal
 interface ModalTambahSoalProps {
@@ -177,7 +178,7 @@ export default function EditLombaPage() {
   const fetchLombaDetail = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/lomba/${id}`, {
+      const response = await fetch(`${API_URL}/api/lomba/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +230,7 @@ export default function EditLombaPage() {
       setConfirmationConfig(prev => ({ ...prev, isLoading: true }));
       
       const endpoint = type === 'pg' ? 'pg' : type === 'essay' ? 'essay' : 'isian-singkat';
-      const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}/${id}`, {
+      const response = await fetch(`${API_URL}/api/admin/soal/${endpoint}/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -422,7 +423,7 @@ export default function EditLombaPage() {
                       {soal.media_soal && (
                         <div className="mb-4">
                           <img 
-                            src={`http://localhost:8000/${soal.media_soal}`} 
+                            src={`${API_URL}/${soal.media_soal}`} 
                             alt="Soal" 
                             className="w-full max-w-md h-48 object-contain rounded-md border bg-gray-50"
                           />
@@ -442,7 +443,7 @@ export default function EditLombaPage() {
                               {optionMedia && (
                                 <div className="mt-1 ml-4">
                                   <img 
-                                    src={`http://localhost:8000/${optionMedia}`} 
+                                    src={`${API_URL}/${optionMedia}`} 
                                     alt={`Opsi ${option}`} 
                                     className="w-24 h-24 object-contain rounded border bg-gray-50"
                                   />

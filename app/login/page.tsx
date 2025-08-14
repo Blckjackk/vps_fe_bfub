@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { LuLockKeyhole } from "react-icons/lu";
 import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "@/lib/auth";
+import { API_URL } from "@/lib/api";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -40,10 +41,12 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/login", {
+      console.log('Login attempt with API URL:', `${API_URL}/api/login`);
+      const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify({
           username,

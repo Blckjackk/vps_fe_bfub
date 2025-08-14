@@ -6,6 +6,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { API_URL } from "@/lib/api";
 import {
   FaRegAddressCard,
   FaRegUser,
@@ -49,7 +50,8 @@ export default function RegisterPeserta() {
   // Fetch cabang lomba list
   const fetchCabangLomba = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/lomba');
+      console.log('Fetching cabang lomba from:', `${API_URL}/api/lomba`);
+      const response = await fetch(`${API_URL}/api/lomba`);
       const data = await response.json();
       
       if (data.success) {
@@ -153,7 +155,8 @@ export default function RegisterPeserta() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/register', {
+      console.log('Registering with API URL:', `${API_URL}/api/register`);
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

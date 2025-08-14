@@ -10,6 +10,7 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 import TokenPopup from "@/components/cbt/TokenPopup";
 import ConfirmationSubmitPopup from "@/components/cbt/ConfirmationSubmitPopup";
 import SuccessNextSectionPopup from "@/components/cbt/SuccessNextSectionPopup";
+import { API_URL } from "@/lib/api";
 
 type QuestionType = 'pg' | 'singkat' | 'esai';
 
@@ -397,8 +398,6 @@ export default function CBTPage() {
       setIsLoadingQuestions(true);
       console.log('Fetching questions for cabangLombaId:', cabangLombaId, 'pesertaId:', pesertaId);
       
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      
       // Common fetch headers
       const headers = {
         'Content-Type': 'application/json',
@@ -458,9 +457,9 @@ export default function CBTPage() {
 
       // Fetch all question types in parallel
       const [pgResponse, singkatResponse, esaiResponse] = await Promise.all([
-        fetch(`${baseUrl}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${baseUrl}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${baseUrl}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
+        fetch(`${API_URL}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${API_URL}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${API_URL}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
       ]);
 
       // Check for HTTP errors
@@ -1051,10 +1050,9 @@ export default function CBTPage() {
       setUserData(user); // Set user data untuk digunakan di komponen lain
       
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
+        const res = await fetch(`${API_URL}/api/peserta/pakai-token`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
           },
@@ -1091,8 +1089,8 @@ export default function CBTPage() {
       if (document.visibilityState === "hidden" && !allowExitFullscreen) {
         const kodeToken = tokenRef.current;
         if (kodeToken) {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-          await fetch(`${baseUrl}/api/peserta/hanguskan-token`, {
+          
+          await fetch(`\$\{API_URL\}/api/peserta/hanguskan-token`, {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
@@ -1131,8 +1129,8 @@ export default function CBTPage() {
     
     try {
       // Validasi token ke backend dengan data peserta
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
+      
+      const res = await fetch(`\$\{API_URL\}/api/peserta/pakai-token`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -1210,14 +1208,14 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
       
       let allSuccess = true;
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers:', pgAnswers);
-        const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
+        const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1241,7 +1239,7 @@ export default function CBTPage() {
       // Submit Isian Singkat answers
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers:', isianSingkatAnswers);
-        const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
+        const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1265,7 +1263,7 @@ export default function CBTPage() {
       // Submit Essay answers
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers:', essayAnswers);
-        const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
+        const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1296,7 +1294,7 @@ export default function CBTPage() {
       if (allSuccess) {
         // Call API to finish exam and update status to 'selesai'
         try {
-          const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
+          const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1357,13 +1355,13 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers on time up:', pgAnswers);
         try {
-          const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
+          const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1386,7 +1384,7 @@ export default function CBTPage() {
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers on time up:', isianSingkatAnswers);
         try {
-          const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
+          const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1409,7 +1407,7 @@ export default function CBTPage() {
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers on time up:', essayAnswers);
         try {
-          const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
+          const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1430,7 +1428,7 @@ export default function CBTPage() {
 
       // Try to finish exam - don't throw error if it fails
       try {
-        const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
+        const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

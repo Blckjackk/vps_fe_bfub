@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import API_URL from '@/lib/api';
+
 interface EditSoalProps {
   jenisSoal: 'pg' | 'essay' | 'isian';
   lombaId: string;
@@ -69,7 +71,7 @@ export default function EditSoalPage() {
           ? 'essay'
           : 'isian-singkat';
 
-        const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}/${soalId}`, {
+        const response = await fetch(`${API_URL}/api/admin/soal/${endpoint}/${soalId}`, {
           headers: {
             'Accept': 'application/json',
           }
@@ -89,7 +91,7 @@ export default function EditSoalPage() {
             
             // Set media preview if exists
             if (soalData.media_soal) {
-              setMediaSoalPreview(`http://localhost:8000/${soalData.media_soal}`);
+              setMediaSoalPreview(`${API_URL}/${soalData.media_soal}`);
             }
 
             // Set options data
@@ -100,11 +102,11 @@ export default function EditSoalPage() {
             setOpsiE(soalData.opsi_e || '');
 
             // Set options media previews if exist
-            if (soalData.opsi_a_media) setOpsiAMediaPreview(`http://localhost:8000/${soalData.opsi_a_media}`);
-            if (soalData.opsi_b_media) setOpsiBMediaPreview(`http://localhost:8000/${soalData.opsi_b_media}`);
-            if (soalData.opsi_c_media) setOpsiCMediaPreview(`http://localhost:8000/${soalData.opsi_c_media}`);
-            if (soalData.opsi_d_media) setOpsiDMediaPreview(`http://localhost:8000/${soalData.opsi_d_media}`);
-            if (soalData.opsi_e_media) setOpsiEMediaPreview(`http://localhost:8000/${soalData.opsi_e_media}`);
+            if (soalData.opsi_a_media) setOpsiAMediaPreview(`${API_URL}/${soalData.opsi_a_media}`);
+            if (soalData.opsi_b_media) setOpsiBMediaPreview(`${API_URL}/${soalData.opsi_b_media}`);
+            if (soalData.opsi_c_media) setOpsiCMediaPreview(`${API_URL}/${soalData.opsi_c_media}`);
+            if (soalData.opsi_d_media) setOpsiDMediaPreview(`${API_URL}/${soalData.opsi_d_media}`);
+            if (soalData.opsi_e_media) setOpsiEMediaPreview(`${API_URL}/${soalData.opsi_e_media}`);
 
             setJawabanBenar(soalData.jawaban_benar || '');
           } 
@@ -230,7 +232,7 @@ export default function EditSoalPage() {
         ? 'essay'
         : 'isian-singkat';
 
-      const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}/${soalId}`, {
+      const response = await fetch(`${API_URL}/api/admin/soal/${endpoint}/${soalId}`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

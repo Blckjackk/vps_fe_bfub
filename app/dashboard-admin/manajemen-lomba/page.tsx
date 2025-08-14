@@ -7,6 +7,7 @@ import SetTanggalRilisModal from '@/components/dashboard-admin/SetTanggalRilisMo
 import { Plus, Search, Filter } from 'lucide-react';
 import { FaAngleDown } from 'react-icons/fa';
 import { toast, Toaster } from 'sonner';
+import { API_URL } from '@/lib/api';
 
 // Interface untuk data lomba dari API
 interface LombaData {
@@ -41,7 +42,7 @@ export default function ManajemenLombaPage() {
   const fetchLomba = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/lomba', {
+      const response = await fetch(`${API_URL}/api/lomba`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ export default function ManajemenLombaPage() {
 
     try {
       const deletePromises = selectedItems.map(id => 
-        fetch(`http://localhost:8000/api/lomba/${id}`, {
+        fetch(`${API_URL}/api/lomba/${id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export default function ManajemenLombaPage() {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/lomba/${id}`, {
+      const response = await fetch(`${API_URL}/api/lomba/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

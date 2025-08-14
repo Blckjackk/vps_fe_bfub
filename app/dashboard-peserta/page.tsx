@@ -29,6 +29,7 @@ import { FaTimes } from "react-icons/fa";
 
 import { useEffect, useState } from "react";
 import { withAuth } from "@/lib/auth";
+import { API_URL } from "@/lib/api";
 
 // State untuk popup dan input token
 // Dideklarasikan di dalam komponen utama
@@ -83,7 +84,7 @@ function HalamanUjian() {
       cabang_lomba_id: lombaId,
     });
 
-    const res = await fetch("http://localhost:8000/api/peserta/pakai-token", {
+    const res = await fetch(`${API_URL}/api/peserta/pakai-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -205,7 +206,7 @@ function HalamanUjian() {
       const checkActiveToken = async () => {
         try {
           const res = await fetch(
-            "http://localhost:8000/api/peserta/pakai-token",
+            `${API_URL}/api/peserta/pakai-token`,
             {
               method: "POST",
               headers: {
@@ -253,7 +254,7 @@ function HalamanUjian() {
         // Ambil data peserta lengkap dengan cabang lomba
         // Ambil id lomba dari peserta, lalu fetch detail lomba seperti di halaman edit lomba
         const pesertaProfileRes = await fetch(
-          `http://localhost:8000/api/peserta/profile/${pesertaId}`
+          `${API_URL}/api/peserta/profile/${pesertaId}`
         );
         const pesertaProfile = await pesertaProfileRes.json();
         if (pesertaProfile.success && pesertaProfile.data.cabang_lomba) {
@@ -262,7 +263,7 @@ function HalamanUjian() {
           setStatusUjian(pesertaProfile.data.status_ujian || "belum_mulai");
           // Fetch detail lomba dari endpoint yang sama dengan halaman edit lomba
           const lombaDetailRes = await fetch(
-            `http://localhost:8000/api/lomba/${lombaId}`
+            `${API_URL}/api/lomba/${lombaId}`
           );
           const lombaDetail = await lombaDetailRes.json();
           if (
@@ -318,7 +319,7 @@ function HalamanUjian() {
       try {
         // Pertama ambil data profil peserta untuk mendapatkan cabang lomba
         const profileResponse = await fetch(
-          `http://localhost:8000/api/peserta/profile/${pesertaId}`
+          `${API_URL}/api/peserta/profile/${pesertaId}`
         );
         const profileData = await profileResponse.json();
 
@@ -329,7 +330,7 @@ function HalamanUjian() {
 
         // Kemudian ambil token aktif
         const response = await fetch(
-          `http://localhost:8000/api/peserta/ambil-token?peserta_id=${pesertaId}`
+          `${API_URL}/api/peserta/ambil-token?peserta_id=${pesertaId}`
         );
         const data = await response.json();
 
@@ -597,7 +598,7 @@ function HalamanUjian() {
 
                 try {
                   const res = await fetch(
-                    "http://localhost:8000/api/peserta/pakai-token",
+                    `${API_URL}/api/peserta/pakai-token`,
                     {
                       method: "POST",
                       headers: {

@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import API_URL from '@/lib/api'; // Import API_URL from your API config
 
 interface TambahSoalProps {
   jenisSoal: 'pg' | 'essay' | 'isian';
@@ -154,7 +155,7 @@ export default function TambahSoalPage() {
         ? 'essay'
         : 'isian-singkat';
 
-      const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}`, {
+      const response = await fetch(`${API_URL}/api/admin/soal/${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`

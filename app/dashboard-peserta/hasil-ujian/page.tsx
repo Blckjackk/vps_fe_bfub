@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, User, Book } from 'lucide-react';
 import Link from 'next/link';
 // import { withAuth } from '@/lib/auth';
+import API_URL from '@/lib/api';
 
 interface HasilUjian {
   id: number;
@@ -34,7 +35,7 @@ function HasilUjianPage() {
   const fetchHasilUjian = async () => {
     try {
       const token = localStorage.getItem('session_token');
-      const response = await fetch('http://localhost:8000/api/peserta/hasil-ujian', {
+      const response = await fetch(`${API_URL}/api/peserta/hasil-ujian`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
