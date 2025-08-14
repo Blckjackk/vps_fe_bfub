@@ -158,7 +158,7 @@ export default function ProfilePesertaPage() {
     );
   }
   return (
-    <div className="flex min-h-screen bg-[#F9FAFF] text-gray-800">
+    <div className="flex min-h-screen text-gray-800">
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-start py-16 px-8">
         <h1 className="text-2xl font-bold mb-10">Profile</h1>
