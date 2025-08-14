@@ -10,7 +10,6 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 import TokenPopup from "@/components/cbt/TokenPopup";
 import ConfirmationSubmitPopup from "@/components/cbt/ConfirmationSubmitPopup";
 import SuccessNextSectionPopup from "@/components/cbt/SuccessNextSectionPopup";
-import { API_URL } from "@/lib/api";
 
 type QuestionType = 'pg' | 'singkat' | 'esai';
 
@@ -21,12 +20,18 @@ interface Question {
   pertanyaan_isian?: string;  // For isian singkat questions
   pertanyaan_essay?: string;  // For essay questions
   deskripsi_soal?: string;    // Alternative field name
+  media_soal?: string;        // Image for the question
   pilihan?: string[];         // For frontend compatibility
   opsi_a?: string;            // From API
   opsi_b?: string;
   opsi_c?: string;
   opsi_d?: string;
   opsi_e?: string;
+  opsi_a_media?: string;      // Image for option A
+  opsi_b_media?: string;      // Image for option B
+  opsi_c_media?: string;      // Image for option C
+  opsi_d_media?: string;      // Image for option D
+  opsi_e_media?: string;      // Image for option E
   jawaban?: string;           // User's answer
   jenis: QuestionType;
   cabang_lomba_id: number;
@@ -398,6 +403,8 @@ export default function CBTPage() {
       setIsLoadingQuestions(true);
       console.log('Fetching questions for cabangLombaId:', cabangLombaId, 'pesertaId:', pesertaId);
       
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
       // Common fetch headers
       const headers = {
         'Content-Type': 'application/json',
@@ -457,9 +464,9 @@ export default function CBTPage() {
 
       // Fetch all question types in parallel
       const [pgResponse, singkatResponse, esaiResponse] = await Promise.all([
-        fetch(`${API_URL}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${API_URL}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${API_URL}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
+        fetch(`${baseUrl}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${baseUrl}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${baseUrl}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
       ]);
 
       // Check for HTTP errors
@@ -1050,7 +1057,8 @@ export default function CBTPage() {
       setUserData(user); // Set user data untuk digunakan di komponen lain
       
       try {
-        const res = await fetch(`${API_URL}/api/peserta/pakai-token`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1089,8 +1097,8 @@ export default function CBTPage() {
       if (document.visibilityState === "hidden" && !allowExitFullscreen) {
         const kodeToken = tokenRef.current;
         if (kodeToken) {
-          
-          await fetch(`\$\{API_URL\}/api/peserta/hanguskan-token`, {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          await fetch(`${baseUrl}/api/peserta/hanguskan-token`, {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
@@ -1129,8 +1137,8 @@ export default function CBTPage() {
     
     try {
       // Validasi token ke backend dengan data peserta
-      
-      const res = await fetch(`\$\{API_URL\}/api/peserta/pakai-token`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -1208,14 +1216,14 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       
       let allSuccess = true;
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers:', pgAnswers);
-        const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
+        const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1239,7 +1247,7 @@ export default function CBTPage() {
       // Submit Isian Singkat answers
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers:', isianSingkatAnswers);
-        const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
+        const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1263,7 +1271,7 @@ export default function CBTPage() {
       // Submit Essay answers
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers:', essayAnswers);
-        const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
+        const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1294,7 +1302,7 @@ export default function CBTPage() {
       if (allSuccess) {
         // Call API to finish exam and update status to 'selesai'
         try {
-          const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
+          const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1355,13 +1363,13 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers on time up:', pgAnswers);
         try {
-          const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
+          const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1384,7 +1392,7 @@ export default function CBTPage() {
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers on time up:', isianSingkatAnswers);
         try {
-          const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
+          const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1407,7 +1415,7 @@ export default function CBTPage() {
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers on time up:', essayAnswers);
         try {
-          const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
+          const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1428,7 +1436,7 @@ export default function CBTPage() {
 
       // Try to finish exam - don't throw error if it fails
       try {
-        const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
+        const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1652,9 +1660,22 @@ export default function CBTPage() {
               <div className="space-y-6">
                 <div className="bg-white p-6 rounded-lg border border-gray-100">
                   {questions[questionType][currentQuestion - 1] ? (
-                    <p className="text-gray-800 leading-relaxed">
-                      {questions[questionType][currentQuestion - 1].soal}
-                    </p>
+                    <div className="space-y-4">
+                      <p className="text-gray-800 leading-relaxed">
+                        {questions[questionType][currentQuestion - 1].soal}
+                      </p>
+                      {/* Display question image if available */}
+                      {questions[questionType][currentQuestion - 1].media_soal && (
+                        <div className="flex justify-center">
+                          <img 
+                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${questions[questionType][currentQuestion - 1].media_soal}`}
+                            alt="Gambar soal"
+                            className="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm"
+                            style={{ maxHeight: '400px' }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-gray-500 text-center">
                       {isLoadingQuestions 
@@ -1672,6 +1693,10 @@ export default function CBTPage() {
                     <>
                       {questions[questionType][currentQuestion - 1]?.pilihan?.map((pilihan, index) => {
                         const label = String.fromCharCode(97 + index); // 'a', 'b', 'c', etc.
+                        const currentQ = questions[questionType][currentQuestion - 1];
+                        const optionMediaField = `opsi_${label}_media` as keyof Question;
+                        const optionMedia = currentQ[optionMediaField] as string;
+                        
                         return (
                           <div
                             key={label}
@@ -1692,9 +1717,22 @@ export default function CBTPage() {
                             `}>
                               {label}
                             </div>
-                            <p className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}>
-                              {pilihan}
-                            </p>
+                            <div className="flex-1">
+                              <p className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}>
+                                {pilihan}
+                              </p>
+                              {/* Display option image if available */}
+                              {optionMedia && (
+                                <div className="mt-2">
+                                  <img 
+                                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${optionMedia}`}
+                                    alt={`Gambar opsi ${label}`}
+                                    className="max-w-full h-auto rounded border border-gray-200 shadow-sm"
+                                    style={{ maxHeight: '200px' }}
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
