@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import LombaTable from '@/components/dashboard-admin/manajemen-lomba/LombaTable';
+import SetTanggalRilisModal from '@/components/dashboard-admin/SetTanggalRilisModal';
 import { Plus, Search, Filter } from 'lucide-react';
 import { FaAngleDown } from 'react-icons/fa';
 import { toast, Toaster } from 'sonner';
@@ -14,6 +15,7 @@ interface LombaData {
   deskripsi_lomba: string;
   waktu_mulai_pengerjaan: string;
   waktu_akhir_pengerjaan: string;
+  tanggal_rilis_nilai: string | null;
   total_peserta: number;
   total_soal_pg: number;
   total_soal_essay: number;
@@ -30,6 +32,10 @@ export default function ManajemenLombaPage() {
   const [filterType, setFilterType] = useState('semua');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const toastShownRef = useRef(false);
+  
+  // State untuk modal set tanggal rilis
+  const [showSetTanggalModal, setShowSetTanggalModal] = useState(false);
+  const [selectedLombaForRilis, setSelectedLombaForRilis] = useState<{id: number, nama: string} | null>(null);
 
   // Fetch data lomba dari API
   const fetchLomba = async () => {
@@ -94,6 +100,14 @@ export default function ManajemenLombaPage() {
       minute: '2-digit',
       hour12: false
     }).replace(',', ' -') : '-',
+    tanggalRilisNilai: item.tanggal_rilis_nilai ? new Date(item.tanggal_rilis_nilai).toLocaleString('id-ID', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', ' -') : 'Belum diset',
     jumlahSoalPG: item.total_soal_pg || 0,
     jumlahSoalIsian: item.total_soal_isian || 0,
     jumlahSoalEsai: item.total_soal_essay || 0,
@@ -223,6 +237,17 @@ export default function ManajemenLombaPage() {
     setShowDropdown(false);
   };
 
+  // Handle set tanggal rilis
+  const handleSetTanggalRilis = (id: number, namaLomba: string) => {
+    setSelectedLombaForRilis({id, nama: namaLomba});
+    setShowSetTanggalModal(true);
+  };
+
+  const handleSetTanggalSuccess = () => {
+    toast.success('Tanggal rilis nilai berhasil ditetapkan!');
+    fetchLomba(); // Refresh data jika diperlukan
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-gray-800">Manajemen Lomba</h1>
@@ -286,9 +311,25 @@ export default function ManajemenLombaPage() {
             selectedItems={selectedItems}
             onItemSelection={handleItemSelection}
             onDeleteSingle={handleDeleteSingle}
+            onSetTanggalRilis={handleSetTanggalRilis}
           />
         )}
       </div>
+      
+      {/* Modal Set Tanggal Rilis */}
+      {selectedLombaForRilis && (
+        <SetTanggalRilisModal
+          isOpen={showSetTanggalModal}
+          onClose={() => {
+            setShowSetTanggalModal(false);
+            setSelectedLombaForRilis(null);
+          }}
+          lombaId={selectedLombaForRilis.id}
+          namaLomba={selectedLombaForRilis.nama}
+          onSuccess={handleSetTanggalSuccess}
+        />
+      )}
+      
       <Toaster position="top-right" richColors />
     </div>
   );
