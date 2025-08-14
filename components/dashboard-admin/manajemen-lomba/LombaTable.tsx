@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 // Tipe data untuk setiap Lomba
@@ -8,6 +8,7 @@ type Lomba = {
   durasi: string;
   mulai: string;
   akhir: string;
+  tanggalRilisNilai: string;
   jumlahSoalPG: number;
   jumlahSoalIsian: number;
   jumlahSoalEsai: number;
@@ -19,9 +20,10 @@ interface LombaTableProps {
   selectedItems?: number[];
   onItemSelection?: (id: number) => void;
   onDeleteSingle?: (id: number, namaLomba: string) => void;
+  onSetTanggalRilis?: (id: number, namaLomba: string) => void;
 }
 
-export default function LombaTable({ lomba, selectedItems = [], onItemSelection, onDeleteSingle }: LombaTableProps) {
+export default function LombaTable({ lomba, selectedItems = [], onItemSelection, onDeleteSingle, onSetTanggalRilis }: LombaTableProps) {
   return (
     <div className="mt-4 bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -45,6 +47,7 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection,
               <th scope="col" className="px-6 py-3">Durasi</th>
               <th scope="col" className="px-6 py-3">Waktu Mulai</th>
               <th scope="col" className="px-6 py-3">Waktu Berakhir</th>
+              <th scope="col" className="px-6 py-3">Tanggal Rilis Nilai</th>
               <th scope="col" className="px-6 py-3">Soal PG</th>
               <th scope="col" className="px-6 py-3">Soal Isian</th>
               <th scope="col" className="px-6 py-3">Soal Esai</th>
@@ -67,6 +70,15 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection,
                 <td className="px-6 py-4">{item.durasi}</td>
                 <td className="px-6 py-4">{item.mulai}</td>
                 <td className="px-6 py-4">{item.akhir}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                    item.tanggalRilisNilai === 'Belum diset' 
+                      ? 'bg-red-100 text-red-800' 
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {item.tanggalRilisNilai}
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-center">
                   <span className="text-sm font-medium">
                     {item.jumlahSoalPG}
@@ -91,6 +103,15 @@ export default function LombaTable({ lomba, selectedItems = [], onItemSelection,
                     >
                       <Pencil size={18} />
                     </Link>
+                    
+                    <button 
+                      className="text-green-600 hover:text-green-800"
+                      title="Set Tanggal Rilis Nilai"
+                      onClick={() => onSetTanggalRilis && onSetTanggalRilis(item.id, item.namaLomba)}
+                    >
+                      <Clock size={18} />
+                    </button>
+                    
                     <button 
                       className="text-red-600 hover:text-red-800" 
                       title="Hapus Lomba"

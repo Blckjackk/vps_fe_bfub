@@ -283,19 +283,46 @@ export default function CBTPage() {
 
   // Inisialisasi timer ujian
   const initializeExamTimer = () => {
+    console.log('=== INITIALIZE EXAM TIMER ===');
     const savedDuration = localStorage.getItem("durasi_ujian");
     const savedStartTime = localStorage.getItem("exam_start_time");
     
+    console.log('savedDuration from localStorage:', savedDuration);
+    console.log('savedStartTime from localStorage:', savedStartTime);
+    
     if (savedDuration) {
       const duration = parseInt(savedDuration);
+      console.log('parsed duration:', duration, 'minutes');
       setExamDuration(duration);
       
       let startTime = Date.now();
+      let isNewExam = false;
+      
       if (savedStartTime) {
-        startTime = parseInt(savedStartTime);
+        const savedTime = parseInt(savedStartTime);
+        const elapsedFromSaved = Math.floor((Date.now() - savedTime) / 1000);
+        const totalSeconds = duration * 60;
+        
+        console.log('checking saved start time:', new Date(savedTime));
+        console.log('elapsed from saved time:', elapsedFromSaved, 'seconds');
+        console.log('total exam duration:', totalSeconds, 'seconds');
+        
+        // Jika waktu yang berlalu sudah melebihi durasi ujian + buffer 1 menit, reset timer
+        if (elapsedFromSaved > (totalSeconds + 60)) {
+          console.log('⚠️ Saved start time is too old, resetting timer...');
+          isNewExam = true;
+          startTime = Date.now();
+          localStorage.setItem("exam_start_time", startTime.toString());
+          console.log('✅ New start time set:', new Date(startTime));
+        } else {
+          startTime = savedTime;
+          console.log('using existing valid start time:', new Date(startTime));
+        }
       } else {
         // Pertama kali memulai ujian, simpan waktu mulai
+        isNewExam = true;
         localStorage.setItem("exam_start_time", startTime.toString());
+        console.log('setting new start time (first time):', new Date(startTime));
       }
       
       setExamStartTime(startTime);
@@ -305,8 +332,19 @@ export default function CBTPage() {
       const totalSeconds = duration * 60;
       const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
       
+      console.log('current time:', new Date());
+      console.log('start time:', new Date(startTime));
+      console.log('elapsed seconds:', elapsedSeconds);
+      console.log('total seconds:', totalSeconds);
+      console.log('remaining seconds:', remainingSeconds);
+      console.log('formatted time:', formatTime(remainingSeconds));
+      console.log('is new exam:', isNewExam);
+      
       setTimeLeft(remainingSeconds);
+    } else {
+      console.log('No savedDuration found in localStorage!');
     }
+    console.log('=== END INITIALIZE EXAM TIMER ===');
   };
 
   // Handle ketika waktu habis
@@ -373,6 +411,49 @@ export default function CBTPage() {
         headers,
         credentials: 'include' as RequestCredentials
       };
+
+      // Fetch cabang lomba info untuk mendapatkan durasi ujian
+      console.log('=== FETCHING CABANG LOMBA DATA ===');
+      const cabangLombaResponse = await fetch(`${baseUrl}/api/lomba/${cabangLombaId}`, fetchOptions);
+      let cabangLombaData = null;
+      
+      console.log('cabangLombaResponse status:', cabangLombaResponse.status);
+      console.log('cabangLombaResponse ok:', cabangLombaResponse.ok);
+      
+      if (cabangLombaResponse.ok) {
+        const cabangLombaResult = await cabangLombaResponse.json();
+        console.log('cabangLombaResult:', cabangLombaResult);
+        cabangLombaData = cabangLombaResult.data;
+        console.log('cabangLombaData:', cabangLombaData);
+        
+        // Hitung durasi ujian berdasarkan waktu mulai dan akhir
+        if (cabangLombaData?.waktu_mulai_pengerjaan && cabangLombaData?.waktu_akhir_pengerjaan) {
+          console.log('waktu_mulai_pengerjaan:', cabangLombaData.waktu_mulai_pengerjaan);
+          console.log('waktu_akhir_pengerjaan:', cabangLombaData.waktu_akhir_pengerjaan);
+          
+          const waktuMulai = new Date(cabangLombaData.waktu_mulai_pengerjaan);
+          const waktuAkhir = new Date(cabangLombaData.waktu_akhir_pengerjaan);
+          
+          console.log('parsed waktuMulai:', waktuMulai);
+          console.log('parsed waktuAkhir:', waktuAkhir);
+          
+          const durasiMenit = Math.floor((waktuAkhir.getTime() - waktuMulai.getTime()) / (1000 * 60));
+          
+          console.log('calculated durasiMenit:', durasiMenit);
+          
+          // Simpan durasi ujian ke localStorage
+          localStorage.setItem("durasi_ujian", durasiMenit.toString());
+          console.log('Durasi ujian disimpan:', durasiMenit, 'menit');
+          console.log('localStorage durasi_ujian after set:', localStorage.getItem("durasi_ujian"));
+        } else {
+          console.log('Missing waktu_mulai_pengerjaan or waktu_akhir_pengerjaan');
+        }
+      } else {
+        console.log('Failed to fetch cabang lomba data');
+        const errorText = await cabangLombaResponse.text();
+        console.log('Error response:', errorText);
+      }
+      console.log('=== END FETCHING CABANG LOMBA DATA ===');
 
       // Fetch all question types in parallel
       const [pgResponse, singkatResponse, esaiResponse] = await Promise.all([
@@ -471,11 +552,24 @@ export default function CBTPage() {
         setQuestionType(types[0]);
       }
 
-      // Set judul ujian dari cabang_lomba yang pertama ditemukan
-      const firstQuestion = soalPG[0] || soalSingkat[0] || soalEsai[0];
-      if (firstQuestion?.cabang_lomba?.nama_cabang) {
-        setExamTitle(firstQuestion.cabang_lomba.nama_cabang);
+      // Set judul ujian dari cabang_lomba yang pertama ditemukan atau dari data cabang lomba
+      if (cabangLombaData?.nama_cabang) {
+        setExamTitle(cabangLombaData.nama_cabang);
+      } else {
+        const firstQuestion = soalPG[0] || soalSingkat[0] || soalEsai[0];
+        if (firstQuestion?.cabang_lomba?.nama_cabang) {
+          setExamTitle(firstQuestion.cabang_lomba.nama_cabang);
+        }
       }
+      
+      // Initialize timer setelah durasi ujian diset
+      console.log('=== SCHEDULING TIMER INITIALIZATION ===');
+      setTimeout(() => {
+        console.log('=== CALLING initializeExamTimer FROM TIMEOUT ===');
+        console.log('localStorage durasi_ujian before init:', localStorage.getItem("durasi_ujian"));
+        initializeExamTimer();
+      }, 100);
+      
     } catch (error) {
       console.error("Error fetching questions:", error);
     } finally {
@@ -783,11 +877,6 @@ export default function CBTPage() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Initialize timer when component mounts
-  useEffect(() => {
-    initializeExamTimer();
-  }, []);
-
   // Reset currentQuestion when switching question types and load saved answer
   useEffect(() => {
     if (questions[questionType].length > 0) {
@@ -979,9 +1068,7 @@ export default function CBTPage() {
         if (data.success) {
           setTokenAktif(storedToken);
           tokenRef.current = storedToken;
-          // Initialize timer after token validation
-          initializeExamTimer();
-          // Fetch questions after successful token validation
+          // Fetch questions first - timer akan diinisialisasi di dalam fetchQuestions setelah durasi diset
           await fetchQuestions(user.cabang_lomba_id, user.id);
         } else {
           // Token tidak valid, kembali ke dashboard
@@ -1500,6 +1587,16 @@ export default function CBTPage() {
           isTimeRunningLow={isTimeRunningLow()}
           isTimeCritical={isTimeCritical()}
         />
+        {/* Debug info - remove this later
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed top-20 right-4 bg-black text-white p-2 text-xs z-50">
+            <div>timeLeft: {timeLeft}</div>
+            <div>formatted: {formatTime(timeLeft)}</div>
+            <div>examDuration: {examDuration}</div>
+            <div>examStartTime: {examStartTime}</div>
+            <div>localStorage durasi_ujian: {typeof window !== 'undefined' ? localStorage.getItem("durasi_ujian") : 'N/A'}</div>
+          </div>
+        )} */}
 
         <div className="container mx-auto px-6 pt-4">
           <div className="flex gap-4 mb-4">
