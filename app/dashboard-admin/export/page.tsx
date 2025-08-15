@@ -1,12 +1,75 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { FaUser, FaClipboardList} from "react-icons/fa";
 import { HiNewspaper } from "react-icons/hi2";
 import { toast, Toaster } from 'sonner';
 import { useRef, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+interface CabangLomba {
+  id: number;
+  nama_lomba: string;
+  deskripsi?: string;
+}
+
+interface PesertaData {
+  id: number;
+  nama_lengkap: string;    // Database menggunakan 'nama_lengkap' bukan 'nama'
+  nama?: string;           // Fallback untuk compatibility  
+  email?: string;          // Optional karena tidak ada di database
+  nomor_pendaftaran: string;
+  asal_sekolah: string;
+  cabang_lomba_id: number;
+  status: string;
+  status_ujian?: string;   // Alternative field name
+  created_at: string;
+  cabang_lomba?: {
+    nama_lomba: string;
+    nama_cabang?: string;  // Alternative field name
+  };
+}
+
+interface SoalData {
+  id: number;
+  pertanyaan?: string;        // Untuk PG
+  pertanyaan_essay?: string;  // Untuk Essay - sesuai database
+  pertanyaan_isian?: string;  // Untuk Isian Singkat - sesuai database
+  soal?: string;              // Fallback untuk compatibility
+  nomor_soal: number;
+  cabang_lomba_id: number;
+  tipe_soal: string;
+  opsi_a?: string;
+  opsi_b?: string;
+  opsi_c?: string;
+  opsi_d?: string;
+  opsi_e?: string;
+  jawaban_benar?: string;
+  // bobot?: number;
+  score?: number;
+}
+
+interface HasilLombaData {
+  id: number;
+  peserta_id: number;
+  nama_peserta?: string;
+  asal_sekolah?: string;
+  cabang_lomba?: string;
+  total_score: number;
+  ranking?: number;
+  status_ujian: string;
+  waktu_selesai?: string;
+  peserta?: {
+    nama: string;
+    asal_sekolah: string;
+    cabang_lomba?: {
+      nama_lomba: string;
+    };
+  };
+}
 
 export default function ExportPage() {
   const [fileFormat, setFileFormat] = useState("csv");
@@ -17,7 +80,257 @@ export default function ExportPage() {
   });
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [cabangLombaList, setCabangLombaList] = useState<CabangLomba[]>([]);
+  const [selectedCabangLomba, setSelectedCabangLomba] = useState("");
   const toastShownRef = useRef(false);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  // Fetch cabang lomba data
+  useEffect(() => {
+    const fetchCabangLomba = async () => {
+      try {
+        // Try different possible endpoints for cabang lomba
+        const possibleEndpoints = [
+          '/api/lomba',           // Primary endpoint from backend routes
+          '/api/admin/cabang-lomba',
+          '/api/cabang-lomba'
+        ];
+
+        let success = false;
+        
+        for (const endpoint of possibleEndpoints) {
+          try {
+            const response = await fetch(`${baseUrl}${endpoint}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              credentials: 'include'
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Response from ${endpoint}:`, data); // Debug log
+              
+              // Handle different response structures
+              let cabangLombaData = [];
+              if (data.data && Array.isArray(data.data)) {
+                // Map from lomba response structure to cabang lomba format
+                cabangLombaData = data.data.map((lomba: any) => ({
+                  id: lomba.id,
+                  nama_lomba: lomba.nama_cabang,
+                  deskripsi: lomba.deskripsi_lomba
+                }));
+              } else if (Array.isArray(data.data)) {
+                cabangLombaData = data.data;
+              } else if (Array.isArray(data)) {
+                cabangLombaData = data;
+              }
+              
+              setCabangLombaList(cabangLombaData);
+              success = true;
+              console.log('Cabang lomba loaded:', cabangLombaData);
+              break;
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch from ${endpoint}:`, error);
+            continue;
+          }
+        }
+
+        if (!success) {
+          console.warn('Could not fetch cabang lomba data from any endpoint');
+          toast.warning('Gagal memuat data cabang lomba');
+        }
+      } catch (error) {
+        console.error('Error fetching cabang lomba:', error);
+        toast.error('Error saat memuat cabang lomba');
+      }
+    };
+
+    fetchCabangLomba();
+  }, [baseUrl]);
+
+  // Fetch peserta data dynamically
+  const fetchPesertaData = async (): Promise<PesertaData[]> => {
+    try {
+      let url = `${baseUrl}/api/admin/peserta`;
+      
+      const params = new URLSearchParams();
+      if (selectedCabangLomba) {
+        params.append('cabang_lomba_id', selectedCabangLomba);
+      }
+      if (startDate) {
+        params.append('start_date', startDate);
+      }
+      if (endDate) {
+        params.append('end_date', endDate);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Peserta API Response:', result); // Debug log
+      return result.data || result.peserta || result || [];
+    } catch (error) {
+      console.error('Error fetching peserta data:', error);
+      throw error;
+    }
+  };
+
+  // Fetch soal data dynamically
+  const fetchSoalData = async (): Promise<SoalData[]> => {
+    try {
+      if (!selectedCabangLomba) {
+        throw new Error('Silakan pilih cabang lomba untuk export soal');
+      }
+
+      const allSoal: SoalData[] = [];
+
+      // Fetch PG questions
+      try {
+        const pgResponse = await fetch(`${baseUrl}/api/soal/pg?cabang_lomba_id=${selectedCabangLomba}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (pgResponse.ok) {
+          const pgData = await pgResponse.json();
+          console.log('PG Soal API Response:', pgData); // Debug log
+          const pgSoal = (pgData.data || pgData.soal || pgData || []).map((soal: any) => ({
+            ...soal,
+            tipe_soal: 'Pilihan Ganda'
+          }));
+          allSoal.push(...pgSoal);
+        }
+      } catch (error) {
+        console.warn('No PG questions found');
+      }
+
+      // Fetch Isian Singkat questions
+      try {
+        const isianResponse = await fetch(`${baseUrl}/api/soal/isian-singkat?cabang_lomba_id=${selectedCabangLomba}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (isianResponse.ok) {
+          const isianData = await isianResponse.json();
+          console.log('Isian Singkat API Response:', isianData); // Debug log
+          const isianSoal = (isianData.data || isianData.soal || isianData || []).map((soal: any) => ({
+            ...soal,
+            tipe_soal: 'Isian Singkat'
+          }));
+          allSoal.push(...isianSoal);
+        }
+      } catch (error) {
+        console.warn('No Isian Singkat questions found');
+      }
+
+      // Fetch Essay questions
+      try {
+        const essayResponse = await fetch(`${baseUrl}/api/soal/essay?cabang_lomba_id=${selectedCabangLomba}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (essayResponse.ok) {
+          const essayData = await essayResponse.json();
+          console.log('Essay API Response:', essayData); // Debug log
+          const essaySoal = (essayData.data || essayData.soal || essayData || []).map((soal: any) => ({
+            ...soal,
+            tipe_soal: 'Essay'
+          }));
+          allSoal.push(...essaySoal);
+        }
+      } catch (error) {
+        console.warn('No Essay questions found');
+      }
+
+      if (allSoal.length === 0) {
+        throw new Error('Tidak ada soal yang ditemukan untuk cabang lomba ini');
+      }
+
+      return allSoal;
+    } catch (error) {
+      console.error('Error fetching soal data:', error);
+      throw error;
+    }
+  };
+
+  // Fetch hasil lomba data dynamically
+  const fetchHasilLombaData = async (): Promise<HasilLombaData[]> => {
+    try {
+      let url = `${baseUrl}/api/admin/hasil-lomba`;
+      
+      const params = new URLSearchParams();
+      if (selectedCabangLomba) {
+        params.append('cabang_lomba_id', selectedCabangLomba);
+      }
+      if (startDate) {
+        params.append('start_date', startDate);
+      }
+      if (endDate) {
+        params.append('end_date', endDate);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        // Return empty array if no results found instead of throwing error
+        return [];
+      }
+
+      const result = await response.json();
+      return result.data || result.hasil || result || [];
+    } catch (error) {
+      console.error('Error fetching hasil lomba data:', error);
+      // Return empty array instead of throwing error for hasil lomba
+      return [];
+    }
+  };
 
   const handleSelectAll = () => {
     setSelected({
@@ -28,19 +341,257 @@ export default function ExportPage() {
   };
 
   useEffect(() => {
-  if (!toastShownRef.current) {
-    toast.success('Halaman berhasil dimuat!');
-    toastShownRef.current = true;
-  }
-}, []);
+    if (!toastShownRef.current) {
+      toast.success('Halaman berhasil dimuat!');
+      toastShownRef.current = true;
+    }
+    
+    // Check API status
+    const checkApiStatus = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/api/ping`);
+        if (response.ok) {
+          setApiStatus('online');
+          toast.success('Terhubung ke database', { duration: 2000 });
+        } else {
+          setApiStatus('offline');
+        }
+      } catch (error) {
+        setApiStatus('offline');
+        toast.warning('Database offline', { duration: 3000 });
+      }
+    };
+    
+    checkApiStatus();
+  }, [baseUrl]);
 
+  // Export data to CSV
+  const exportToCSV = (data: any[], filename: string, headers: string[]) => {
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => headers.map(header => {
+        const key = header.toLowerCase().replace(/ /g, '_');
+        const value = row[key] || '';
+        return `"${String(value).replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export data to PDF
+  const exportToPDF = (data: any[], filename: string, headers: string[], title: string) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text(title, 14, 22);
+    
+    // Add export date
+    doc.setFontSize(10);
+    doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
+    
+    if (selectedCabangLomba) {
+      const cabangLomba = cabangLombaList.find((cl: CabangLomba) => cl.id.toString() === selectedCabangLomba);
+      if (cabangLomba) {
+        doc.text(`Cabang Lomba: ${cabangLomba.nama_lomba}`, 14, 36);
+      }
+    }
+
+    // Create table data
+    const tableData = data.map(row => 
+      headers.map(header => {
+        const key = header.toLowerCase().replace(/ /g, '_');
+        const value = row[key] || '';
+        return String(value);
+      })
+    );
+
+    // Add table
+    autoTable(doc, {
+      head: [headers],
+      body: tableData,
+      startY: selectedCabangLomba ? 42 : 36,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [33, 150, 243] },
+      margin: { top: 30 }
+    });
+
+    doc.save(`${filename}.pdf`);
+  };
+
+  const handleExport = async () => {
+    if (!selected.peserta && !selected.soal && !selected.hasil_lomba) {
+      toast.error('Silakan pilih minimal satu jenis data untuk diekspor');
+      return;
+    }
+
+    if (selected.soal && !selectedCabangLomba) {
+      toast.error('Silakan pilih cabang lomba untuk export soal');
+      return;
+    }
+
+    setIsExporting(true);
+    let exportCount = 0;
+    let totalExports = (selected.peserta ? 1 : 0) + (selected.soal ? 1 : 0) + (selected.hasil_lomba ? 1 : 0);
+
+    try {
+      // Export peserta data
+      if (selected.peserta) {
+        toast.info('Mengekspor data peserta...');
+        try {
+          const pesertaData = await fetchPesertaData();
+          const headers = ['No', 'Nama Lengkap', 'Nomor Pendaftaran', 'Asal Sekolah'];
+          const processedData = pesertaData.map((peserta: PesertaData, index: number) => ({
+            no: index + 1,
+            nama_lengkap: peserta.nama_lengkap || peserta.nama || '',
+            nomor_pendaftaran: peserta.nomor_pendaftaran || '',
+            asal_sekolah: peserta.asal_sekolah || ''
+          }));
+
+          if (processedData.length === 0) {
+            toast.warning('Tidak ada data peserta yang ditemukan');
+          } else {
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `data_peserta_${timestamp}`;
+
+            if (fileFormat === 'csv') {
+              exportToCSV(processedData, filename, headers);
+            } else {
+              exportToPDF(processedData, filename, headers, 'Data Peserta');
+            }
+            exportCount++;
+            toast.success(`Data peserta berhasil diekspor (${processedData.length} record)`);
+          }
+        } catch (error) {
+          console.error('Error exporting peserta:', error);
+          toast.error(`Gagal mengekspor data peserta: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      // Export soal data
+      if (selected.soal) {
+        toast.info('Mengekspor data soal...');
+        try {
+          const soalData = await fetchSoalData();
+          const headers = ['No', 'Tipe Soal', 'Nomor Soal', 'Soal', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'Jawaban Benar' // 'Bobot'
+          ];
+          const processedData = soalData.map((soal: SoalData, index: number) => ({
+            no: index + 1,
+            tipe_soal: soal.tipe_soal || '',
+            nomor_soal: soal.nomor_soal || '',
+            soal: soal.pertanyaan || soal.pertanyaan_essay || soal.pertanyaan_isian || soal.soal || '',  // Field yang sesuai database
+            opsi_a: soal.opsi_a || '-',
+            opsi_b: soal.opsi_b || '-',
+            opsi_c: soal.opsi_c || '-',
+            opsi_d: soal.opsi_d || '-',
+            opsi_e: soal.opsi_e || '-',
+            jawaban_benar: soal.jawaban_benar || '-',
+            // bobot: soal.bobot || soal.score || ''
+          }));
+
+          const cabangLomba = cabangLombaList.find((cl: CabangLomba) => cl.id.toString() === selectedCabangLomba);
+          const timestamp = new Date().toISOString().slice(0, 10);
+          const filename = `soal_${cabangLomba?.nama_lomba?.replace(/\s+/g, '_').toLowerCase() || 'unknown'}_${timestamp}`;
+
+          if (processedData.length === 0) {
+            toast.warning('Tidak ada data soal yang ditemukan untuk cabang lomba yang dipilih');
+          } else {
+            if (fileFormat === 'csv') {
+              exportToCSV(processedData, filename, headers);
+            } else {
+              exportToPDF(processedData, filename, headers, `Soal - ${cabangLomba?.nama_lomba || 'Unknown'}`);
+            }
+            exportCount++;
+            toast.success(`Data soal berhasil diekspor (${processedData.length} soal)`);
+          }
+        } catch (error) {
+          console.error('Error exporting soal:', error);
+          toast.error(`Gagal mengekspor data soal: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      // Export hasil lomba data
+      if (selected.hasil_lomba) {
+        toast.info('Mengekspor data hasil lomba...');
+        try {
+          const hasilData = await fetchHasilLombaData();
+          
+          if (hasilData.length === 0) {
+            toast.warning('Tidak ada hasil lomba yang ditemukan');
+          } else {
+            const headers = ['No', 'Nama Peserta', 'Asal Sekolah', 'Cabang Lomba', 'Total Score', 'Ranking', 'Status Ujian', 'Waktu Selesai'];
+            const processedData = hasilData.map((hasil: HasilLombaData, index: number) => ({
+              no: index + 1,
+              nama_peserta: hasil.nama_peserta || hasil.peserta?.nama || '',
+              asal_sekolah: hasil.asal_sekolah || hasil.peserta?.asal_sekolah || '',
+              cabang_lomba: hasil.cabang_lomba || hasil.peserta?.cabang_lomba?.nama_lomba || '',
+              total_score: hasil.total_score || '0',
+              ranking: hasil.ranking || index + 1,
+              status_ujian: hasil.status_ujian || '',
+              waktu_selesai: hasil.waktu_selesai ? new Date(hasil.waktu_selesai).toLocaleString('id-ID') : ''
+            }));
+
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `hasil_lomba_${timestamp}`;
+
+            if (fileFormat === 'csv') {
+              exportToCSV(processedData, filename, headers);
+            } else {
+              exportToPDF(processedData, filename, headers, 'Hasil Lomba');
+            }
+            exportCount++;
+            toast.success(`Data hasil lomba berhasil diekspor (${processedData.length} record)`);
+          }
+        } catch (error) {
+          console.error('Error exporting hasil lomba:', error);
+          toast.error(`Gagal mengekspor data hasil lomba: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      // Final success message
+      if (exportCount > 0) {
+        toast.success(`Export selesai! ${exportCount} dari ${totalExports} file berhasil diekspor.`);
+      } else {
+        toast.error('Tidak ada file yang berhasil diekspor.');
+      }
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(`Terjadi kesalahan: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
       <div className="space-y-6">
         {/* Header with back button and title */}
         <div className="mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-gray-800">Ekspor File</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold text-gray-800">Ekspor File</h1>
+            </div>
+            
+            {/* API Status Indicator */}
+            <div className="flex items-center gap-2 text-sm">
+              <div className={`w-2 h-2 rounded-full ${
+                apiStatus === 'online' ? 'bg-green-500' : 
+                apiStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
+              }`}></div>
+              <span className="text-gray-600">
+                {apiStatus === 'online' ? 'Database Terhubung' : 
+                 apiStatus === 'offline' ? 'Mode Offline' : 'Memeriksa koneksi...'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -85,9 +636,14 @@ export default function ExportPage() {
                   <input
                     type="checkbox"
                     checked={selected.soal}
-                    onChange={(e) =>
-                      setSelected((s) => ({ ...s, soal: e.target.checked }))
-                    }
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setSelected((s) => ({ ...s, soal: isChecked }));
+                      // Reset cabang lomba selection jika soal di-uncheck
+                      if (!isChecked) {
+                        setSelectedCabangLomba("");
+                      }
+                    }}
                     className="w-5 h-5 rounded border-gray-300 text-[#6C63FF] focus:ring-[#6C63FF]"
                   />
                   <div className="flex gap-2 items-center">
@@ -142,6 +698,34 @@ export default function ExportPage() {
               </select>
             </div>
 
+            {/* Cabang Lomba Selection - Hanya muncul jika Soal dipilih */}
+            {selected.soal && (
+              <div className="mb-6 transition-all duration-300 ease-in-out">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cabang Lomba
+                </label>
+                <select
+                  value={selectedCabangLomba}
+                  onChange={(e) => setSelectedCabangLomba(e.target.value)}
+                  className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF] ${
+                    !selectedCabangLomba ? 'text-gray-400' : 'text-gray-900'
+                  }`}
+                >
+                  <option value="" disabled className="text-gray-400 italic">
+                    ~ Pilih cabang lomba ~
+                  </option>
+                  {cabangLombaList.map((cabang) => (
+                    <option key={cabang.id} value={cabang.id.toString()} className="text-gray-900">
+                      {cabang.nama_lomba}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  *Wajib dipilih untuk export soal
+                </p>
+              </div>
+            )}
+
             {/* Date Range */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -153,40 +737,101 @@ export default function ExportPage() {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF]"
+                  placeholder="Tanggal mulai"
                 />
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#6C63FF] focus:border-[#6C63FF]"
+                  placeholder="Tanggal akhir"
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Kosongkan untuk mengekspor semua data
+              </p>
+            </div>
+
+            {/* Selected Tables Info */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Tabel Dipilih ({Object.entries(selected).filter(([key, value]) => value).length})
+              </h3>
+              <div className="text-sm text-gray-600">
+                {Object.entries(selected).filter(([key, value]) => value).length === 0 ? (
+                  <p className="text-gray-400 italic">Belum ada tabel dipilih</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {selected.peserta && <li>• Data Peserta</li>}
+                    {selected.soal && <li>• Data Soal</li>}
+                    {selected.hasil_lomba && <li>• Data Hasil Lomba</li>}
+                  </ul>
+                )}
+              </div>
+              {selectedCabangLomba && (
+                <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                  <strong>Cabang Lomba:</strong><br/>
+                  {cabangLombaList.find(cl => cl.id.toString() === selectedCabangLomba)?.nama_lomba}
+                </div>
+              )}
+              {(startDate || endDate) && (
+                <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-700">
+                  <strong>Filter Tanggal:</strong><br/>
+                  {startDate && `Dari: ${new Date(startDate).toLocaleDateString('id-ID')}`}<br/>
+                  {endDate && `Sampai: ${new Date(endDate).toLocaleDateString('id-ID')}`}
+                </div>
+              )}
             </div>
 
             {/* Information Format */}
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
-                Informasi Format
+                Informasi Export
               </h3>
-              <ul className="text-sm text-gray-600 space-y-2 list-disc pl-4">
-                <li>Excel (.xlsx): Data dalam bentuk tabel, mudah dibaca dan dianalisis secara visual</li>
-                <li>CSV (.csv): Format ringan dan sederhana, cocok untuk ekspor cepat dan kompatibel dengan banyak sistem</li>
-                <li>JSON (.json): Format data terstruktur, umum digunakan untuk pertukaran data antarsistem dan API</li>
-                <li>ZIP (.zip): Menggabungkan beberapa file dalam satu arsip, memudahkan distribusi dan penyimpanan</li>
-                <li>PDF (.pdf): Dokumen siap cetak dan dibagikan, isi tidak mudah diubah</li>
-                <li>DOCX (.docx): Dokumen yang dapat diedit, cocok untuk laporan atau draf dokumen</li>
-
-              </ul>
+              <div className="text-sm text-gray-600 space-y-2">
+                <div className="p-3 bg-gray-50 rounded-lg border">
+                  <ul className="space-y-1">
+                    <li><strong>Data Peserta:</strong> Nama lengkap, nomor pendaftaran, asal sekolah</li>
+                    <li><strong>Data Soal:</strong> Pertanyaan (PG/Essay/Isian), opsi jawaban, kunci jawaban berdasarkan cabang lomba</li>
+                    <li><strong>Hasil Lomba:</strong> Score, ranking, status ujian peserta</li>
+                    <li><strong>Format:</strong> {fileFormat.toUpperCase()} - {fileFormat === 'csv' ? 'Mudah dibuka di Excel' : 'Dokumen siap cetak'}</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Export Button */}
             <Button
-              className="w-full bg-[#2ECC8B] hover:bg-[#27ae60] text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2"
-              type="submit"
+              onClick={handleExport}
+              disabled={isExporting || Object.values(selected).every(v => !v) || (selected.soal && !selectedCabangLomba)}
+              className="w-full bg-[#2ECC8B] hover:bg-[#27ae60] text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
             >
-              Export
-              <Download className="w-4 h-4" />
+              {isExporting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Mengekspor...
+                </>
+              ) : (
+                <>
+                  Export
+                  <Download className="w-4 h-4" />
+                </>
+              )}
             </Button>
+            
+            {/* Export Info */}
+            {Object.values(selected).some(v => v) && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
+                <p className="font-medium mb-1">Yang akan diekspor:</p>
+                <p>• Format: {fileFormat.toUpperCase()}</p>
+                <p>• Jumlah tabel: {Object.values(selected).filter(v => v).length}</p>
+                <p>• Status database: {apiStatus === 'online' ? 'Terhubung' : 'Offline'}</p>
+                {selected.soal && !selectedCabangLomba && (
+                  <p className="text-red-600 mt-2">⚠️ Pilih cabang lomba untuk export soal</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <Toaster position="top-right" richColors />

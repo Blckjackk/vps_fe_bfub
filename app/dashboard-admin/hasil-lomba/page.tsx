@@ -120,7 +120,7 @@ export default function HasilUjianPage() {
   // Ambil daftar cabang lomba
   const fetchLombaList = async () => {
     try {
-      const response = await fetch('${API_URL}/api/lomba');
+      const response = await fetch(`${API_URL}/api/lomba`);
       const data = await response.json();
       if (data.success) setLombaList(data.data);
     } catch (err) {
