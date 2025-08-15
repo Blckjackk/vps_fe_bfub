@@ -208,22 +208,7 @@ export default function CBTPage() {
     };
     localStorage.setItem("cbt_progress", JSON.stringify(progress));
 
-    // Remove mark when answer is saved
-    setMarkedQuestions(prev => {
-      const currentMarked = prev[questionType];
-      const isMarked = currentMarked.includes(currentQuestion);
-      
-      if (isMarked) {
-        const updated = {
-          ...prev,
-          [questionType]: currentMarked.filter(q => q !== currentQuestion)
-        };
-        // Save marked questions to localStorage
-        localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
-        return updated;
-      }
-      return prev;
-    });
+    // Keep marked state even after saving the answer (do not auto-unmark)
   };
 
   // Fungsi untuk menandai soal
@@ -274,6 +259,15 @@ export default function CBTPage() {
     } else {
       return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
+  };
+
+  // Normalisasi URL media agar mendukung path yang sudah menyertakan 'storage/' maupun tidak
+  const getMediaUrl = (path?: string | null): string => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('storage/')) return `${baseUrl}/${path}`;
+    return `${baseUrl}/storage/${path}`;
   };
 
   // Check if time is running low (less than 10 minutes)
@@ -1668,7 +1662,7 @@ export default function CBTPage() {
                       {questions[questionType][currentQuestion - 1].media_soal && (
                         <div className="flex justify-center">
                           <img 
-                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${questions[questionType][currentQuestion - 1].media_soal}`}
+                            src={getMediaUrl(questions[questionType][currentQuestion - 1].media_soal)}
                             alt="Gambar soal"
                             className="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm"
                             style={{ maxHeight: '400px' }}
@@ -1725,7 +1719,7 @@ export default function CBTPage() {
                               {optionMedia && (
                                 <div className="mt-2">
                                   <img 
-                                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${optionMedia}`}
+                                    src={getMediaUrl(optionMedia)}
                                     alt={`Gambar opsi ${label}`}
                                     className="max-w-full h-auto rounded border border-gray-200 shadow-sm"
                                     style={{ maxHeight: '200px' }}
