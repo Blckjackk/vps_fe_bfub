@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:local": "cp .env.example .env.local && next dev --turbopack",
     "build": "next build",
+    "build:production": "NODE_ENV=production next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "env:check": "node -e \"console.log('Environment Check:'); console.log('API_URL:', process.env.NEXT_PUBLIC_API_URL); console.log('NODE_ENV:', process.env.NODE_ENV); console.log('DEBUG:', process.env.NEXT_PUBLIC_DEBUG);\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
