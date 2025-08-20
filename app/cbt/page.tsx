@@ -10,7 +10,6 @@ import SidebarSoal from "@/components/cbt/SidebarSoal";
 import TokenPopup from "@/components/cbt/TokenPopup";
 import ConfirmationSubmitPopup from "@/components/cbt/ConfirmationSubmitPopup";
 import SuccessNextSectionPopup from "@/components/cbt/SuccessNextSectionPopup";
-import { API_URL } from "@/lib/api";
 
 type QuestionType = 'pg' | 'singkat' | 'esai';
 
@@ -21,12 +20,18 @@ interface Question {
   pertanyaan_isian?: string;  // For isian singkat questions
   pertanyaan_essay?: string;  // For essay questions
   deskripsi_soal?: string;    // Alternative field name
+  media_soal?: string;        // Image for the question
   pilihan?: string[];         // For frontend compatibility
   opsi_a?: string;            // From API
   opsi_b?: string;
   opsi_c?: string;
   opsi_d?: string;
   opsi_e?: string;
+  opsi_a_media?: string;      // Image for option A
+  opsi_b_media?: string;      // Image for option B
+  opsi_c_media?: string;      // Image for option C
+  opsi_d_media?: string;      // Image for option D
+  opsi_e_media?: string;      // Image for option E
   jawaban?: string;           // User's answer
   jenis: QuestionType;
   cabang_lomba_id: number;
@@ -203,22 +208,7 @@ export default function CBTPage() {
     };
     localStorage.setItem("cbt_progress", JSON.stringify(progress));
 
-    // Remove mark when answer is saved
-    setMarkedQuestions(prev => {
-      const currentMarked = prev[questionType];
-      const isMarked = currentMarked.includes(currentQuestion);
-      
-      if (isMarked) {
-        const updated = {
-          ...prev,
-          [questionType]: currentMarked.filter(q => q !== currentQuestion)
-        };
-        // Save marked questions to localStorage
-        localStorage.setItem("cbt_marked_questions", JSON.stringify(updated));
-        return updated;
-      }
-      return prev;
-    });
+    // Keep marked state even after saving the answer (do not auto-unmark)
   };
 
   // Fungsi untuk menandai soal
@@ -271,6 +261,15 @@ export default function CBTPage() {
     }
   };
 
+  // Normalisasi URL media agar mendukung path yang sudah menyertakan 'storage/' maupun tidak
+  const getMediaUrl = (path?: string | null): string => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('storage/')) return `${baseUrl}/${path}`;
+    return `${baseUrl}/storage/${path}`;
+  };
+
   // Check if time is running low (less than 10 minutes)
   const isTimeRunningLow = (): boolean => {
     return timeLeft <= 600; // 10 minutes = 600 seconds
@@ -283,19 +282,46 @@ export default function CBTPage() {
 
   // Inisialisasi timer ujian
   const initializeExamTimer = () => {
+    console.log('=== INITIALIZE EXAM TIMER ===');
     const savedDuration = localStorage.getItem("durasi_ujian");
     const savedStartTime = localStorage.getItem("exam_start_time");
     
+    console.log('savedDuration from localStorage:', savedDuration);
+    console.log('savedStartTime from localStorage:', savedStartTime);
+    
     if (savedDuration) {
       const duration = parseInt(savedDuration);
+      console.log('parsed duration:', duration, 'minutes');
       setExamDuration(duration);
       
       let startTime = Date.now();
+      let isNewExam = false;
+      
       if (savedStartTime) {
-        startTime = parseInt(savedStartTime);
+        const savedTime = parseInt(savedStartTime);
+        const elapsedFromSaved = Math.floor((Date.now() - savedTime) / 1000);
+        const totalSeconds = duration * 60;
+        
+        console.log('checking saved start time:', new Date(savedTime));
+        console.log('elapsed from saved time:', elapsedFromSaved, 'seconds');
+        console.log('total exam duration:', totalSeconds, 'seconds');
+        
+        // Jika waktu yang berlalu sudah melebihi durasi ujian + buffer 1 menit, reset timer
+        if (elapsedFromSaved > (totalSeconds + 60)) {
+          console.log('⚠️ Saved start time is too old, resetting timer...');
+          isNewExam = true;
+          startTime = Date.now();
+          localStorage.setItem("exam_start_time", startTime.toString());
+          console.log('✅ New start time set:', new Date(startTime));
+        } else {
+          startTime = savedTime;
+          console.log('using existing valid start time:', new Date(startTime));
+        }
       } else {
         // Pertama kali memulai ujian, simpan waktu mulai
+        isNewExam = true;
         localStorage.setItem("exam_start_time", startTime.toString());
+        console.log('setting new start time (first time):', new Date(startTime));
       }
       
       setExamStartTime(startTime);
@@ -305,8 +331,19 @@ export default function CBTPage() {
       const totalSeconds = duration * 60;
       const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
       
+      console.log('current time:', new Date());
+      console.log('start time:', new Date(startTime));
+      console.log('elapsed seconds:', elapsedSeconds);
+      console.log('total seconds:', totalSeconds);
+      console.log('remaining seconds:', remainingSeconds);
+      console.log('formatted time:', formatTime(remainingSeconds));
+      console.log('is new exam:', isNewExam);
+      
       setTimeLeft(remainingSeconds);
+    } else {
+      console.log('No savedDuration found in localStorage!');
     }
+    console.log('=== END INITIALIZE EXAM TIMER ===');
   };
 
   // Handle ketika waktu habis
@@ -360,6 +397,8 @@ export default function CBTPage() {
       setIsLoadingQuestions(true);
       console.log('Fetching questions for cabangLombaId:', cabangLombaId, 'pesertaId:', pesertaId);
       
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
       // Common fetch headers
       const headers = {
         'Content-Type': 'application/json',
@@ -374,11 +413,54 @@ export default function CBTPage() {
         credentials: 'include' as RequestCredentials
       };
 
+      // Fetch cabang lomba info untuk mendapatkan durasi ujian
+      console.log('=== FETCHING CABANG LOMBA DATA ===');
+      const cabangLombaResponse = await fetch(`${baseUrl}/api/lomba/${cabangLombaId}`, fetchOptions);
+      let cabangLombaData = null;
+      
+      console.log('cabangLombaResponse status:', cabangLombaResponse.status);
+      console.log('cabangLombaResponse ok:', cabangLombaResponse.ok);
+      
+      if (cabangLombaResponse.ok) {
+        const cabangLombaResult = await cabangLombaResponse.json();
+        console.log('cabangLombaResult:', cabangLombaResult);
+        cabangLombaData = cabangLombaResult.data;
+        console.log('cabangLombaData:', cabangLombaData);
+        
+        // Hitung durasi ujian berdasarkan waktu mulai dan akhir
+        if (cabangLombaData?.waktu_mulai_pengerjaan && cabangLombaData?.waktu_akhir_pengerjaan) {
+          console.log('waktu_mulai_pengerjaan:', cabangLombaData.waktu_mulai_pengerjaan);
+          console.log('waktu_akhir_pengerjaan:', cabangLombaData.waktu_akhir_pengerjaan);
+          
+          const waktuMulai = new Date(cabangLombaData.waktu_mulai_pengerjaan);
+          const waktuAkhir = new Date(cabangLombaData.waktu_akhir_pengerjaan);
+          
+          console.log('parsed waktuMulai:', waktuMulai);
+          console.log('parsed waktuAkhir:', waktuAkhir);
+          
+          const durasiMenit = Math.floor((waktuAkhir.getTime() - waktuMulai.getTime()) / (1000 * 60));
+          
+          console.log('calculated durasiMenit:', durasiMenit);
+          
+          // Simpan durasi ujian ke localStorage
+          localStorage.setItem("durasi_ujian", durasiMenit.toString());
+          console.log('Durasi ujian disimpan:', durasiMenit, 'menit');
+          console.log('localStorage durasi_ujian after set:', localStorage.getItem("durasi_ujian"));
+        } else {
+          console.log('Missing waktu_mulai_pengerjaan or waktu_akhir_pengerjaan');
+        }
+      } else {
+        console.log('Failed to fetch cabang lomba data');
+        const errorText = await cabangLombaResponse.text();
+        console.log('Error response:', errorText);
+      }
+      console.log('=== END FETCHING CABANG LOMBA DATA ===');
+
       // Fetch all question types in parallel
       const [pgResponse, singkatResponse, esaiResponse] = await Promise.all([
-        fetch(`${API_URL}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${API_URL}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
-        fetch(`${API_URL}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
+        fetch(`${baseUrl}/api/soal/pg?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${baseUrl}/api/soal/isian-singkat?cabang_lomba_id=${cabangLombaId}`, fetchOptions),
+        fetch(`${baseUrl}/api/soal/essay?cabang_lomba_id=${cabangLombaId}`, fetchOptions)
       ]);
 
       // Check for HTTP errors
@@ -471,11 +553,24 @@ export default function CBTPage() {
         setQuestionType(types[0]);
       }
 
-      // Set judul ujian dari cabang_lomba yang pertama ditemukan
-      const firstQuestion = soalPG[0] || soalSingkat[0] || soalEsai[0];
-      if (firstQuestion?.cabang_lomba?.nama_cabang) {
-        setExamTitle(firstQuestion.cabang_lomba.nama_cabang);
+      // Set judul ujian dari cabang_lomba yang pertama ditemukan atau dari data cabang lomba
+      if (cabangLombaData?.nama_cabang) {
+        setExamTitle(cabangLombaData.nama_cabang);
+      } else {
+        const firstQuestion = soalPG[0] || soalSingkat[0] || soalEsai[0];
+        if (firstQuestion?.cabang_lomba?.nama_cabang) {
+          setExamTitle(firstQuestion.cabang_lomba.nama_cabang);
+        }
       }
+      
+      // Initialize timer setelah durasi ujian diset
+      console.log('=== SCHEDULING TIMER INITIALIZATION ===');
+      setTimeout(() => {
+        console.log('=== CALLING initializeExamTimer FROM TIMEOUT ===');
+        console.log('localStorage durasi_ujian before init:', localStorage.getItem("durasi_ujian"));
+        initializeExamTimer();
+      }, 100);
+      
     } catch (error) {
       console.error("Error fetching questions:", error);
     } finally {
@@ -783,11 +878,6 @@ export default function CBTPage() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Initialize timer when component mounts
-  useEffect(() => {
-    initializeExamTimer();
-  }, []);
-
   // Reset currentQuestion when switching question types and load saved answer
   useEffect(() => {
     if (questions[questionType].length > 0) {
@@ -961,7 +1051,8 @@ export default function CBTPage() {
       setUserData(user); // Set user data untuk digunakan di komponen lain
       
       try {
-        const res = await fetch(`${API_URL}/api/peserta/pakai-token`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -979,9 +1070,7 @@ export default function CBTPage() {
         if (data.success) {
           setTokenAktif(storedToken);
           tokenRef.current = storedToken;
-          // Initialize timer after token validation
-          initializeExamTimer();
-          // Fetch questions after successful token validation
+          // Fetch questions first - timer akan diinisialisasi di dalam fetchQuestions setelah durasi diset
           await fetchQuestions(user.cabang_lomba_id, user.id);
         } else {
           // Token tidak valid, kembali ke dashboard
@@ -1002,8 +1091,8 @@ export default function CBTPage() {
       if (document.visibilityState === "hidden" && !allowExitFullscreen) {
         const kodeToken = tokenRef.current;
         if (kodeToken) {
-          
-          await fetch(`\$\{API_URL\}/api/peserta/hanguskan-token`, {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          await fetch(`${baseUrl}/api/peserta/hanguskan-token`, {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
@@ -1042,8 +1131,8 @@ export default function CBTPage() {
     
     try {
       // Validasi token ke backend dengan data peserta
-      
-      const res = await fetch(`\$\{API_URL\}/api/peserta/pakai-token`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/peserta/pakai-token`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -1121,14 +1210,14 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       
       let allSuccess = true;
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers:', pgAnswers);
-        const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
+        const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1152,7 +1241,7 @@ export default function CBTPage() {
       // Submit Isian Singkat answers
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers:', isianSingkatAnswers);
-        const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
+        const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1176,7 +1265,7 @@ export default function CBTPage() {
       // Submit Essay answers
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers:', essayAnswers);
-        const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
+        const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1207,7 +1296,7 @@ export default function CBTPage() {
       if (allSuccess) {
         // Call API to finish exam and update status to 'selesai'
         try {
-          const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
+          const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1268,13 +1357,13 @@ export default function CBTPage() {
       if (!userData) return;
       
       const user = JSON.parse(userData);
-      
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       
       // Submit PG answers
       if (pgAnswers.length > 0) {
         console.log('Submitting PG answers on time up:', pgAnswers);
         try {
-          const pgResponse = await fetch(`\$\{API_URL\}/api/jawaban/pg`, {
+          const pgResponse = await fetch(`${baseUrl}/api/jawaban/pg`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1297,7 +1386,7 @@ export default function CBTPage() {
       if (isianSingkatAnswers.length > 0) {
         console.log('Submitting Isian Singkat answers on time up:', isianSingkatAnswers);
         try {
-          const isianResponse = await fetch(`\$\{API_URL\}/api/jawaban/isian-singkat`, {
+          const isianResponse = await fetch(`${baseUrl}/api/jawaban/isian-singkat`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1320,7 +1409,7 @@ export default function CBTPage() {
       if (essayAnswers.length > 0) {
         console.log('Submitting Essay answers on time up:', essayAnswers);
         try {
-          const essayResponse = await fetch(`\$\{API_URL\}/api/jawaban/essay`, {
+          const essayResponse = await fetch(`${baseUrl}/api/jawaban/essay`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1341,7 +1430,7 @@ export default function CBTPage() {
 
       // Try to finish exam - don't throw error if it fails
       try {
-        const finishResponse = await fetch(`\$\{API_URL\}/api/peserta/selesaikan-ujian`, {
+        const finishResponse = await fetch(`${baseUrl}/api/peserta/selesaikan-ujian`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1500,6 +1589,16 @@ export default function CBTPage() {
           isTimeRunningLow={isTimeRunningLow()}
           isTimeCritical={isTimeCritical()}
         />
+        {/* Debug info - remove this later
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed top-20 right-4 bg-black text-white p-2 text-xs z-50">
+            <div>timeLeft: {timeLeft}</div>
+            <div>formatted: {formatTime(timeLeft)}</div>
+            <div>examDuration: {examDuration}</div>
+            <div>examStartTime: {examStartTime}</div>
+            <div>localStorage durasi_ujian: {typeof window !== 'undefined' ? localStorage.getItem("durasi_ujian") : 'N/A'}</div>
+          </div>
+        )} */}
 
         <div className="container mx-auto px-6 pt-4">
           <div className="flex gap-4 mb-4">
@@ -1555,9 +1654,22 @@ export default function CBTPage() {
               <div className="space-y-6">
                 <div className="bg-white p-6 rounded-lg border border-gray-100">
                   {questions[questionType][currentQuestion - 1] ? (
-                    <p className="text-gray-800 leading-relaxed">
-                      {questions[questionType][currentQuestion - 1].soal}
-                    </p>
+                    <div className="space-y-4">
+                      <p className="text-gray-800 leading-relaxed">
+                        {questions[questionType][currentQuestion - 1].soal}
+                      </p>
+                      {/* Display question image if available */}
+                      {questions[questionType][currentQuestion - 1].media_soal && (
+                        <div className="flex justify-center">
+                          <img 
+                            src={getMediaUrl(questions[questionType][currentQuestion - 1].media_soal)}
+                            alt="Gambar soal"
+                            className="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm"
+                            style={{ maxHeight: '400px' }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-gray-500 text-center">
                       {isLoadingQuestions 
@@ -1575,6 +1687,10 @@ export default function CBTPage() {
                     <>
                       {questions[questionType][currentQuestion - 1]?.pilihan?.map((pilihan, index) => {
                         const label = String.fromCharCode(97 + index); // 'a', 'b', 'c', etc.
+                        const currentQ = questions[questionType][currentQuestion - 1];
+                        const optionMediaField = `opsi_${label}_media` as keyof Question;
+                        const optionMedia = currentQ[optionMediaField] as string;
+                        
                         return (
                           <div
                             key={label}
@@ -1595,9 +1711,22 @@ export default function CBTPage() {
                             `}>
                               {label}
                             </div>
-                            <p className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}>
-                              {pilihan}
-                            </p>
+                            <div className="flex-1">
+                              <p className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}>
+                                {pilihan}
+                              </p>
+                              {/* Display option image if available */}
+                              {optionMedia && (
+                                <div className="mt-2">
+                                  <img 
+                                    src={getMediaUrl(optionMedia)}
+                                    alt={`Gambar opsi ${label}`}
+                                    className="max-w-full h-auto rounded border border-gray-200 shadow-sm"
+                                    style={{ maxHeight: '200px' }}
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}

@@ -35,10 +35,10 @@ export default function SidebarSoal({
                 className={`w-11 h-11 rounded font-medium text-sm transition-all ${
                   isCurrent
                     ? "bg-[#B94A48] text-white"
-                    : isAnswered
-                    ? "bg-green-500 text-white hover:bg-green-600"
                     : isMarked
                     ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                    : isAnswered
+                    ? "bg-green-500 text-white hover:bg-green-600"
                     : "bg-white border border-gray-200 text-gray-700 hover:border-[#B94A48] hover:border-opacity-50"
                 }`}
               >
