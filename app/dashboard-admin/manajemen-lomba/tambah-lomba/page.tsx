@@ -25,6 +25,9 @@ import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function TambahLomba() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -49,7 +52,7 @@ export default function TambahLomba() {
     try {
       console.log('Sending form data:', form); // Debug log
       
-      const response = await fetch('http://localhost:8000/api/lomba', {
+      const response = await fetch(`${API_URL}/api/lomba`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -39,6 +39,9 @@ import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { toast, Toaster } from 'sonner';
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 // Types untuk data dari API
 interface Peserta {
   id: number;
@@ -94,7 +97,7 @@ export default function DataPesertaPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (filterStatus) params.append('status', filterStatus); // 👈 Tambahan penting di sini
   
-      const response = await fetch(`http://localhost:8000/api/admin/peserta?${params}`);
+      const response = await fetch(`${API_URL}/api/admin/peserta?${params}`);
       const data = await response.json();
   
       console.log('API Response:', data); // Debug log
@@ -170,7 +173,7 @@ export default function DataPesertaPage() {
     try {
       if (itemToDelete === 'selected') {
         // Batch delete
-        const response = await fetch('http://localhost:8000/api/admin/peserta/delete-batch', {
+        const response = await fetch(`${API_URL}/api/admin/peserta/delete-batch`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -192,7 +195,7 @@ export default function DataPesertaPage() {
         }
       } else {
         // Single delete
-        const response = await fetch(`http://localhost:8000/api/admin/peserta/${itemToDelete}`, {
+        const response = await fetch(`${API_URL}/api/admin/peserta/${itemToDelete}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

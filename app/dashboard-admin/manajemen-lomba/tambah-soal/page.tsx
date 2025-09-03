@@ -16,6 +16,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface TambahSoalProps {
   jenisSoal: 'pg' | 'essay' | 'isian';
   lombaId: string;
@@ -154,7 +157,7 @@ export default function TambahSoalPage() {
         ? 'essay'
         : 'isian-singkat';
 
-      const response = await fetch(`http://localhost:8000/api/admin/soal/${endpoint}`, {
+      const response = await fetch(`${API_URL}/api/admin/soal/${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`

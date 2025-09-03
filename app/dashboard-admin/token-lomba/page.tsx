@@ -95,7 +95,7 @@ export default function TokenPage() {
   // Fetch daftar lomba
   const fetchLombaList = async () => {
     try {
-      const response = await fetch('${API_URL}/api/lomba');
+      const response = await fetch(`${API_URL}/api/lomba`);
       const data = await response.json();
       
       if (data.success) {
@@ -171,7 +171,7 @@ export default function TokenPage() {
     });
 
     try {
-      const response = await fetch('${API_URL}/api/admin/token/expire', {
+      const response = await fetch(`${API_URL}/api/admin/token/expire`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -237,7 +237,7 @@ export default function TokenPage() {
     });
 
     try {
-      const response = await fetch('${API_URL}/api/admin/token/bulk-delete', {
+      const response = await fetch(`${API_URL}/api/admin/token/bulk-delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

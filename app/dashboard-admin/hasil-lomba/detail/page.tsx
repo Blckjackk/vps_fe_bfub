@@ -29,6 +29,9 @@ import { ArrowLeft } from 'lucide-react';
 import JawabanTable from '@/components/dashboard-admin/hasil-lomba/JawabanTable';
 import NavigasiSoalGrid from '@/components/dashboard-admin/hasil-lomba/NavigasiSoalGrid';
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 // Types
 type PesertaInfo = {
   nama_lengkap: string;
@@ -138,7 +141,7 @@ export default function DetailHasilPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${id}`);
+      const response = await fetch(`${API_URL}/api/admin/hasil/peserta/${id}`);
       const data = await response.json();
 
       if (data.success) {

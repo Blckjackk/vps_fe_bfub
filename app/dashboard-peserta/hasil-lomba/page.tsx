@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { FaClock, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaExclamationTriangle } from "react-icons/fa";
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface HasilNilai {
   no: number;
   jenis: string;
@@ -43,7 +46,7 @@ export default function HasilLombaPage() {
         const pesertaId = user.id;
 
         // Fetch profile peserta untuk info dasar
-        const profileResponse = await fetch(`http://localhost:8000/api/peserta/profile/${pesertaId}`);
+        const profileResponse = await fetch(`${API_URL}/api/peserta/profile/${pesertaId}`);
         const profileData = await profileResponse.json();
 
         if (profileData.success && profileData.data) {
@@ -63,7 +66,7 @@ export default function HasilLombaPage() {
         }
 
         // Fetch status rilis nilai
-        const statusResponse = await fetch(`http://localhost:8000/api/peserta/cek-status-rilis?peserta_id=${pesertaId}`);
+        const statusResponse = await fetch(`${API_URL}/api/peserta/cek-status-rilis?peserta_id=${pesertaId}`);
         const statusData = await statusResponse.json();
 
         if (statusData.success && statusData.data) {
@@ -93,7 +96,7 @@ export default function HasilLombaPage() {
   // Fetch hasil ujian dari endpoint admin
   const fetchHasilUjian = async (pesertaId: number) => {
     try {
-      const hasilResponse = await fetch(`http://localhost:8000/api/admin/hasil/peserta/${pesertaId}`);
+      const hasilResponse = await fetch(`${API_URL}/api/admin/hasil/peserta/${pesertaId}`);
       const hasilData = await hasilResponse.json();
 
       if (hasilData.success && hasilData.data) {

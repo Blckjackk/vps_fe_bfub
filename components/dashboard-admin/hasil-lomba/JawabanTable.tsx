@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { Pencil, X } from 'lucide-react';
 import { StatusAlertDialog } from '@/components/dashboard-admin/token-lomba/StatusAlertDialog';
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 type Jawaban = {
   id: number;
   soal: string;
@@ -78,8 +81,8 @@ function ModalPenilaian({ isOpen, onClose, jawaban, tipeSoal, onSaveNilai }: Mod
       
       // Tentukan endpoint berdasarkan tipe soal
       const endpoint = tipeSoal === 'esai' 
-        ? `http://localhost:8000/api/admin/nilai/essay/${jawaban.jawabanId}`
-        : `http://localhost:8000/api/admin/nilai/isian-singkat/${jawaban.jawabanId}`;
+        ? `${API_URL}/api/admin/nilai/essay/${jawaban.jawabanId}`
+        : `${API_URL}/api/admin/nilai/isian-singkat/${jawaban.jawabanId}`;
       
       const response = await fetch(endpoint, {
         method: 'PUT',

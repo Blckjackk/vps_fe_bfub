@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Calendar, Clock } from "lucide-react"
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface SetTanggalRilisModalProps {
   isOpen: boolean
   onClose: () => void
@@ -49,7 +52,7 @@ export default function SetTanggalRilisModal({
       // Gabungkan tanggal dan waktu
       const tanggalRilis = `${tanggal} ${waktu}:00`
       
-      const response = await fetch(`http://localhost:8000/api/admin/lomba/${lombaId}/set-tanggal-rilis`, {
+      const response = await fetch(`${API_URL}/api/admin/lomba/${lombaId}/set-tanggal-rilis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

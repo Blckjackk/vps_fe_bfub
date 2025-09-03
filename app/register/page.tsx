@@ -49,7 +49,8 @@ export default function RegisterPeserta() {
   // Fetch cabang lomba list
   const fetchCabangLomba = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/lomba');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/lomba`);
       const data = await response.json();
       
       if (data.success) {
@@ -153,7 +154,8 @@ export default function RegisterPeserta() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/register', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

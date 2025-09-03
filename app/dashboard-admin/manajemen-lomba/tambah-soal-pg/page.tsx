@@ -29,6 +29,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+// API URL dari environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface Lomba {
   id: number;
   nama_cabang: string;
@@ -43,7 +46,7 @@ export default function TambahSoalPG() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch('/api/lomba')
+    fetch(`${API_URL}/api/lomba`)
       .then(res => res.json())
       .then(data => setLombaList(data))
       .catch(() => toast.error('Gagal memuat data lomba.'));
@@ -57,7 +60,7 @@ export default function TambahSoalPG() {
     }
 
     setLoading(true);
-    const response = await fetch('/api/admin/soal/pg', {
+    const response = await fetch(`${API_URL}/api/admin/soal/pg`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
