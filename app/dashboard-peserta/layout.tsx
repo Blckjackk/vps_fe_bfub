@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation';
 import SidebarPeserta from "@/components/dashboard-peserta/sidebar-peserta";
 import AuthWrapper from "@/components/auth/AuthWrapper";
 import LogoutConfirmationDialog from "@/components/dashboard-peserta/LogoutConfirmationDialog";
+import { useHeartbeat } from "@/lib/useHeartbeat";
 
 export default function LayoutPeserta({ children }: { children: React.ReactNode }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [namaPeserta, setNamaPeserta] = useState("");
   const [asalSekolah, setAsalSekolah] = useState("");
   const router = useRouter();
+  
+  // Initialize heartbeat system for online detection
+  useHeartbeat();
 
   useEffect(() => {
     // Ambil data user dari localStorage
@@ -22,8 +26,34 @@ export default function LayoutPeserta({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("Berhasil logout!");
+    
+    // Send offline heartbeat before logout
+    try {
+      const userData = localStorage.getItem("user_data");
+      if (userData) {
+        const user = JSON.parse(userData);
+        const token = localStorage.getItem('session_token');
+        
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/peserta/heartbeat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            peserta_id: user.id,
+            is_active: false,
+            event_type: 'logout',
+            timestamp: new Date().toISOString()
+          })
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send logout heartbeat:', error);
+    }
+    
     // Hapus data dari localStorage
     localStorage.removeItem("session_token");
     localStorage.removeItem("user_data");
