@@ -103,16 +103,9 @@ function AdminDashboardPage() {
     try {
       const token = localStorage.getItem('session_token');
       
-      console.log('=== DASHBOARD DEBUG INFO ===');
-      console.log('API_URL:', API_URL);
-      console.log('Token available:', !!token);
-      
       // Fetch data REAL dari endpoint yang sama dengan data-peserta
       const pesertaUrl = `${API_URL}/api/admin/peserta?all=true&per_page=9999&page=1`;
       const lombaUrl = `${API_URL}/api/lomba`;
-      
-      console.log('Fetching peserta from:', pesertaUrl);
-      console.log('Fetching lomba from:', lombaUrl);
       
       const [pesertaRes, lombaRes] = await Promise.all([
         fetch(pesertaUrl, {
@@ -121,7 +114,6 @@ function AdminDashboardPage() {
             'Authorization': `Bearer ${token}`
           }
         }).catch(err => {
-          console.error('Peserta fetch error:', err);
           return { ok: false, status: 500 };
         }),
         fetch(lombaUrl, {
@@ -130,37 +122,30 @@ function AdminDashboardPage() {
             'Authorization': `Bearer ${token}`
           }
         }).catch(err => {
-          console.error('Lomba fetch error:', err);
           return { ok: false, status: 500 };
         })
       ]);
 
-      console.log('Peserta response:', { ok: pesertaRes.ok, status: pesertaRes.status });
-      console.log('Lomba response:', { ok: lombaRes.ok, status: lombaRes.status });
+      let tempPesertaStats: PesertaStats | null = null;
 
       // Process peserta data - DATA REAL dari endpoint yang sama dengan data-peserta
       if (pesertaRes.ok && 'json' in pesertaRes) {
         try {
           const pesertaData = await pesertaRes.json();
-          console.log('Peserta API Response:', pesertaData);
           
           if (pesertaData.success) {
             // Gunakan stats langsung dari API yang sama dengan data-peserta
-            const realStats = pesertaData.stats;
-            console.log('Real stats from API:', realStats);
-            
-            setPesertaStats(realStats);
+            tempPesertaStats = pesertaData.stats;
+            setPesertaStats(tempPesertaStats);
             
             toast.success('Data berhasil dimuat dari database!');
           } else {
-            console.log('Peserta API returned success=false:', pesertaData.message);
             toast.error('Gagal memuat data peserta: ' + pesertaData.message);
           }
         } catch (jsonError) {
-          console.error('Error parsing peserta JSON:', jsonError);
+          // Silent error handling
         }
       } else {
-        console.log('Peserta API request failed:', pesertaRes.status);
         toast.error('Endpoint peserta tidak dapat diakses');
       }
 
@@ -168,36 +153,34 @@ function AdminDashboardPage() {
       if (lombaRes.ok && 'json' in lombaRes) {
         try {
           const lombaData = await lombaRes.json();
-          console.log('Lomba API Response:', lombaData);
           
           if (lombaData.success && lombaData.data) {
             const lombaList = Array.isArray(lombaData.data) ? lombaData.data : [lombaData.data];
             
-            // Konversi ke format CabangLomba dan hitung total peserta per cabang
-            const realCabangLomba: CabangLomba[] = lombaList.map((lomba: any) => ({
-              id: lomba.id,
-              nama_cabang: lomba.nama_lomba || lomba.nama_cabang || 'Unknown',
-              deskripsi_lomba: lomba.deskripsi_lomba || lomba.deskripsi || 'Tidak ada deskripsi',
-              status: lomba.status || 'aktif',
-              total_peserta: pesertaStats?.per_cabang?.[lomba.nama_lomba || lomba.nama_cabang] || 0
-            }));
+            // Konversi ke format CabangLomba dan ambil total peserta REAL per cabang
+            const realCabangLomba: CabangLomba[] = lombaList.map((lomba: any) => {
+              const namaCabang = lomba.nama_lomba || lomba.nama_cabang || 'Unknown';
+              const totalPeserta = tempPesertaStats?.per_cabang?.[namaCabang] || 0;
+              
+              return {
+                id: lomba.id,
+                nama_cabang: namaCabang,
+                deskripsi_lomba: lomba.deskripsi_lomba || lomba.deskripsi || 'Tidak ada deskripsi',
+                status: lomba.status || 'aktif',
+                total_peserta: totalPeserta
+              };
+            });
             
             setCabangLomba(realCabangLomba);
-            console.log('Real cabang lomba set:', realCabangLomba);
-          } else {
-            console.log('Lomba API returned success=false or no data');
           }
         } catch (jsonError) {
-          console.error('Error parsing lomba JSON:', jsonError);
+          // Silent error handling
         }
-      } else {
-        console.log('Lomba API request failed:', lombaRes.status);
       }
 
       setLastUpdate(new Date().toLocaleTimeString('id-ID'));
       
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
       toast.error('Gagal memuat data dashboard');
     } finally {
       setLoading(false);
