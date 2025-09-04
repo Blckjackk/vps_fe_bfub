@@ -145,11 +145,13 @@ export default function TambahPesertaPage() {
 
     try {
       const token = localStorage.getItem('session_token');
-      const response = await fetch(`${API_URL}/api/admin/peserta`, {
+      // Menggunakan endpoint yang sama dengan register
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          // Tetap sertakan Authorization untuk admin
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           nama_lengkap: formData.nama_lengkap,
@@ -162,24 +164,61 @@ export default function TambahPesertaPage() {
         }),
       });
 
-      const data = await response.json();
+      // Improved error handling untuk response HTML
+      let data;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // Server mengembalikan HTML (error 500 biasanya)
+        const textResponse = await response.text();
+        throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+      }
 
       if (data.success) {
-        toast.success('Peserta berhasil ditambahkan!');
+        toast.success('Peserta berhasil ditambahkan oleh admin!');
         setTimeout(() => {
           router.push('/dashboard-admin/data-peserta');
         }, 1500);
       } else {
+        // Handle errors seperti di register
         if (data.errors) {
           setErrors(data.errors);
+          
+          // Cek spesifik error
+          if (data.errors.nomor_pendaftaran) {
+            toast.error('Nomor pendaftaran sudah terdaftar. Silakan gunakan nomor pendaftaran yang berbeda.');
+          } else if (data.errors.username) {
+            toast.error('Username sudah digunakan. Silakan pilih username yang berbeda.');
+          } else {
+            toast.error('Ada kesalahan pada form. Silakan periksa kembali.');
+          }
+        } else {
+          // Handle error message seperti di register
+          const errorMessage = data.message || '';
+          const lowerErrorMessage = errorMessage.toLowerCase();
+          
+          const cleanErrorMessage = errorMessage.replace(/\s*\(and \d+ more error[s]?\)/i, '');
+          
+          if (lowerErrorMessage.includes('nomor_pendaftaran') || lowerErrorMessage.includes('nomor pendaftaran')) {
+            toast.error('Nomor pendaftaran sudah terdaftar. Silakan gunakan nomor pendaftaran yang berbeda.');
+          } else if (lowerErrorMessage.includes('username')) {
+            toast.error('Username sudah digunakan. Silakan pilih username yang berbeda.');
+          } else if (lowerErrorMessage.includes('has already been taken') || lowerErrorMessage.includes('duplicate') || lowerErrorMessage.includes('sudah ada')) {
+            toast.error('Data yang Anda masukkan sudah terdaftar. Silakan periksa kembali nomor pendaftaran atau username.');
+          } else {
+            toast.error(cleanErrorMessage || 'Gagal menambahkan peserta. Silakan coba lagi.');
+          }
         }
-        
-        const errorMessage = data.message || 'Gagal menambahkan peserta';
-        toast.error(errorMessage);
       }
     } catch (err) {
       console.error('Error creating peserta:', err);
-      toast.error('Terjadi kesalahan saat menambahkan peserta');
+      if (err instanceof Error && err.message.includes('Server error')) {
+        toast.error('Server mengalami masalah. Silakan hubungi administrator atau coba lagi nanti.');
+      } else {
+        toast.error('Terjadi kesalahan saat menambahkan peserta. Silakan coba lagi.');
+      }
     } finally {
       setLoading(false);
     }
