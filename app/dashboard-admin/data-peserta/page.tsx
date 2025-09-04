@@ -70,10 +70,18 @@ interface Stats {
   per_cabang: Record<string, number>;
 }
 
+interface PaginationInfo {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
 export default function DataPesertaPage() {
   // States untuk data dinamis dari API
   const [peserta, setPeserta] = useState<Peserta[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,17 +103,27 @@ export default function DataPesertaPage() {
       const params = new URLSearchParams();
   
       if (searchTerm) params.append('search', searchTerm);
-      if (filterStatus) params.append('status', filterStatus); // 👈 Tambahan penting di sini
+      if (filterStatus) params.append('status', filterStatus);
+      
+      // Try multiple approaches to get all records
+      params.append('all', 'true'); // Some APIs use this
+      params.append('per_page', '9999'); // Very high limit as fallback
+      params.append('page', '1');
   
       const response = await fetch(`${API_URL}/api/admin/peserta?${params}`);
       const data = await response.json();
   
       console.log('API Response:', data); // Debug log
+      console.log('Records received:', data.data?.length, 'Total in stats:', data.stats?.total_peserta); // Debug log
   
       if (data.success) {
         setPeserta(data.data || []);
         setStats(data.stats || null);
+        setPaginationInfo(data.pagination || null);
         setError('');
+        
+        // Log for debugging
+        console.log(`Successfully loaded ${data.data?.length || 0} peserta records`);
       } else {
         setError(data.message || 'Gagal memuat data peserta');
         setPeserta([]);
@@ -297,15 +315,21 @@ export default function DataPesertaPage() {
 
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="relative w-full md:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Cari peserta..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-80 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="relative w-full md:w-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Cari peserta..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-80 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              {/* Show record count
+              <div className="text-sm text-gray-600 whitespace-nowrap">
+                Menampilkan {peserta.length} dari {stats?.total_peserta || 0} peserta
+              </div> */}
             </div>
             <div className="flex items-center gap-2">
               {/* Dropdown filter status */}
