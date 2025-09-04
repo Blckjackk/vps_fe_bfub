@@ -77,13 +77,13 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="flex items-center justify-between px-8 py-2.5 shadow-sm bg-white sticky top-0 z-10 h-[64px]">
         <div className="flex items-center gap-2 h-full">
-          <div className="h-12 w-auto flex items-center">
+          <div className="h-14 w-auto flex items-center">
             <Image
               src="/images/logos/brand/logo-BFUB-Polos.png"
               alt="BFUB Logo"
-              width={120}
-              height={48}
-              className="h-10 w-auto object-contain"
+              width={160}
+              height={60}
+              className="h-14 w-auto object-contain"
             />
           </div>
         </div>
