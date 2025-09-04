@@ -40,7 +40,7 @@ import { toast, Toaster } from 'sonner';
 import { API_URL } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface DashboardStats {
+interface DashboardStats  {
   total_peserta: number;
   total_lomba: number;
   peserta_online: number;
