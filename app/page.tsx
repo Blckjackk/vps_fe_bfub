@@ -79,7 +79,12 @@ export default function LandingPage() {
         <div className="flex items-center gap-2 h-full">
           <div className="h-12 w-auto flex items-center">
             <Image
-              src="/images/logos/brand/logo-BFUB-polos.png"alt="BFUB Logo"width={100}height={100}className="h-25 w-auto object-contain"/>
+              src="/images/logos/brand/logo-BFUB-Polos.png"
+              alt="BFUB Logo"
+              width={120}
+              height={48}
+              className="h-10 w-auto object-contain"
+            />
           </div>
         </div>
         <nav className="hidden md:flex gap-6 text-sm font-medium leading-none transition-colors duration-200">
