@@ -263,11 +263,7 @@ function AdminDashboardPage() {
                         {lomba.total_peserta || 0} peserta terdaftar
                       </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      lomba.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {lomba.status || 'aktif'}
-                    </span>
+                    
                   </div>
                 ))
               ) : (
