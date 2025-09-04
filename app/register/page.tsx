@@ -244,7 +244,7 @@ export default function RegisterPeserta() {
           </p>
           <div className="flex justify-center">
             <Image
-              src="/images/logos/illustration/illustration_2.png"
+              src="/images/logos/illustration/Illustration_2.png"
               alt="illustration_2"
               width={320}
               height={220}
