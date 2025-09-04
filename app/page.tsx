@@ -81,8 +81,8 @@ export default function LandingPage() {
             <Image
               src="/images/logos/brand/logo-BFUB-Polos.png"
               alt="BFUB Logo"
-              width={160}
-              height={60}
+              width={320}
+              height={120}
               className="h-14 w-auto object-contain"
             />
           </div>
