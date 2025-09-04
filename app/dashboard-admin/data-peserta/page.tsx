@@ -35,7 +35,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ConfirmationDialog from '@/components/dashboard-admin/ConfirmationDialog';
 import SuccessDialog from '@/components/dashboard-admin/SuccessDialog';
-import { Users, Plus, Upload, Download, Search, Filter } from 'lucide-react';
+import { Users, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 import { toast, Toaster } from 'sonner';
 
@@ -295,14 +295,6 @@ export default function DataPesertaPage() {
             className="flex items-center gap-2 bg-[#B94A48] text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
             <Plus size={18} /> Tambah Peserta
           </Link>
-          <Link
-            href="/dashboard-admin/data-peserta/import"
-            className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition-colors border">
-            <Download size={18} /> Import
-          </Link>
-          <button className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-600 transition-colors">
-            <Upload size={18} /> Export
-          </button>
         </div>
 
         {/* Error Message */}
