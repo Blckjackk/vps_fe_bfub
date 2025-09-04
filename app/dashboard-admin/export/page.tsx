@@ -65,10 +65,20 @@ interface HasilLombaData {
   peserta?: {
     nama: string;
     asal_sekolah: string;
+    nomor_pendaftaran?: string;
     cabang_lomba?: {
       nama_lomba: string;
     };
   };
+  // Fields from hasil lomba page format
+  noPendaftaran?: string;
+  nama?: string;
+  cabor?: string;
+  nilai?: number;
+  waktu_pengerjaan?: string;
+  // Added fields for detailed scoring
+  calculated_score?: number;
+  detail_data?: any;
 }
 
 export default function ExportPage() {
@@ -289,14 +299,14 @@ export default function ExportPage() {
     }
   };
 
-  // Fetch hasil lomba data dynamically
+  // Fetch hasil lomba data dynamically with detailed scoring
   const fetchHasilLombaData = async (): Promise<HasilLombaData[]> => {
     try {
-      let url = `${baseUrl}/api/admin/hasil-lomba`;
+      let url = `${baseUrl}/api/admin/hasil/lomba`;
       
       const params = new URLSearchParams();
       if (selectedCabangLomba) {
-        params.append('cabang_lomba_id', selectedCabangLomba);
+        params.append('lomba_id', selectedCabangLomba);
       }
       if (startDate) {
         params.append('start_date', startDate);
@@ -319,15 +329,77 @@ export default function ExportPage() {
       });
 
       if (!response.ok) {
-        // Return empty array if no results found instead of throwing error
         return [];
       }
 
       const result = await response.json();
-      return result.data || result.hasil || result || [];
+      console.log('Hasil Lomba API Response:', result);
+      const hasilLombaList = result.data || result.hasil || result || [];
+      
+      // Fetch detailed data for each peserta to calculate accurate score
+      const detailedHasilData = await Promise.all(
+        hasilLombaList.map(async (hasil: any) => {
+          try {
+            // Get detailed peserta data using same endpoint as dashboard peserta
+            const detailResponse = await fetch(`${baseUrl}/api/admin/hasil/peserta/${hasil.peserta_id || hasil.id}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              credentials: 'include'
+            });
+
+            if (detailResponse.ok) {
+              const detailResult = await detailResponse.json();
+              if (detailResult.success && detailResult.data) {
+                const detailData = detailResult.data;
+                
+                // Calculate total score using same logic as dashboard peserta
+                const jawabanPG = detailData.jawaban_pg || [];
+                const jawabanEsai = detailData.jawaban_essay || [];
+                const jawabanSingkat = detailData.jawaban_isian_singkat || [];
+                const statistik = detailData.statistik || {};
+
+                // PG Score: count correct answers
+                const pgBenar = statistik.jawaban_pg_benar || 0;
+                
+                // Essay Score: sum of actual scores
+                const totalNilaiEsai = jawabanEsai.reduce((acc: number, j: any) => acc + (j.score || 0), 0);
+                
+                // Isian Singkat Score: sum of actual scores  
+                const totalNilaiSingkat = jawabanSingkat.reduce((acc: number, j: any) => acc + (j.score || 0), 0);
+                
+                // Total score = PG + Essay + Isian (same as dashboard peserta)
+                const calculatedTotalScore = pgBenar + totalNilaiEsai + totalNilaiSingkat;
+                
+                console.log('Score calculation for', detailData.peserta?.nama_lengkap, ':', {
+                  pgBenar,
+                  totalNilaiEsai,
+                  totalNilaiSingkat,
+                  calculatedTotalScore
+                });
+
+                // Merge with original hasil data and add calculated score
+                return {
+                  ...hasil,
+                  calculated_score: calculatedTotalScore,
+                  detail_data: detailData
+                };
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to fetch detail for peserta', hasil.peserta_id || hasil.id, ':', error);
+          }
+          
+          // Return original data if detail fetch failed
+          return hasil;
+        })
+      );
+      
+      return detailedHasilData;
     } catch (error) {
       console.error('Error fetching hasil lomba data:', error);
-      // Return empty array instead of throwing error for hasil lomba
       return [];
     }
   };
@@ -439,6 +511,11 @@ export default function ExportPage() {
       return;
     }
 
+    if (selected.hasil_lomba && !selectedCabangLomba) {
+      toast.error('Silakan pilih cabang lomba untuk export hasil lomba');
+      return;
+    }
+
     setIsExporting(true);
     let exportCount = 0;
     let totalExports = (selected.peserta ? 1 : 0) + (selected.soal ? 1 : 0) + (selected.hasil_lomba ? 1 : 0);
@@ -528,25 +605,38 @@ export default function ExportPage() {
           if (hasilData.length === 0) {
             toast.warning('Tidak ada hasil lomba yang ditemukan');
           } else {
-            const headers = ['No', 'Nama Peserta', 'Asal Sekolah', 'Cabang Lomba', 'Total Score', 'Ranking', 'Status Ujian', 'Waktu Selesai'];
-            const processedData = hasilData.map((hasil: HasilLombaData, index: number) => ({
-              no: index + 1,
-              nama_peserta: hasil.nama_peserta || hasil.peserta?.nama || '',
-              asal_sekolah: hasil.asal_sekolah || hasil.peserta?.asal_sekolah || '',
-              cabang_lomba: hasil.cabang_lomba || hasil.peserta?.cabang_lomba?.nama_lomba || '',
-              total_score: hasil.total_score || '0',
-              ranking: hasil.ranking || index + 1,
-              status_ujian: hasil.status_ujian || '',
-              waktu_selesai: hasil.waktu_selesai ? new Date(hasil.waktu_selesai).toLocaleString('id-ID') : ''
-            }));
+            const headers = ['No', 'Nama Peserta', 'Cabang Lomba', 'Nomor Pendaftaran', 'Asal Sekolah/Institusi', 'Skor Akhir'];
+            const processedData = hasilData.map((hasil: HasilLombaData, index: number) => {
+              // Use calculated_score if available (from detailed API), otherwise fallback to existing fields
+              const finalScore = hasil.calculated_score !== undefined ? 
+                hasil.calculated_score : 
+                (hasil.nilai || hasil.total_score || 0);
+              
+              console.log(`Score for ${hasil.nama || hasil.nama_peserta}:`, {
+                calculated_score: hasil.calculated_score,
+                fallback_nilai: hasil.nilai,
+                fallback_total_score: hasil.total_score,
+                final_score: finalScore
+              });
 
+              return {
+                no: index + 1,
+                nama_peserta: hasil.nama || hasil.nama_peserta || hasil.peserta?.nama || '',
+                cabang_lomba: hasil.cabor || hasil.cabang_lomba || hasil.peserta?.cabang_lomba?.nama_lomba || '',
+                nomor_pendaftaran: hasil.noPendaftaran || hasil.peserta?.nomor_pendaftaran || '',
+                'asal_sekolah/institusi': hasil.asal_sekolah || hasil.peserta?.asal_sekolah || '',
+                skor_akhir: finalScore
+              };
+            });
+
+            const cabangLomba = cabangLombaList.find((cl: CabangLomba) => cl.id.toString() === selectedCabangLomba);
             const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `hasil_lomba_${timestamp}`;
+            const filename = `hasil_lomba_${cabangLomba?.nama_lomba?.replace(/\s+/g, '_').toLowerCase() || 'unknown'}_${timestamp}`;
 
             if (fileFormat === 'csv') {
               exportToCSV(processedData, filename, headers);
             } else {
-              exportToPDF(processedData, filename, headers, 'Hasil Lomba');
+              exportToPDF(processedData, filename, headers, `Hasil Lomba - ${cabangLomba?.nama_lomba || 'Unknown'}`);
             }
             exportCount++;
             toast.success(`Data hasil lomba berhasil diekspor (${processedData.length} record)`);
@@ -639,8 +729,8 @@ export default function ExportPage() {
                     onChange={(e) => {
                       const isChecked = e.target.checked;
                       setSelected((s) => ({ ...s, soal: isChecked }));
-                      // Reset cabang lomba selection jika soal di-uncheck
-                      if (!isChecked) {
+                      // Reset cabang lomba selection jika soal dan hasil lomba keduanya di-uncheck
+                      if (!isChecked && !selected.hasil_lomba) {
                         setSelectedCabangLomba("");
                       }
                     }}
@@ -662,9 +752,14 @@ export default function ExportPage() {
                   <input
                     type="checkbox"
                     checked={selected.hasil_lomba}
-                    onChange={(e) =>
-                      setSelected((s) => ({ ...s, hasil_lomba: e.target.checked }))
-                    }
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setSelected((s) => ({ ...s, hasil_lomba: isChecked }));
+                      // Reset cabang lomba selection jika hasil lomba dan soal keduanya di-uncheck
+                      if (!isChecked && !selected.soal) {
+                        setSelectedCabangLomba("");
+                      }
+                    }}
                     className="w-5 h-5 rounded border-gray-300 text-[#6C63FF] focus:ring-[#6C63FF]"
                   />
                   <div className="flex gap-2 items-center">
@@ -673,7 +768,7 @@ export default function ExportPage() {
                   </div>
                 </div>
                 <p className="mt-2 text-sm text-gray-600">
-                  Tabel hasil lomba menampilkan rekapitulasi lengkap dari seluruh peserta yang telah mengikuti kompetisi. Setiap entri dalam tabel memuat informasi penting seperti nama peserta, nomor pendaftaran, asal sekolah atau institusi, serta skor akhir yang diperoleh.
+                  Tabel hasil lomba menampilkan rekapitulasi lengkap dari seluruh peserta yang telah mengikuti kompetisi. Setiap entri dalam tabel memuat informasi penting seperti nama peserta, cabang lomba, nomor pendaftaran, asal sekolah/institusi, dan skor akhir berdasarkan cabang lomba yang dipilih.
                 </p>
               </div>
             </div>
@@ -698,8 +793,8 @@ export default function ExportPage() {
               </select>
             </div>
 
-            {/* Cabang Lomba Selection - Hanya muncul jika Soal dipilih */}
-            {selected.soal && (
+            {/* Cabang Lomba Selection - Hanya muncul jika Soal atau Hasil Lomba dipilih */}
+            {(selected.soal || selected.hasil_lomba) && (
               <div className="mb-6 transition-all duration-300 ease-in-out">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cabang Lomba
@@ -721,12 +816,17 @@ export default function ExportPage() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  *Wajib dipilih untuk export soal
+                  {selected.soal && selected.hasil_lomba 
+                    ? '*Wajib dipilih untuk export soal dan hasil lomba'
+                    : selected.soal 
+                    ? '*Wajib dipilih untuk export soal'
+                    : '*Wajib dipilih untuk export hasil lomba'
+                  }
                 </p>
               </div>
             )}
 
-            {/* Date Range */}
+            {/* Date Range
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Rentang Waktu
@@ -750,7 +850,7 @@ export default function ExportPage() {
               <p className="text-xs text-gray-500 mt-1">
                 Kosongkan untuk mengekspor semua data
               </p>
-            </div>
+            </div> */}
 
             {/* Selected Tables Info */}
             <div className="mb-6">
@@ -793,7 +893,7 @@ export default function ExportPage() {
                   <ul className="space-y-1">
                     <li><strong>Data Peserta:</strong> Nama lengkap, nomor pendaftaran, asal sekolah</li>
                     <li><strong>Data Soal:</strong> Pertanyaan (PG/Essay/Isian), opsi jawaban, kunci jawaban berdasarkan cabang lomba</li>
-                    <li><strong>Hasil Lomba:</strong> Score, ranking, status ujian peserta</li>
+                    <li><strong>Hasil Lomba:</strong> Nama peserta, cabang lomba, nomor pendaftaran, asal sekolah/institusi, skor akhir berdasarkan cabang lomba</li>
                     <li><strong>Format:</strong> {fileFormat.toUpperCase()} - {fileFormat === 'csv' ? 'Mudah dibuka di Excel' : 'Dokumen siap cetak'}</li>
                   </ul>
                 </div>
@@ -803,7 +903,7 @@ export default function ExportPage() {
             {/* Export Button */}
             <Button
               onClick={handleExport}
-              disabled={isExporting || Object.values(selected).every(v => !v) || (selected.soal && !selectedCabangLomba)}
+              disabled={isExporting || Object.values(selected).every(v => !v) || ((selected.soal || selected.hasil_lomba) && !selectedCabangLomba)}
               className="w-full bg-[#2ECC8B] hover:bg-[#27ae60] text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
             >
@@ -827,8 +927,8 @@ export default function ExportPage() {
                 <p>• Format: {fileFormat.toUpperCase()}</p>
                 <p>• Jumlah tabel: {Object.values(selected).filter(v => v).length}</p>
                 <p>• Status database: {apiStatus === 'online' ? 'Terhubung' : 'Offline'}</p>
-                {selected.soal && !selectedCabangLomba && (
-                  <p className="text-red-600 mt-2">⚠️ Pilih cabang lomba untuk export soal</p>
+                {((selected.soal || selected.hasil_lomba) && !selectedCabangLomba) && (
+                  <p className="text-red-600 mt-2">⚠️ Pilih cabang lomba untuk export {selected.soal && selected.hasil_lomba ? 'soal dan hasil lomba' : selected.soal ? 'soal' : 'hasil lomba'}</p>
                 )}
               </div>
             )}
