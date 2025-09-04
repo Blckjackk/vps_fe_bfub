@@ -33,7 +33,7 @@
 'use client';
 
 import StatCard from '@/components/dashboard-admin/StatCard';
-import { Users, LayoutGrid, Wifi, Trophy, Clock, CheckCircle2, UserCheck, FileText, Activity } from 'lucide-react';
+import { Users, LayoutGrid, Trophy, Clock, CheckCircle2, FileText } from 'lucide-react';
 import { useState, useEffect, useRef} from 'react';
 import { withAuth } from '@/lib/auth';
 import { toast, Toaster } from 'sonner';
@@ -43,21 +43,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface DashboardStats  {
   total_peserta: number;
   total_lomba: number;
-  peserta_online: number;
   peserta_selesai: number;
   peserta_belum_mulai: number;
   token_aktif: number;
-  token_terpakai: number;
   peserta_sedang_ujian: number;
-  total_pendaftaran: number;
-  rata_rata_nilai: number;
 }
 
 interface LombaInfo {
   id: number;
   nama_lomba: string;
   total_peserta: number;
-  peserta_online: number;
   status: 'aktif' | 'nonaktif' | 'selesai';
 }
 
@@ -71,30 +66,16 @@ interface OnlinePeserta {
   duration_online: string;
 }
 
-interface RecentActivity {
-  id: number;
-  activity: string;
-  user: string;
-  timestamp: string;
-  type: 'login' | 'logout' | 'ujian_mulai' | 'ujian_selesai' | 'pendaftaran';
-}
-
 function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     total_peserta: 0,
     total_lomba: 0,
-    peserta_online: 0,
     peserta_selesai: 0,
     peserta_belum_mulai: 0,
     token_aktif: 0,
-    token_terpakai: 0,
-    peserta_sedang_ujian: 0,
-    total_pendaftaran: 0,
-    rata_rata_nilai: 0
+    peserta_sedang_ujian: 0
   });
   const [lombaInfo, setLombaInfo] = useState<LombaInfo[]>([]);
-  const [onlinePeserta, setOnlinePeserta] = useState<OnlinePeserta[]>([]);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const toastShownRef = useRef(false);
@@ -123,10 +104,6 @@ function AdminDashboardPage() {
       console.log('=== DASHBOARD DEBUG INFO ===');
       console.log('API_URL:', API_URL);
       console.log('Token available:', !!token);
-      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
-      
-      // Test API connectivity first
-      console.log('Testing API connectivity...');
       
       // Fetch data dari endpoints yang SUDAH ADA dan WORKING
       const lombaUrl = `${API_URL}/api/lomba`;
@@ -136,7 +113,6 @@ function AdminDashboardPage() {
       console.log('Fetching from:', pesertaUrl);
       
       const [lombaRes, pesertaRes] = await Promise.all([
-        // Endpoint untuk cabang lomba yang sudah ada
         fetch(lombaUrl, {
           headers: {
             'Content-Type': 'application/json',
@@ -146,7 +122,6 @@ function AdminDashboardPage() {
           console.error('Error fetching lomba:', err);
           return { ok: false, status: 500, error: err.message };
         }),
-        // Endpoint untuk peserta yang sudah ada
         fetch(pesertaUrl, {
           headers: {
             'Content-Type': 'application/json',
@@ -164,22 +139,18 @@ function AdminDashboardPage() {
       let realStats = {
         total_peserta: 0,
         total_lomba: 0,
-        peserta_online: Math.floor(Math.random() * 30) + 10, // Mock online count
         peserta_selesai: 0,
         peserta_belum_mulai: 0,
-        token_aktif: 15,
-        token_terpakai: 30,
-        peserta_sedang_ujian: Math.floor(Math.random() * 15) + 5,
-        total_pendaftaran: 0,
-        rata_rata_nilai: 0
+        token_aktif: 0,
+        peserta_sedang_ujian: 0
       };
 
       let realLombaInfo: LombaInfo[] = [];
 
-      // Process lomba data (cabang lomba)
+      // Process lomba data (cabang lomba) - DATA REAL dari database
       if (lombaRes.ok && 'json' in lombaRes) {
         const lombaData = await lombaRes.json();
-        console.log('Lomba data:', lombaData);
+        console.log('Lomba data dari database:', lombaData);
         if (lombaData.success && lombaData.data) {
           const lombaList = Array.isArray(lombaData.data) ? lombaData.data : [lombaData.data];
           realStats.total_lomba = lombaList.length;
@@ -187,252 +158,101 @@ function AdminDashboardPage() {
           realLombaInfo = lombaList.map((lomba: any, index: number) => ({
             id: lomba.id || index + 1,
             nama_lomba: lomba.nama_lomba || lomba.nama || `Lomba ${index + 1}`,
-            total_peserta: Math.floor(Math.random() * 30) + 15, // Mock data
-            peserta_online: Math.floor(Math.random() * 8) + 2,
+            total_peserta: 0, // Akan dihitung dari data peserta real
             status: (lomba.status === 'aktif' || lomba.is_active) ? 'aktif' : 'nonaktif' as const
           }));
         }
       } else {
-        console.log('Lomba API failed, using fallback');
+        console.log('Lomba API failed');
+        toast.error('Gagal mengambil data lomba dari database');
       }
 
-      // Process peserta data
+      // Process peserta data - DATA REAL dari table peserta
       if (pesertaRes.ok && 'json' in pesertaRes) {
         const pesertaData = await pesertaRes.json();
-        console.log('Peserta data:', pesertaData);
+        console.log('Peserta data dari database:', pesertaData);
         if (pesertaData.success && pesertaData.data) {
           if (Array.isArray(pesertaData.data)) {
+            // HITUNG REAL dari database
             realStats.total_peserta = pesertaData.data.length;
-            realStats.total_pendaftaran = pesertaData.data.length;
             
-            // Analisis status peserta dari data real - cek berbagai field yang mungkin ada
+            // Hitung peserta selesai dari status_ujian = 'selesai' - DATA REAL
             const selesai = pesertaData.data.filter((p: any) => 
-              p.status_ujian === 'selesai' || 
-              p.ujian_selesai === true || 
-              p.status === 'selesai' ||
-              p.hasil_ujian !== null
+              p.status_ujian === 'selesai'
             ).length;
             
+            // Hitung peserta sedang ujian dari status_ujian = 'sedang_ujian' - DATA REAL
             const sedangUjian = pesertaData.data.filter((p: any) => 
-              p.status_ujian === 'sedang_ujian' || 
-              p.status === 'sedang_ujian' || 
-              p.ujian_berlangsung === true ||
-              (p.waktu_mulai && !p.waktu_selesai)
+              p.status_ujian === 'sedang_ujian'
             ).length;
 
+            // Hitung peserta belum mulai dari status_ujian = 'belum_mulai' - DATA REAL
             const belumMulai = pesertaData.data.filter((p: any) => 
-              p.status_ujian === 'belum_mulai' || 
-              p.ujian_selesai === false || 
-              p.status === 'belum_mulai' ||
-              (!p.waktu_mulai && !p.hasil_ujian)
+              p.status_ujian === 'belum_mulai' || !p.status_ujian
             ).length;
             
             realStats.peserta_selesai = selesai;
             realStats.peserta_sedang_ujian = sedangUjian;
-            realStats.peserta_belum_mulai = belumMulai || (realStats.total_peserta - selesai - sedangUjian);
+            realStats.peserta_belum_mulai = belumMulai;
 
-            // Simulasi peserta online berdasarkan data real dengan logic yang masuk akal
-            const potentialOnline = pesertaData.data
-              .filter((p: any) => {
-                // Prioritas: yang sedang ujian pasti online
-                if (p.status_ujian === 'sedang_ujian' || p.status === 'sedang_ujian') return true;
-                
-                // Cek jika ada timestamp aktivitas terbaru
-                const recentFields = ['last_login', 'updated_at', 'last_activity', 'login_time'];
-                for (const field of recentFields) {
-                  if (p[field]) {
-                    const lastActivity = new Date(p[field]);
-                    const now = new Date();
-                    const diffMinutes = (now.getTime() - lastActivity.getTime()) / (1000 * 60);
-                    if (diffMinutes <= 30) return true; // Online jika aktivitas dalam 30 menit
-                  }
-                }
-                
-                // Random untuk simulasi (berdasarkan ID untuk konsistensi)
-                return (p.id % 5) === 0; // 20% dari peserta dianggap online
-              });
-
-            realStats.peserta_online = potentialOnline.length;
-
-            // Buat list peserta online dari data real
-            const realOnlinePeserta = potentialOnline
-              .slice(0, 10) // Ambil 10 teratas
-              .map((p: any, index: number) => {
-                const getStatusUjian = () => {
-                  if (p.status_ujian === 'sedang_ujian' || p.status === 'sedang_ujian') return 'sedang_ujian';
-                  if (p.status_ujian === 'selesai' || p.status === 'selesai' || p.hasil_ujian) return 'selesai';
-                  return 'belum_mulai';
-                };
-
-                const getLastActivity = () => {
-                  const activityFields = ['last_activity', 'last_login', 'updated_at'];
-                  for (const field of activityFields) {
-                    if (p[field]) {
-                      const time = new Date(p[field]);
-                      const now = new Date();
-                      const diff = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
-                      if (diff < 60) return `${diff} menit yang lalu`;
-                      if (diff < 1440) return `${Math.floor(diff/60)} jam yang lalu`;
-                      return `${Math.floor(diff/1440)} hari yang lalu`;
-                    }
-                  }
-                  return `${Math.floor(Math.random() * 10) + 1} menit yang lalu`;
-                };
-
-                const getDurationOnline = () => {
-                  if (p.login_time) {
-                    const login = new Date(p.login_time);
-                    const now = new Date();
-                    const diff = Math.floor((now.getTime() - login.getTime()) / (1000 * 60));
-                    if (diff < 60) return `${diff} menit`;
-                    if (diff < 1440) return `${Math.floor(diff/60)} jam ${diff%60} menit`;
-                    return `${Math.floor(diff/1440)} hari`;
-                  }
-                  return `${Math.floor(Math.random() * 60) + 5} menit`;
-                };
-
-                return {
-                  id: p.id || index + 1,
-                  nama_lengkap: p.nama_lengkap || p.nama || `Peserta ${index + 1}`,
-                  email: p.email || `peserta${index + 1}@example.com`,
-                  status_ujian: getStatusUjian(),
-                  lomba: p.nama_lomba || realLombaInfo[index % Math.max(realLombaInfo.length, 1)]?.nama_lomba || 'Unknown',
-                  last_activity: getLastActivity(),
-                  duration_online: getDurationOnline()
-                };
-              });
-
-            setOnlinePeserta(realOnlinePeserta);
+            // Update total peserta per lomba - DATA REAL
+            realLombaInfo = realLombaInfo.map(lomba => {
+              const pesertaLomba = pesertaData.data.filter((p: any) => 
+                p.cabang_lomba_id === lomba.id
+              ).length;
+              
+              return {
+                ...lomba,
+                total_peserta: pesertaLomba
+              };
+            });
             
           } else if (pesertaData.pagination) {
             realStats.total_peserta = pesertaData.pagination.total || 0;
-            realStats.total_pendaftaran = pesertaData.pagination.total || 0;
-            realStats.peserta_selesai = Math.floor(realStats.total_peserta * 0.3);
-            realStats.peserta_sedang_ujian = Math.floor(realStats.total_peserta * 0.1);
-            realStats.peserta_belum_mulai = Math.floor(realStats.total_peserta * 0.6);
-            realStats.peserta_online = Math.floor(realStats.total_peserta * 0.2);
           }
         }
       } else {
-        console.log('Peserta API failed, using fallback');
+        console.log('Peserta API failed');
+        toast.error('Gagal mengambil data peserta dari database');
       }
 
-      // Jika tidak ada data real, gunakan mock data
-      if (realStats.total_peserta === 0 && realStats.total_lomba === 0) {
-        console.log('No real data available, using complete mock data');
+      // Fetch token aktif dari endpoint yang ada
+      try {
+        const tokenRes = await fetch(`${API_URL}/api/admin/token`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
         
-        realStats = {
-          total_peserta: 150,
-          total_lomba: 6,
-          peserta_online: Math.floor(Math.random() * 30) + 10,
-          peserta_selesai: 45,
-          peserta_belum_mulai: 80,
-          token_aktif: 15,
-          token_terpakai: 30,
-          peserta_sedang_ujian: Math.floor(Math.random() * 15) + 5,
-          total_pendaftaran: 150,
-          rata_rata_nilai: 78.5
-        };
-
-        realLombaInfo = [
-          { id: 1, nama_lomba: "OSA", total_peserta: 25, peserta_online: Math.floor(Math.random() * 8) + 2, status: "aktif" as const },
-          { id: 2, nama_lomba: "OBI", total_peserta: 30, peserta_online: Math.floor(Math.random() * 10) + 3, status: "aktif" as const },
-          { id: 3, nama_lomba: "LCTB", total_peserta: 28, peserta_online: Math.floor(Math.random() * 6) + 1, status: "aktif" as const },
-          { id: 4, nama_lomba: "LKTIN", total_peserta: 22, peserta_online: Math.floor(Math.random() * 4) + 1, status: "aktif" as const },
-          { id: 5, nama_lomba: "Microteaching", total_peserta: 20, peserta_online: Math.floor(Math.random() * 5) + 2, status: "aktif" as const },
-          { id: 6, nama_lomba: "OBN", total_peserta: 25, peserta_online: Math.floor(Math.random() * 7) + 1, status: "aktif" as const }
-        ];
-
-        // Mock data untuk peserta online saat fallback
-        const mockOnlinePeserta = [
-          {
-            id: 1,
-            nama_lengkap: "Ahmad Rizky Pratama",
-            email: "ahmad.rizky@example.com",
-            status_ujian: "sedang_ujian",
-            lomba: "OSA",
-            last_activity: "2 menit yang lalu",
-            duration_online: "15 menit"
-          },
-          {
-            id: 2,
-            nama_lengkap: "Siti Nurhaliza",
-            email: "siti.nur@example.com",
-            status_ujian: "belum_mulai",
-            lomba: "OBI",
-            last_activity: "1 menit yang lalu",
-            duration_online: "8 menit"
-          },
-          {
-            id: 3,
-            nama_lengkap: "Budi Santoso",
-            email: "budi.santoso@example.com",
-            status_ujian: "selesai",
-            lomba: "LCTB",
-            last_activity: "5 menit yang lalu",
-            duration_online: "45 menit"
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          if (tokenData.success && Array.isArray(tokenData.data)) {
+            // Hitung token yang aktif dari database
+            realStats.token_aktif = tokenData.data.filter((t: any) => 
+              t.status_token === 'aktif' || t.is_active === true
+            ).length;
           }
-        ];
-
-        setOnlinePeserta(mockOnlinePeserta);
-        toast.info('Backend tidak tersedia - Menggunakan data simulasi');
-      } else {
-        toast.success('Data berhasil dimuat dari backend');
-      }
-
-      // Generate recent activities berdasarkan data yang ada
-      const mockRecentActivities = [
-        {
-          id: 1,
-          activity: "Login ke sistem",
-          user: onlinePeserta[0]?.nama_lengkap || "Ahmad Rizky Pratama",
-          timestamp: "2 menit yang lalu",
-          type: "login" as const
-        },
-        {
-          id: 2,
-          activity: `Memulai ujian ${realLombaInfo[0]?.nama_lomba || "OSA"}`,
-          user: onlinePeserta[1]?.nama_lengkap || "Siti Nurhaliza",
-          timestamp: "5 menit yang lalu",
-          type: "ujian_mulai" as const
-        },
-        {
-          id: 3,
-          activity: `Selesai ujian ${realLombaInfo[1]?.nama_lomba || "OBI"}`,
-          user: "Budi Santoso",
-          timestamp: "8 menit yang lalu",
-          type: "ujian_selesai" as const
-        },
-        {
-          id: 4,
-          activity: `Mendaftar lomba ${realLombaInfo[2]?.nama_lomba || "LCTB"}`,
-          user: "Diana Putri",
-          timestamp: "12 menit yang lalu",
-          type: "pendaftaran" as const
         }
-      ];
+      } catch (error) {
+        console.log('Token endpoint tidak tersedia');
+      }
 
       setStats(realStats);
       setLombaInfo(realLombaInfo);
-      setRecentActivities(mockRecentActivities);
       setLastUpdate(new Date().toLocaleTimeString('id-ID'));
+      
+      if (realStats.total_peserta > 0 || realStats.total_lomba > 0) {
+        toast.success('Data berhasil dimuat dari database');
+      } else {
+        toast.info('Tidak ada data di database');
+      }
       
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Gagal memuat data dashboard');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'login': return <UserCheck className="w-4 h-4 text-green-500" />;
-      case 'logout': return <UserCheck className="w-4 h-4 text-red-500" />;
-      case 'ujian_mulai': return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'ujian_selesai': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case 'pendaftaran': return <FileText className="w-4 h-4 text-purple-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -446,7 +266,7 @@ function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Main Stats */}
+      {/* Main Stats - HANYA DATA REAL */}
       <section className="mt-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Statistik Utama</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -463,10 +283,10 @@ function AdminDashboardPage() {
             iconColor="text-blue-500"
           />
           <StatCard
-            Icon={Wifi}
-            title="Peserta Online"
-            value={loading ? 'Loading...' : stats.peserta_online}
-            iconColor="text-green-500"
+            Icon={CheckCircle2}
+            title="Ujian Selesai"
+            value={loading ? 'Loading...' : stats.peserta_selesai}
+            iconColor="text-green-600"
           />
           <StatCard
             Icon={Clock}
@@ -477,21 +297,15 @@ function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* Additional Stats */}
+      {/* Additional Stats - HANYA DATA REAL */}
       <section className="mt-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Statistik Tambahan</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            Icon={CheckCircle2}
-            title="Ujian Selesai"
-            value={loading ? 'Loading...' : stats.peserta_selesai}
-            iconColor="text-green-600"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard
             Icon={FileText}
-            title="Total Pendaftaran"
-            value={loading ? 'Loading...' : stats.total_pendaftaran.toLocaleString()}
-            iconColor="text-purple-500"
+            title="Belum Mulai"
+            value={loading ? 'Loading...' : stats.peserta_belum_mulai}
+            iconColor="text-blue-500"
           />
           <StatCard
             Icon={Trophy}
@@ -499,17 +313,11 @@ function AdminDashboardPage() {
             value={loading ? 'Loading...' : stats.token_aktif}
             iconColor="text-yellow-500"
           />
-          <StatCard
-            Icon={Activity}
-            title="Rata-rata Nilai"
-            value={loading ? 'Loading...' : stats.rata_rata_nilai ? `${stats.rata_rata_nilai.toFixed(1)}` : '0.0'}
-            iconColor="text-indigo-500"
-          />
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        {/* Lomba Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
+        {/* Lomba Information - DATA REAL */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -527,7 +335,7 @@ function AdminDashboardPage() {
                     <div>
                       <h3 className="font-medium">{lomba.nama_lomba}</h3>
                       <p className="text-sm text-gray-600">
-                        {lomba.total_peserta} peserta • {lomba.peserta_online} online
+                        {lomba.total_peserta} peserta terdaftar
                       </p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -545,75 +353,7 @@ function AdminDashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Online Peserta */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wifi className="w-5 h-5 text-green-500" />
-              Peserta Online ({onlinePeserta.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {loading ? (
-                <p>Loading...</p>
-              ) : onlinePeserta.length > 0 ? (
-                onlinePeserta.map((peserta) => (
-                  <div key={peserta.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <h3 className="font-medium text-sm">{peserta.nama_lengkap}</h3>
-                      <p className="text-xs text-gray-600">{peserta.lomba}</p>
-                      <p className="text-xs text-green-600">{peserta.duration_online}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        peserta.status_ujian === 'sedang_ujian' ? 'bg-orange-100 text-orange-800' :
-                        peserta.status_ujian === 'selesai' ? 'bg-green-100 text-green-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {peserta.status_ujian}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500">Tidak ada peserta online</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
-
-      {/* Recent Activities */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Aktivitas Terbaru
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {loading ? (
-              <p>Loading...</p>
-            ) : recentActivities.length > 0 ? (
-              recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  {getActivityIcon(activity.type)}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.activity}</p>
-                    <p className="text-xs text-gray-600">oleh {activity.user}</p>
-                  </div>
-                  <p className="text-xs text-gray-500">{activity.timestamp}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">Tidak ada aktivitas terbaru</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       <Toaster position="top-right" richColors />
     </div>
