@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth";
 
 const competitions = [
   {
-    name: "Microteaching",
+    name: "Microteaching Azzammmmmm",
     desc: "Untuk mahasiswa/i S1 yang ingin menunjukkan bakat mengajar dan berbagai ilmu secara kreatif.",
     img: "/images/logos/competitions/logo-lomba-Microteaching.png",
   },
