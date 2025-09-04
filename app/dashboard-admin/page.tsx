@@ -120,23 +120,46 @@ function AdminDashboardPage() {
     try {
       const token = localStorage.getItem('session_token');
       
-      // Fetch data dari endpoints yang sudah ada
+      console.log('=== DASHBOARD DEBUG INFO ===');
+      console.log('API_URL:', API_URL);
+      console.log('Token available:', !!token);
+      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+      
+      // Test API connectivity first
+      console.log('Testing API connectivity...');
+      
+      // Fetch data dari endpoints yang SUDAH ADA dan WORKING
+      const lombaUrl = `${API_URL}/api/lomba`;
+      const pesertaUrl = `${API_URL}/api/admin/peserta`;
+      
+      console.log('Fetching from:', lombaUrl);
+      console.log('Fetching from:', pesertaUrl);
+      
       const [lombaRes, pesertaRes] = await Promise.all([
         // Endpoint untuk cabang lomba yang sudah ada
-        fetch(`${API_URL}/api/lomba`, {
+        fetch(lombaUrl, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           }
+        }).catch(err => {
+          console.error('Error fetching lomba:', err);
+          return { ok: false, status: 500, error: err.message };
         }),
         // Endpoint untuk peserta yang sudah ada
-        fetch(`${API_URL}/api/admin/peserta`, {
+        fetch(pesertaUrl, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           }
+        }).catch(err => {
+          console.error('Error fetching peserta:', err);
+          return { ok: false, status: 500, error: err.message };
         })
       ]);
+
+      console.log('Lomba response:', { ok: lombaRes.ok, status: lombaRes.status });
+      console.log('Peserta response:', { ok: pesertaRes.ok, status: pesertaRes.status });
 
       let realStats = {
         total_peserta: 0,
@@ -154,8 +177,9 @@ function AdminDashboardPage() {
       let realLombaInfo: LombaInfo[] = [];
 
       // Process lomba data (cabang lomba)
-      if (lombaRes.ok) {
+      if (lombaRes.ok && 'json' in lombaRes) {
         const lombaData = await lombaRes.json();
+        console.log('Lomba data:', lombaData);
         if (lombaData.success && lombaData.data) {
           const lombaList = Array.isArray(lombaData.data) ? lombaData.data : [lombaData.data];
           realStats.total_lomba = lombaList.length;
@@ -168,11 +192,14 @@ function AdminDashboardPage() {
             status: (lomba.status === 'aktif' || lomba.is_active) ? 'aktif' : 'nonaktif' as const
           }));
         }
+      } else {
+        console.log('Lomba API failed, using fallback');
       }
 
       // Process peserta data
-      if (pesertaRes.ok) {
+      if (pesertaRes.ok && 'json' in pesertaRes) {
         const pesertaData = await pesertaRes.json();
+        console.log('Peserta data:', pesertaData);
         if (pesertaData.success && pesertaData.data) {
           if (Array.isArray(pesertaData.data)) {
             realStats.total_peserta = pesertaData.data.length;
@@ -286,11 +313,13 @@ function AdminDashboardPage() {
             realStats.peserta_online = Math.floor(realStats.total_peserta * 0.2);
           }
         }
+      } else {
+        console.log('Peserta API failed, using fallback');
       }
 
-      // Fallback ke mock data jika API gagal
-      if (!lombaRes.ok && !pesertaRes.ok) {
-        console.log('API endpoints not available, using mock data');
+      // Jika tidak ada data real, gunakan mock data
+      if (realStats.total_peserta === 0 && realStats.total_lomba === 0) {
+        console.log('No real data available, using complete mock data');
         
         realStats = {
           total_peserta: 150,
@@ -321,7 +350,7 @@ function AdminDashboardPage() {
             nama_lengkap: "Ahmad Rizky Pratama",
             email: "ahmad.rizky@example.com",
             status_ujian: "sedang_ujian",
-            lomba: realLombaInfo[0]?.nama_lomba || "OSA",
+            lomba: "OSA",
             last_activity: "2 menit yang lalu",
             duration_online: "15 menit"
           },
@@ -330,16 +359,25 @@ function AdminDashboardPage() {
             nama_lengkap: "Siti Nurhaliza",
             email: "siti.nur@example.com",
             status_ujian: "belum_mulai",
-            lomba: realLombaInfo[1]?.nama_lomba || "OBI",
+            lomba: "OBI",
             last_activity: "1 menit yang lalu",
             duration_online: "8 menit"
+          },
+          {
+            id: 3,
+            nama_lengkap: "Budi Santoso",
+            email: "budi.santoso@example.com",
+            status_ujian: "selesai",
+            lomba: "LCTB",
+            last_activity: "5 menit yang lalu",
+            duration_online: "45 menit"
           }
         ];
 
         setOnlinePeserta(mockOnlinePeserta);
-        toast.info('Menggunakan data simulasi - Backend belum lengkap');
+        toast.info('Backend tidak tersedia - Menggunakan data simulasi');
       } else {
-        toast.success('Data berhasil dimuat dari database');
+        toast.success('Data berhasil dimuat dari backend');
       }
 
       // Generate recent activities berdasarkan data yang ada
