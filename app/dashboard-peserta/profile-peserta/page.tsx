@@ -223,18 +223,6 @@ export default function ProfilePesertaPage() {
           )}
         </div>
 
-        {/* Tombol Edit Profil (opsional untuk future enhancement) */}
-        <div className="mt-6">
-          <button 
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
-            onClick={() => {
-              // Future: implement edit profile functionality
-              alert("Fitur edit profil akan segera tersedia!");
-            }}
-          >
-            Edit Profil
-          </button>
-        </div>
       </main>
     </div>
   );
