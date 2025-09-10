@@ -80,11 +80,33 @@ export default function ManajemenLombaPage() {
 }, []);
 
 
+  // Function to calculate duration in minutes
+  const calculateDuration = (waktuMulai: string, waktuAkhir: string): string => {
+    if (!waktuMulai || !waktuAkhir) return '-';
+    
+    const startTime = new Date(waktuMulai);
+    const endTime = new Date(waktuAkhir);
+    
+    // Calculate difference in milliseconds
+    const diffMs = endTime.getTime() - startTime.getTime();
+    
+    // Convert to minutes
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return `${diffMinutes} menit`;
+    } else {
+      const hours = Math.floor(diffMinutes / 60);
+      const minutes = diffMinutes % 60;
+      return minutes > 0 ? `${hours} jam ${minutes} menit` : `${hours} jam`;
+    }
+  };
+
   // Convert data untuk kompatibilitas dengan LombaTable yang sudah ada
   const convertedLomba = lombaData.map(item => ({
     id: item.id,
     namaLomba: item.nama_cabang,
-    durasi: '120 menit', // Default duration
+    durasi: calculateDuration(item.waktu_mulai_pengerjaan, item.waktu_akhir_pengerjaan),
     mulai: item.waktu_mulai_pengerjaan ? new Date(item.waktu_mulai_pengerjaan).toLocaleString('id-ID', { 
       year: 'numeric',
       month: '2-digit',
