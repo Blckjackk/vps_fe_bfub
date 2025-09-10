@@ -171,6 +171,11 @@ export default function ExportPage() {
       let url = `${baseUrl}/api/admin/peserta`;
       
       const params = new URLSearchParams();
+      
+      // Add parameters to get ALL records (no pagination limit)
+      params.append('all', 'true');
+      params.append('per_page', '9999');
+      
       if (selectedCabangLomba) {
         params.append('cabang_lomba_id', selectedCabangLomba);
       }
@@ -181,9 +186,7 @@ export default function ExportPage() {
         params.append('end_date', endDate);
       }
       
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
+      url += `?${params.toString()}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -200,7 +203,12 @@ export default function ExportPage() {
 
       const result = await response.json();
       console.log('Peserta API Response:', result); // Debug log
-      return result.data || result.peserta || result || [];
+      console.log('Total peserta received for export:', result.data?.length || 0); // Debug log
+      
+      const pesertaData = result.data || result.peserta || result || [];
+      console.log('Final peserta data count:', pesertaData.length); // Debug log
+      
+      return pesertaData;
     } catch (error) {
       console.error('Error fetching peserta data:', error);
       throw error;
@@ -437,17 +445,47 @@ export default function ExportPage() {
     checkApiStatus();
   }, [baseUrl]);
 
-  // Export data to CSV
+  // Export data to CSV with better formatting
   const exportToCSV = (data: any[], filename: string, headers: string[]) => {
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => headers.map(header => {
+    // Create CSV with better formatting and metadata
+    const csvRows = [
+      // Header information
+      `"BFUB - Data Export Report"`,
+      `"Generated on: ${new Date().toLocaleDateString('id-ID')} ${new Date().toLocaleTimeString('id-ID')}"`,
+      `"Total Records: ${data.length}"`,
+      ''
+    ];
+
+    // Add cabang lomba info if available
+    if (selectedCabangLomba) {
+      const cabangLomba = cabangLombaList.find((cl: CabangLomba) => cl.id.toString() === selectedCabangLomba);
+      if (cabangLomba) {
+        csvRows.push(`"Cabang Lomba: ${cabangLomba.nama_lomba}"`);
+        csvRows.push('');
+      }
+    }
+    
+    // Add table headers
+    csvRows.push(headers.join(','));
+    
+    // Add separator row (visual separator in Excel)
+    csvRows.push(headers.map(() => '""').join(','));
+    
+    // Add data rows with better formatting
+    data.forEach(row => {
+      const rowData = headers.map(header => {
         const key = header.toLowerCase().replace(/ /g, '_');
         const value = row[key] || '';
         return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
+      });
+      csvRows.push(rowData.join(','));
+    });
 
+    // Add footer information
+    csvRows.push('');
+    csvRows.push(`"End of Report - BFUB System"`);
+
+    const csvContent = csvRows.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -459,24 +497,36 @@ export default function ExportPage() {
     document.body.removeChild(link);
   };
 
-  // Export data to PDF
+  // Export data to PDF with custom styling
   const exportToPDF = (data: any[], filename: string, headers: string[], title: string) => {
     const doc = new jsPDF();
     
-    // Add title
-    doc.setFontSize(16);
+    // Add title with custom color
+    doc.setFontSize(18);
+    doc.setTextColor(193, 63, 63); // #C13F3F color
     doc.text(title, 14, 22);
     
-    // Add export date
-    doc.setFontSize(10);
-    doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
+    // Add subtitle
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100); // Gray color
+    doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 14, 32);
     
+    // Add cabang lomba info if available
+    let startY = 40;
     if (selectedCabangLomba) {
       const cabangLomba = cabangLombaList.find((cl: CabangLomba) => cl.id.toString() === selectedCabangLomba);
       if (cabangLomba) {
-        doc.text(`Cabang Lomba: ${cabangLomba.nama_lomba}`, 14, 36);
+        doc.setFontSize(10);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Cabang Lomba: ${cabangLomba.nama_lomba}`, 14, 40);
+        startY = 48;
       }
     }
+
+    // Add separator line
+    doc.setDrawColor(193, 63, 63); // #C13F3F color
+    doc.setLineWidth(0.5);
+    doc.line(14, startY, 200, startY);
 
     // Create table data
     const tableData = data.map(row => 
@@ -487,15 +537,42 @@ export default function ExportPage() {
       })
     );
 
-    // Add table
+    // Add table with custom styling
     autoTable(doc, {
       head: [headers],
       body: tableData,
-      startY: selectedCabangLomba ? 42 : 36,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [33, 150, 243] },
-      margin: { top: 30 }
+      startY: startY + 5,
+      styles: { 
+        fontSize: 9,
+        cellPadding: 3,
+        textColor: [50, 50, 50],
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      headStyles: { 
+        fillColor: [193, 63, 63], // #C13F3F color
+        textColor: [255, 255, 255], // White text
+        fontSize: 10,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      alternateRowStyles: {
+        fillColor: [248, 249, 250] // Light gray for alternate rows
+      },
+      margin: { top: 30, left: 14, right: 14 },
+      tableLineColor: [193, 63, 63],
+      tableLineWidth: 0.1,
     });
+
+    // Add footer
+    const pageCount = (doc as any).getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Halaman ${i} dari ${pageCount}`, 14, (doc as any).internal.pageSize.height - 10);
+      doc.text(`Generated by BFUB System - ${new Date().toLocaleString('id-ID')}`, 14, (doc as any).internal.pageSize.height - 5);
+    }
 
     doc.save(`${filename}.pdf`);
   };
@@ -526,6 +603,8 @@ export default function ExportPage() {
         toast.info('Mengekspor data peserta...');
         try {
           const pesertaData = await fetchPesertaData();
+          console.log('Fetched peserta data for export:', pesertaData.length, 'records'); // Debug log
+          
           const headers = ['No', 'Nama Lengkap', 'Nomor Pendaftaran', 'Asal Sekolah'];
           const processedData = pesertaData.map((peserta: PesertaData, index: number) => ({
             no: index + 1,
@@ -533,6 +612,8 @@ export default function ExportPage() {
             nomor_pendaftaran: peserta.nomor_pendaftaran || '',
             asal_sekolah: peserta.asal_sekolah || ''
           }));
+
+          console.log('Processed data for export:', processedData.length, 'records'); // Debug log
 
           if (processedData.length === 0) {
             toast.warning('Tidak ada data peserta yang ditemukan');
@@ -542,11 +623,11 @@ export default function ExportPage() {
 
             if (fileFormat === 'csv') {
               exportToCSV(processedData, filename, headers);
-            } else {
+            } else if (fileFormat === 'pdf') {
               exportToPDF(processedData, filename, headers, 'Data Peserta');
             }
             exportCount++;
-            toast.success(`Data peserta berhasil diekspor (${processedData.length} record)`);
+            toast.success(`Data peserta berhasil diekspor (${processedData.length} dari total ${pesertaData.length} record)`);
           }
         } catch (error) {
           console.error('Error exporting peserta:', error);
@@ -584,10 +665,9 @@ export default function ExportPage() {
           } else {
             if (fileFormat === 'csv') {
               exportToCSV(processedData, filename, headers);
-            } else {
+            } else if (fileFormat === 'pdf') {
               exportToPDF(processedData, filename, headers, `Soal - ${cabangLomba?.nama_lomba || 'Unknown'}`);
-            }
-            exportCount++;
+            }exportCount++;
             toast.success(`Data soal berhasil diekspor (${processedData.length} soal)`);
           }
         } catch (error) {
@@ -635,7 +715,7 @@ export default function ExportPage() {
 
             if (fileFormat === 'csv') {
               exportToCSV(processedData, filename, headers);
-            } else {
+            } else if (fileFormat === 'pdf') {
               exportToPDF(processedData, filename, headers, `Hasil Lomba - ${cabangLomba?.nama_lomba || 'Unknown'}`);
             }
             exportCount++;
