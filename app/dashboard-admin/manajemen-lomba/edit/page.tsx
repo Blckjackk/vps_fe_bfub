@@ -9,6 +9,21 @@ import { FaArrowLeft } from 'react-icons/fa';
 // API URL dari environment variable
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// Fungsi untuk format text dengan HTML tags yang aman
+const formatText = (text: string): string => {
+  if (!text) return '';
+  
+  // Sanitize untuk keamanan - hanya izinkan tag tertentu
+  let formatted = text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags
+    .replace(/javascript:/gi, '') // Remove javascript: URLs
+    .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
+    .replace(/on\w+='[^']*'/gi, ''); // Remove event handlers
+  
+  return formatted;
+};
+
 // Modal CRUD Tambah Soal
 interface ModalTambahSoalProps {
   open: boolean;
@@ -419,7 +434,12 @@ export default function EditLombaPage() {
                       </div>
 
                       {/* Question Text */}
-                      <p className="text-gray-700 mb-2">{soal.pertanyaan}</p>
+                      <div 
+                        className="text-gray-700 mb-2"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatText(soal.pertanyaan || '') 
+                        }}
+                      />
                       
                       {/* Question Image */}
                       {soal.media_soal && (
@@ -440,7 +460,14 @@ export default function EditLombaPage() {
 
                           return (
                             <div key={option}>
-                              <p><span className="font-medium">{option}.</span> {optionText}</p>
+                              <div>
+                                <span className="font-medium">{option}.</span>{' '}
+                                <span 
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: formatText(optionText || '') 
+                                  }}
+                                />
+                              </div>
                               {/* Show option image if exists */}
                               {optionMedia && (
                                 <div className="mt-1 ml-4">
@@ -509,7 +536,12 @@ export default function EditLombaPage() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700">{soal.pertanyaan_essay}</p>
+                      <div 
+                        className="text-gray-700"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatText(soal.pertanyaan_essay || '') 
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -556,7 +588,12 @@ export default function EditLombaPage() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700 mb-2">{soal.pertanyaan_isian}</p>
+                      <div 
+                        className="text-gray-700 mb-2"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatText(soal.pertanyaan_isian || '') 
+                        }}
+                      />
                       <p className="text-green-600">
                         <span className="font-medium">Jawaban:</span> {soal.jawaban_benar}
                       </p>

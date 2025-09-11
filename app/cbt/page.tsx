@@ -270,6 +270,21 @@ export default function CBTPage() {
     return `${baseUrl}/storage/${path}`;
   };
 
+  // Fungsi untuk format text dengan HTML tags yang aman
+  const formatText = (text: string): string => {
+    if (!text) return '';
+    
+    // Sanitize untuk keamanan - hanya izinkan tag tertentu
+    let formatted = text
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags
+      .replace(/javascript:/gi, '') // Remove javascript: URLs
+      .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
+      .replace(/on\w+='[^']*'/gi, ''); // Remove event handlers
+    
+    return formatted;
+  };
+
   // Check if time is running low (less than 10 minutes)
   const isTimeRunningLow = (): boolean => {
     return timeLeft <= 600; // 10 minutes = 600 seconds
@@ -1655,9 +1670,12 @@ export default function CBTPage() {
                 <div className="bg-white p-6 rounded-lg border border-gray-100">
                   {questions[questionType][currentQuestion - 1] ? (
                     <div className="space-y-4">
-                      <p className="text-gray-800 leading-relaxed">
-                        {questions[questionType][currentQuestion - 1].soal}
-                      </p>
+                      <div 
+                        className="text-gray-800 leading-relaxed"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatText(questions[questionType][currentQuestion - 1].soal || '') 
+                        }}
+                      />
                       {/* Display question image if available */}
                       {questions[questionType][currentQuestion - 1].media_soal && (
                         <div className="flex justify-center">
@@ -1712,9 +1730,12 @@ export default function CBTPage() {
                               {label}
                             </div>
                             <div className="flex-1">
-                              <p className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}>
-                                {pilihan}
-                              </p>
+                              <div 
+                                className={`text-gray-700 ${selectedOption === label ? "text-[#B94A48] font-medium" : ""}`}
+                                dangerouslySetInnerHTML={{ 
+                                  __html: formatText(pilihan || '') 
+                                }}
+                              />
                               {/* Display option image if available */}
                               {optionMedia && (
                                 <div className="mt-2">

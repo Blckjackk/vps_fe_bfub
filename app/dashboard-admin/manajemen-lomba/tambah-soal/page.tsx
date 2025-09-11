@@ -243,8 +243,16 @@ export default function TambahSoalPage() {
                     value={soal}
                     onChange={(e) => setSoal(e.target.value)}
                     className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-                    placeholder="Tuliskan pertanyaan soal di sini..."
+                    placeholder="Tuliskan pertanyaan soal di sini...
+
+Tips format:
+- Untuk italic: <i>teks italic</i>
+- Untuk enter/baris baru: <br>
+- Contoh: Spesies <i>Homo sapiens</i> adalah...<br>Mereka memiliki karakteristik khusus."
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Format yang didukung: &lt;i&gt;teks&lt;/i&gt; untuk <em>italic</em>, &lt;br&gt; untuk baris baru
+                  </p>
                 </div>
 
                 {/* PG: Soal Gambar */}
@@ -285,9 +293,17 @@ export default function TambahSoalPage() {
                   value={soal}
                   onChange={(e) => setSoal(e.target.value)}
                   className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-                  placeholder="Tuliskan pertanyaan essay di sini..."
+                  placeholder="Tuliskan pertanyaan essay di sini...
+
+Tips format:
+- Untuk italic: <i>teks italic</i>
+- Untuk enter/baris baru: <br>
+- Contoh: Jelaskan tentang spesies <i>Homo sapiens</i>.<br><br>Berikan contoh konkret!"
                   required
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Format yang didukung: &lt;i&gt;teks&lt;/i&gt; untuk <em>italic</em>, &lt;br&gt; untuk baris baru
+                </p>
               </div>
             )}
 
@@ -301,9 +317,17 @@ export default function TambahSoalPage() {
                   value={soal}
                   onChange={(e) => setSoal(e.target.value)}
                   className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-                  placeholder="Tuliskan pertanyaan isian singkat di sini..."
+                  placeholder="Tuliskan pertanyaan isian singkat di sini...
+
+Tips format:
+- Untuk italic: <i>teks italic</i>
+- Untuk enter/baris baru: <br>
+- Contoh: Nama spesies <i>Homo sapiens</i> adalah ___<br>Sebutkan ciri khasnya!"
                   required
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Format yang didukung: &lt;i&gt;teks&lt;/i&gt; untuk <em>italic</em>, &lt;br&gt; untuk baris baru
+                </p>
               </div>
             )}
 
@@ -316,26 +340,33 @@ export default function TambahSoalPage() {
                       Opsi {opsi}
                     </label>
                     {formatSoal === 'text' ? (
-                      <textarea
-                        value={
-                          opsi === 'A' ? opsiA :
-                          opsi === 'B' ? opsiB :
-                          opsi === 'C' ? opsiC :
-                          opsi === 'D' ? opsiD :
-                          opsiE
-                        }
-                        onChange={(e) => {
-                          if (opsi === 'A') setOpsiA(e.target.value);
-                          if (opsi === 'B') setOpsiB(e.target.value);
-                          if (opsi === 'C') setOpsiC(e.target.value);
-                          if (opsi === 'D') setOpsiD(e.target.value);
-                          if (opsi === 'E') setOpsiE(e.target.value);
-                        }}
-                        className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        rows={2}
-                        placeholder={`Tuliskan opsi ${opsi} di sini...`}
-                        required
-                      />
+                      <>
+                        <textarea
+                          value={
+                            opsi === 'A' ? opsiA :
+                            opsi === 'B' ? opsiB :
+                            opsi === 'C' ? opsiC :
+                            opsi === 'D' ? opsiD :
+                            opsiE
+                          }
+                          onChange={(e) => {
+                            if (opsi === 'A') setOpsiA(e.target.value);
+                            if (opsi === 'B') setOpsiB(e.target.value);
+                            if (opsi === 'C') setOpsiC(e.target.value);
+                            if (opsi === 'D') setOpsiD(e.target.value);
+                            if (opsi === 'E') setOpsiE(e.target.value);
+                          }}
+                          className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          rows={2}
+                          placeholder={`Tuliskan opsi ${opsi} di sini...
+
+Tips: Gunakan <i>teks</i> untuk italic, <br> untuk baris baru`}
+                          required
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Format: &lt;i&gt;italic&lt;/i&gt;, &lt;br&gt; untuk baris baru
+                        </p>
+                      </>
                     ) : (
                       <textarea
                         value={
@@ -354,7 +385,9 @@ export default function TambahSoalPage() {
                         }}
                         className="w-full p-2 border rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                         rows={2}
-                        placeholder={`Teks tambahan untuk opsi ${opsi} (opsional)`}
+                        placeholder={`Teks tambahan untuk opsi ${opsi} (opsional)
+
+Tips: Gunakan <i>teks</i> untuk italic, <br> untuk baris baru`}
                       />
                     )}
                     {/* File upload untuk opsi */}
